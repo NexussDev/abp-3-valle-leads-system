@@ -1,16 +1,6 @@
-# ABP 3° Semestre - 1000 Valle Multimarcas
+# 🚀 ABP 3° Semestre - 1000 Valle Multimarcas
 
-<p align="center">
-  Sistema completo de gerenciamento de leads desenvolvido com foco em <strong>escalabilidade</strong>, <strong>organização</strong> e <strong>boas práticas</strong>.
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Node.js-Backend-green" />
-  <img src="https://img.shields.io/badge/React-Frontend-blue" />
-  <img src="https://img.shields.io/badge/PostgreSQL-Database-blue" />
-  <img src="https://img.shields.io/badge/Docker-Containerized-informational" />
-  <img src="https://img.shields.io/badge/Architecture-Clean%20Architecture-orange" />
-</p>
+Sistema completo de gerenciamento de leads desenvolvido com foco em **escalabilidade**, **organização** e **boas práticas**.
 
 ---
 
@@ -20,10 +10,10 @@ A **ABP do 3° Semestre - 1000 Valle Multimarcas** é uma aplicação fullstack 
 
 O projeto foi estruturado utilizando o padrão **Clean Architecture**, garantindo:
 
-* 🔹 Separação clara de responsabilidades
-* 🔹 Facilidade de manutenção
-* 🔹 Escalabilidade
-* 🔹 Código organizado para trabalho em equipe
+* Separação clara de responsabilidades
+* Facilidade de manutenção
+* Escalabilidade
+* Código organizado para trabalho em equipe
 
 ---
 
@@ -32,9 +22,9 @@ O projeto foi estruturado utilizando o padrão **Clean Architecture**, garantind
 O sistema segue o modelo de camadas:
 
 ```
-Presentation → Application → Domain
-                   ↓
-             Infrastructure
+Presentation -> Application -> Domain
+                    ↓
+              Infrastructure
 ```
 
 📌 **Regra de ouro:**
@@ -45,22 +35,22 @@ Presentation → Application → Domain
 
 ## 🛠️ Tecnologias Utilizadas
 
-### 🔙 Backend
+### Backend
 
 * Node.js
 * TypeScript
 * Express
 
-### 🎨 Frontend
+### Frontend
 
 * React
 * TypeScript
 
-### 🗄️ Banco de Dados
+### Banco de Dados
 
 * PostgreSQL
 
-### 🐳 Infraestrutura
+### Infraestrutura
 
 * Docker
 * Docker Compose
@@ -71,10 +61,10 @@ Presentation → Application → Domain
 
 ```
 lead-management-system/
-├── docs/        → Documentação
-├── backend/     → API e regras de negócio
-├── frontend/    → Interface do usuário
-├── database/    → Scripts SQL
+├── docs/        - Documentação
+├── backend/     - API e regras de negócio
+├── frontend/    - Interface do usuário
+├── database/    - Scripts SQL
 ```
 
 ---
@@ -89,8 +79,8 @@ docker-compose up --build
 
 Após subir:
 
-* Frontend → http://localhost:3000
-* Backend → http://localhost:3001
+* Frontend: http://localhost:3000
+* Backend: http://localhost:3001
 
 ---
 
@@ -98,9 +88,9 @@ Após subir:
 
 O projeto utiliza scripts versionados:
 
-* `ddl/` → criação de tabelas
-* `dml/` → dados iniciais (seed)
-* `indexes/` → otimizações
+* `ddl/` - criação de tabelas
+* `dml/` - dados iniciais (seed)
+* `indexes/` - otimizações
 
 📌 Exemplo:
 
@@ -113,19 +103,19 @@ O projeto utiliza scripts versionados:
 
 ## 📌 Boas Práticas Adotadas
 
-* ✔ Clean Architecture
-* ✔ Princípios SOLID
-* ✔ Separação de responsabilidades
-* ✔ Tipagem forte com TypeScript
-* ✔ Versionamento de banco de dados
-* ✔ Containerização com Docker
+* Clean Architecture
+* Princípios SOLID
+* Separação de responsabilidades
+* Tipagem forte com TypeScript
+* Versionamento de banco de dados
+* Containerização com Docker
 
 ---
 
 ## 🔄 Fluxo da Aplicação
 
 ```
-Request → Controller → Service → Repository → Database
+Request -> Controller -> Service -> Repository -> Database
 ```
 
 ---
@@ -162,19 +152,3 @@ Inclui:
 ## 🚀 Status do Projeto
 
 🟢 Em desenvolvimento
-
----
-
-## 📌 Objetivo Acadêmico
-
-Este projeto foi desenvolvido com fins educacionais, aplicando conceitos de:
-
-* Engenharia de Software
-* Arquitetura de Sistemas
-* Desenvolvimento Fullstack
-
----
-
-## Autor
-
-Desenvolvido por **NexussDev** 

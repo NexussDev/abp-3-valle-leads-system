@@ -1,164 +1,180 @@
-# 🚀 ABP 3º DSM – Sistema de Gestão de Leads
+# ABP 3° Semestre - 1000 Valle Multimarcas
 
-Sistema desenvolvido para a disciplina de Aprendizagem Baseada em Projetos (ABP), com foco na gestão de leads comerciais e análise de desempenho.
+<p align="center">
+  Sistema completo de gerenciamento de leads desenvolvido com foco em <strong>escalabilidade</strong>, <strong>organização</strong> e <strong>boas práticas</strong>.
+</p>
 
----
-
-## 📌 Sobre o Projeto
-
-O Sistema de Gestão de Leads tem como objetivo gerenciar todo o ciclo de um cliente em potencial, desde a captação até a conversão em venda.
-
-A aplicação permite o controle de leads, acompanhamento de negociações, organização por equipes e análise de desempenho por meio de dashboards.
-
----
-
-## 🎯 Funcionalidades
-
-- 🔐 Autenticação com e-mail e senha (JWT)
-- 🛡️ Controle de acesso por perfil (RBAC)
-- 👥 Gestão de usuários e equipes
-- 📊 Gestão de leads
-- 💰 Controle de negociações
-- 📈 Dashboard com indicadores de desempenho
-- ⏱️ Filtros por período
-- 🧾 Registro de logs do sistema
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-Backend-green" />
+  <img src="https://img.shields.io/badge/React-Frontend-blue" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Database-blue" />
+  <img src="https://img.shields.io/badge/Docker-Containerized-informational" />
+  <img src="https://img.shields.io/badge/Architecture-Clean%20Architecture-orange" />
+</p>
 
 ---
 
-## 🧱 Arquitetura
+## 🧠 Sobre o Projeto
 
-O sistema segue boas práticas de desenvolvimento, incluindo:
+A **ABP do 3° Semestre - 1000 Valle Multimarcas** é uma aplicação fullstack projetada para gerenciar leads, usuários e negociações de forma eficiente.
 
-- Separação entre frontend e backend
-- API REST estruturada
-- Organização em camadas:
-  - Controller
-  - Service
-  - Repository
-  - Domain
-- Banco de dados relacional (PostgreSQL)
+O projeto foi estruturado utilizando o padrão **Clean Architecture**, garantindo:
+
+* 🔹 Separação clara de responsabilidades
+* 🔹 Facilidade de manutenção
+* 🔹 Escalabilidade
+* 🔹 Código organizado para trabalho em equipe
 
 ---
 
-## 🔄 Abordagem de Desenvolvimento
+## 🏗️ Arquitetura
 
-Este projeto segue práticas ágeis baseadas em Scrum, com ciclos iterativos e entregas incrementais.
+O sistema segue o modelo de camadas:
 
-Cada sprint possui objetivos definidos, priorização contínua do backlog e revisões para melhoria do processo.
+```
+Presentation → Application → Domain
+                   ↓
+             Infrastructure
+```
 
-### 📅 Planejamento de Sprints
+📌 **Regra de ouro:**
 
-- **Sprint 1:** 24/03 → 14/04  
-- **Sprint 2:** 15/04 → 21/05  
-- **Sprint 3:** 22/05 → 11/06  
-- **Entrega Final:** Julho de 2026  
-
----
-
-### 📌 Backlog do Produto
-Em evolução contínua ao longo do projeto.
+> Camadas internas nunca dependem das externas.
 
 ---
 
-### 🚀 Progresso das Sprints
+## 🛠️ Tecnologias Utilizadas
 
-**Sprint 1**
-> Definição inicial das funcionalidades e estrutura do sistema.
+### 🔙 Backend
 
-**Sprint 2**
-> Implementação das principais features e refinamentos.
+* Node.js
+* TypeScript
+* Express
 
-**Sprint 3**
-> Ajustes finais, testes e preparação para entrega.
+### 🎨 Frontend
+
+* React
+* TypeScript
+
+### 🗄️ Banco de Dados
+
+* PostgreSQL
+
+### 🐳 Infraestrutura
+
+* Docker
+* Docker Compose
 
 ---
 
-## 📁 Estrutura do Projeto
-```bash
-abp-3-valle-leads-system/
-│
-├── backend/
-├── frontend/
-├── database/
-├── docs/
-│
-├── docker-compose.yml
-└── README.md
+## 📂 Estrutura do Projeto
+
+```
+lead-management-system/
+├── docs/        → Documentação
+├── backend/     → API e regras de negócio
+├── frontend/    → Interface do usuário
+├── database/    → Scripts SQL
 ```
 
 ---
 
-## 🚀 Como Executar o Projeto
+## ▶️ Como Executar o Projeto
+
+⚠️ **Este projeto deve ser executado exclusivamente via Docker**
 
 ```bash
-# Clonar o repositório
-git clone https://github.com/seu-repositorio.git
-
-# Acessar a pasta
-cd abp-3-valle-leads-system
-
-# Subir os containers
-docker-compose up
+docker-compose up --build
 ```
----
 
-## 🤝 Time de Desenvolvimento
+Após subir:
 
-### 👥 Equipe
-
-| **Função** | **Nome** | **Links** |
-|------------|----------|-----------|
-| **Product Owner** | **Pedro Claudino** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/PeClaudino2006) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://br.linkedin.com/in/pedro-claudino-0566472b9) |
-| **Scrum Master** | **Manuela Castro** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/manuelalemes) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/manuela-lemes-castro) |
-| **Backend Developer & Database** | **Gabrielly Neu** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/gabriellyneu) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabrielly-neu-753906239) |
-| **Backend Developer** | **Gabriel Teodoro** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/teodoroooo) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabrielteodoroo?utm_source=share_via&utm_content=profile&utm_medium=member_ios)|
-| **Frontend Developer** | **Alicia Dias** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/TIALICIA) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/alicia-silva-dias-656b2817a/) |
+* Frontend → http://localhost:3000
+* Backend → http://localhost:3001
 
 ---
 
-## 📋 Requisitos do Sistema
+## 🗄️ Banco de Dados
 
-| ✅ Funcionais | ⚙️ Não Funcionais |
-|--------------|------------------|
-| Autenticação com JWT | API REST estruturada |
-| Controle de acesso (RBAC) | Segurança com criptografia |
-| Gestão de usuários | Interface responsiva |
-| Gestão de leads | Uso de Docker |
-| Controle de negociações | Versionamento com Git |
-| Dashboard de indicadores | Arquitetura em camadas |
-| Filtros por período | Boas práticas de código |
-| Registro de logs | Escalabilidade e manutenção |  
+O projeto utiliza scripts versionados:
+
+* `ddl/` → criação de tabelas
+* `dml/` → dados iniciais (seed)
+* `indexes/` → otimizações
+
+📌 Exemplo:
+
+```
+001-create-tables.sql
+002-seed-data.sql
+```
 
 ---
 
-## 📄 Documentação
+## 📌 Boas Práticas Adotadas
 
-A documentação do projeto inclui:
+* ✔ Clean Architecture
+* ✔ Princípios SOLID
+* ✔ Separação de responsabilidades
+* ✔ Tipagem forte com TypeScript
+* ✔ Versionamento de banco de dados
+* ✔ Containerização com Docker
 
-- Product Backlog
-- DER (Diagrama Entidade-Relacionamento)
-- Diagramas UML
-- Endpoints da API
+---
+
+## 🔄 Fluxo da Aplicação
+
+```
+Request → Controller → Service → Repository → Database
+```
+
+---
+
+## 👥 Organização do Time
+
+Para manter o padrão do projeto:
+
+* Cada camada deve respeitar sua responsabilidade
+* Não misturar regras de negócio com controllers
+* Criar código apenas na pasta correta
+* Sempre documentar alterações relevantes
+
+---
+
+## 📚 Documentação
+
+Toda a documentação está disponível em:
+
+```
+/docs
+```
+
+Inclui:
+
+* Arquitetura
+* Endpoints
+* Design Patterns
+* Diagramas
+* Retrospectivas
+
+---
+
+## 🚀 Status do Projeto
+
+🟢 Em desenvolvimento
+
+---
 
 ## 📌 Objetivo Acadêmico
 
-Este projeto tem como objetivo aplicar conceitos de:
+Este projeto foi desenvolvido com fins educacionais, aplicando conceitos de:
 
-- Engenharia de Software
-- Arquitetura de Sistemas
-- Banco de Dados
-- Metodologias Ágeis (Scrum)
-- Desenvolvimento Full Stack
-
---- 
-
-## ⚙️ Tecnologias Utilizadas
-
-
-[![My Skills](https://skillicons.dev/icons?i=nodejs,express,react,typescript,postgres,docker)](https://skillicons.dev)
+* Engenharia de Software
+* Arquitetura de Sistemas
+* Desenvolvimento Fullstack
 
 ---
 
-## 🏁 Status do Projeto
+## Autor
 
- ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow) 
+Desenvolvido por **NexussDev** 

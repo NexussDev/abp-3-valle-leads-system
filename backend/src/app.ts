@@ -1,20 +1,15 @@
 import express from 'express';
 import cors from 'cors';
+import routes from './presentation/routes';
+import { errorHandler } from './infrastructure/middleware/errorHandler';
 
 const app = express();
 
-// --- MIDDLEWARES GLOBAIS ---
-
 app.use(cors());
-
 app.use(express.json());
 
-// --- ROTA DE TESTE (health check) ---
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString()
-  });
-});
+app.use('/api', routes);
+
+app.use(errorHandler);
 
 export default app;

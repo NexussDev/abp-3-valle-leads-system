@@ -2,7 +2,7 @@ import prisma from '../database/prisma';
 import { User, Prisma } from '@prisma/client';
 
 class UserRepository {
-  async findAll(): Promise<Omit<User, 'password'>[]> {
+  async findAll() {
     return prisma.user.findMany({
       select: {
         id: true,
@@ -10,9 +10,7 @@ class UserRepository {
         email: true,
         role: true,
         teamId: true,
-        createdAt: true,
-        updatedAt: true,
-      }
+      },
     });
   }
 

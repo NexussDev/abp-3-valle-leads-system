@@ -1,7 +1,11 @@
 import { Navigate } from "react-router-dom";
 
-export function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = true; // depois você troca por login real
+export default function PrivateRoute({ children }: any) {
+  const token = localStorage.getItem("token");
 
-  return isAuthenticated ? children : <Navigate to="/" />;
+  if (!token) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
 }

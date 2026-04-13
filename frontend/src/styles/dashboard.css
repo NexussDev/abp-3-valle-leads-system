@@ -1,0 +1,42 @@
+.dashboard-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(#1f2430, #3a3f4b);
+}
+
+/* TOPO */
+.dashboard-header {
+  background: #111827;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-header button {
+  background: #c53030;
+  border: none;
+  padding: 8px 15px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* CONTEÚDO */
+.dashboard-content {
+  padding: 30px;
+}
+
+.dashboard-content h1 {
+  color: white;
+}
+
+/* CARDS */
+.card {
+  background: #e5e5e5;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+}

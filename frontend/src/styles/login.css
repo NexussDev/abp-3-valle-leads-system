@@ -1,0 +1,117 @@
+/* Reset e Container Principal */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: radial-gradient(circle, #32323d 0%, #1c1c25 100%);
+  padding: 20px;
+}
+
+/* Topo Escuro (Igual para ambos) */
+.card-top {
+  background-color: #1c1c25;
+  width: 100%;
+  max-width: 450px; /* Largura fixa para não entortar */
+  padding: 30px;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Ajuste da Logo e Seção de Boas-vindas (Cliente) */
+.welcome-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.welcome-text {
+  max-width: 60%;
+  color: white;
+  text-align: left;
+}
+
+.welcome-text h2 { font-size: 1.1rem; margin-bottom: 5px; }
+.welcome-text p { font-size: 0.75rem; color: #ccc; line-height: 1.2; }
+
+.car-img-top {
+  width: 140px;
+  height: auto;
+}
+
+/* Corpo Cinza (Igual para ambos) */
+.card {
+  background-color: #e0e0e0;
+  width: 100%;
+  max-width: 450px;
+  padding: 30px;
+  border-radius: 0 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-sizing: border-box;
+}
+
+.card h3 {
+  text-align: center;
+  font-weight: 400;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+/* Inputs e Labels */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-group label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #555;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #d6d6d6;
+  box-sizing: border-box;
+  font-weight: bold;
+}
+
+/* Botão Vermelho */
+button {
+  background-color: #b33939;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* Botão de Troca de área (Acesso Colaborador) */
+.btn-switch {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: 1px solid #555;
+  color: #777;
+  padding: 5px 10px;
+  font-size: 0.6rem;
+  width: auto;
+  margin: 0;
+}

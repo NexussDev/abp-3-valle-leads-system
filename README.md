@@ -155,7 +155,7 @@ Este projeto tem como objetivo aplicar conceitos de:
 ## ⚙️ Tecnologias Utilizadas
 
 
-[![My Skills](https://skillicons.dev/icons?i=nodejs,express,react,typescript,postgres,docker)](https://skillicons.dev)
+[![My Skills](https://skillicons.dev/icons?i=nodejs,express,prisma,react,typescript,postgres,docker)](https://skillicons.dev)
 
 ---
 

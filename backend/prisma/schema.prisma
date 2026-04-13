@@ -20,6 +20,8 @@ model User {
   id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name     String  @db.VarChar(100)
   email    String  @unique @db.VarChar(150)
+  storeId  String?  @map("store_id") @db.Uuid
+  store    Store?   @relation(fields: [storeId], references: [id])
   password String  @db.VarChar(255)
   role     String  @db.VarChar(20)
   teamId   String? @map("team_id") @db.Uuid
@@ -66,6 +68,9 @@ model Lead {
   name        String?      @db.VarChar(100)
   phone       String?      @db.VarChar(20)
   status      String?      @db.VarChar(30)
+  origin      String
+  storeId     String       @map("store_id") @db.Uuid
+  store       Store        @relation(fields: [storeId], references: [id])
   userId      String       @map("user_id") @db.Uuid
   teamId      String       @map("team_id") @db.Uuid
   clientId    String?      @map("client_id") @db.Uuid
@@ -80,6 +85,15 @@ model Lead {
   negotiation Negotiation?
 
   @@map("lead")
+}
+
+model Store {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String @db.VarChar(100)
+  leads Lead[]
+  users User[]
+
+  @@map("store")
 }
 
 model Negotiation {

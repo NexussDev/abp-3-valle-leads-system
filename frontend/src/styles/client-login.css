@@ -1,0 +1,62 @@
+.card-top-client {
+  background-color: #1c1c25;
+  width: 100%;
+  max-width: 450px;
+  padding: 20px;
+  border-radius: 15px 15px 0 0;
+  color: white;
+  position: relative;
+}
+
+.welcome-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.text-box {
+  max-width: 50%;
+}
+
+.text-box h2 { font-size: 1.1rem; }
+.text-box p { font-size: 0.75rem; color: #ccc; }
+
+.car-img {
+  width: 160px;
+  height: auto;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  width: 100%;
+}
+
+.input-group label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.btn-acesso-colaborador {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: 1px solid #555;
+  color: #888;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: 0.3s;
+}
+
+.btn-acesso-colaborador:hover {
+  color: white;
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+}

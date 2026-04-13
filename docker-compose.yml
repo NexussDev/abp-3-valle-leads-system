@@ -1,1 +1,38 @@
-# Docker Compose config
+services:
+  postgres:
+    image: postgres:15
+    container_name: abp3-valle-leads-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: valle_leads
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: abp3-valle-leads-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://postgres:1234@postgres:5432/valle_leads
+      JWT_SECRET: segredo_super_forte
+
+  frontend:
+    build: ./frontend
+    container_name: abp3-valle-leads-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    command: npm run dev -- --host
+
+volumes:
+  postgres_data:

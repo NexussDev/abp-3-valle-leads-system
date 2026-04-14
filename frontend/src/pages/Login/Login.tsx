@@ -22,12 +22,9 @@ export default function Login() {
     // Simula um pequeno atraso de rede
     setTimeout(() => {
       if (email === emailFicticio && senha === senhaFicticia) {
-        // Salva um status de login
-        localStorage.setItem("token", "autenticado_ficticio");
-
-        // Redireciona para a página "Em Andamento"
-        navigate("/em-andamento");
-      } else {
+  console.log("Login realizado com sucesso!"); // Adicione este log para testar no F12
+  navigate("/leads"); 
+} else {
         alert("E-mail ou senha incorretos!");
         setErro("Credenciais inválidas");
       }

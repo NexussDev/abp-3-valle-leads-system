@@ -1,11 +1,36 @@
-export const fakeLogin = (email: string, senha: string) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email === "admin@email.com" && senha === "123456") {
-        resolve({ token: "fake-token-123" });
-      } else {
-        reject("Email ou senha inválidos");
-      }
-    }, 1000);
-  });
+import { api } from './api';
+
+export interface LoginResponse {
+  token: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+// Login real com o backend
+export const login = async (email: string, password: string): Promise<LoginResponse> => {
+  const data = await api.post('/auth/login', { email, password });
+  return data;
+};
+
+// Salva token no localStorage
+export const saveToken = (token: string) => {
+  localStorage.setItem('token', token);
+};
+
+// Busca token
+export const getToken = (): string | null => {
+  return localStorage.getItem('token');
+};
+
+// Remove token (logout)
+export const logout = () => {
+  localStorage.removeItem('token');
+};
+
+// Verifica se está autenticado
+export const isAuthenticated = (): boolean => {
+  return !!localStorage.getItem('token');
 };

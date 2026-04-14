@@ -25,20 +25,26 @@ class LeadService {
 
   async create(data: {
     origin: string;
-    clientId: string;
+    name?: string;
+    phone?: string;
+    status?: string;
+    clientId?: string;
     userId: string;
     teamId: string;
     storeId: string;
   }): Promise<Lead> {
     return leadRepository.create({
       origin: data.origin as any,
-      client: { connect: { id: data.clientId } },
+      name: data.name,
+      phone: data.phone,
+      status: data.status || 'Novo Lead',
+      ...(data.clientId ? { client: { connect: { id: data.clientId } } } : {}),
       user: { connect: { id: data.userId } },
       team: { connect: { id: data.teamId } },
       store: { connect: { id: data.storeId } },
     });
   }
-
+  
   async update(id: string, data: {
     origin?: string;
     clientId?: string;

@@ -5,6 +5,7 @@ export interface Lead {
   price: number;
   time: string;
   status: string;
+  date: string; // 👈 ADICIONE ISSO
   avatar: string;
   image: string;
 }

@@ -1,0 +1,116 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f4f6f9;
+}
+
+/* NAVBAR */
+.navbar {
+  height: 60px;
+  background: #111827;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.logo {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.logoRed {
+  color: #ef4444;
+}
+
+.menu {
+  display: flex;
+  gap: 20px;
+}
+
+.menu a {
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.menu a:hover,
+.active {
+  color: white;
+  font-weight: bold;
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topAvatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}
+
+/* FILTRO */
+.filterBar {
+  background: white;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.searchGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.searchInput {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.statusSelect {
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.datePicker {
+  padding: 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+}
+
+.btnNew {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* BOARD */
+.board {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  overflow-x: auto;
+  flex: 1;
+}
+
+/* FOOTER */
+.footer {
+  height: 50px;
+  background: #111827;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}

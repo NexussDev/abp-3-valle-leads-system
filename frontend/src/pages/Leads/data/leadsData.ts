@@ -31,7 +31,6 @@ export const leadsData: Column[] = [
       }
     ]
   },
-
   {
     id: 2,
     title: "EM ATENDIMENTO",
@@ -62,7 +61,6 @@ export const leadsData: Column[] = [
       }
     ]
   },
-
   {
     id: 3,
     title: "PROPOSTA",
@@ -82,7 +80,6 @@ export const leadsData: Column[] = [
       }
     ]
   },
-
   {
     id: 4,
     title: "FECHADO",

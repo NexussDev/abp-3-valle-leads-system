@@ -47,7 +47,6 @@ const filterLeads = (columns: Column[]): Column[] => {
           <span className={styles.logoRed}>1000</span> Valle
           <small>MULTIMARCAS</small>
         </div>
-
         <nav className={styles.menu}>
           <a href="#" className={styles.active}>Oportunidades</a>
           <a href="#">Atividades</a>
@@ -120,7 +119,6 @@ const filterLeads = (columns: Column[]): Column[] => {
         <span>Resultado: <strong>R$ 0</strong></span>
         <span>Conversão: <strong>0%</strong></span>
       </footer>
-
     </div>
   );
 }

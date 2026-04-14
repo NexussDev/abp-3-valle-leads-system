@@ -5,15 +5,15 @@ export enum Role {
   ADMIN = 'ADMIN'
 }
 
-export interface TokenPayload {
-  userId: string;
+export interface AuthUser {
+  id: string;
   role: Role;
 }
 
 declare global {
   namespace Express {
     interface Request {
-      user?: TokenPayload;
+      user?: AuthUser;
     }
   }
 }

@@ -48,7 +48,10 @@ Cada sprint possui objetivos definidos, priorização contínua do backlog e rev
 
 ### 📅 Planejamento de Sprints
 
-- **Sprint 1:** 24/03 → 14/04  
+- **Sprint 1:** 24/03 → 14/04
+
+▶️ [Vídeo Sprint 1](https://youtu.be/JZl4LicdbPs?si=BHBxFvGHBrTLPN_v)
+
 - **Sprint 2:** 15/04 → 21/05  
 - **Sprint 3:** 22/05 → 11/06  
 - **Entrega Final:** Julho de 2026  

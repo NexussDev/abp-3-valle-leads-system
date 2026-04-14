@@ -20,13 +20,12 @@ model User {
   id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name     String  @db.VarChar(100)
   email    String  @unique @db.VarChar(150)
-  storeId  String?  @map("store_id") @db.Uuid
-  store    Store?   @relation(fields: [storeId], references: [id])
   password String  @db.VarChar(255)
   role     String  @db.VarChar(20)
   teamId   String? @map("team_id") @db.Uuid
-  leads    Lead[]
-  team     Team?   @relation(fields: [teamId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  leads Lead[]
+  team  Team? @relation(fields: [teamId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("user")
 }
@@ -64,19 +63,17 @@ model Car {
 }
 
 model Lead {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String?      @db.VarChar(100)
-  phone       String?      @db.VarChar(20)
-  status      String?      @db.VarChar(30)
-  origin      String
-  storeId     String       @map("store_id") @db.Uuid
-  store       Store        @relation(fields: [storeId], references: [id])
-  userId      String       @map("user_id") @db.Uuid
-  teamId      String       @map("team_id") @db.Uuid
-  clientId    String?      @map("client_id") @db.Uuid
-  sourceId    String?      @map("source_id") @db.Uuid
-  carId       String?      @map("car_id") @db.Uuid
-  createdAt   DateTime?    @default(now()) @map("created_at") @db.Timestamp(6)
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String?   @db.VarChar(100)
+  phone     String?   @db.VarChar(20)
+  status    String?   @db.VarChar(30)
+  userId    String    @map("user_id") @db.Uuid
+  teamId    String    @map("team_id") @db.Uuid
+  clientId  String?   @map("client_id") @db.Uuid
+  sourceId  String?   @map("source_id") @db.Uuid
+  carId     String?   @map("car_id") @db.Uuid
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+
   car         Car?         @relation(fields: [carId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   client      Client?      @relation(fields: [clientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   source      LeadSource?  @relation(fields: [sourceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -87,15 +84,6 @@ model Lead {
   @@map("lead")
 }
 
-model Store {
-  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name  String @db.VarChar(100)
-  leads Lead[]
-  users User[]
-
-  @@map("store")
-}
-
 model Negotiation {
   id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   leadId     String?              @unique @map("lead_id") @db.Uuid
@@ -104,8 +92,9 @@ model Negotiation {
   importance String?              @db.VarChar(10)
   active     Boolean?             @default(true)
   createdAt  DateTime?            @default(now()) @map("created_at") @db.Timestamp(6)
-  lead       Lead?                @relation(fields: [leadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  history    NegotiationHistory[]
+
+  lead    Lead?                @relation(fields: [leadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  history NegotiationHistory[]
 
   @@map("negotiation")
 }
@@ -118,7 +107,8 @@ model NegotiationHistory {
   oldStage      String?     @map("old_stage") @db.VarChar(30)
   newStage      String?     @map("new_stage") @db.VarChar(30)
   changedAt     DateTime?   @default(now()) @map("changed_at") @db.Timestamp(6)
-  negotiation   Negotiation @relation(fields: [negotiationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  negotiation Negotiation @relation(fields: [negotiationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("negotiation_history")
 }

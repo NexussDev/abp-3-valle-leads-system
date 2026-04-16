@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Importe o hook de navegação
+import { useNavigate } from "react-router-dom";
+import { login, saveToken } from "../../services/auth";
 import "../../styles/login.css";
 
 export default function Login() {
@@ -7,14 +8,15 @@ export default function Login() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  const navigate = useNavigate(); // Inicializa o navegador do React Router
+
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro("");
     setLoading(true);
 
+<<<<<<< HEAD
     // Credenciais fictícias para teste
     const emailFicticio = "admin@1000valle.com";
     const senhaFicticia = "123456";
@@ -28,8 +30,19 @@ export default function Login() {
         alert("E-mail ou senha incorretos!");
         setErro("Credenciais inválidas");
       }
+=======
+    try {
+      const result = await login(email, senha);
+      saveToken(result.token);
+      navigate("/em-andamento");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Credenciais inválidas";
+      setErro(message);
+      alert("E-mail ou senha incorretos!");
+    } finally {
+>>>>>>> 5e40fb0 (API 2)
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -38,7 +51,6 @@ export default function Login() {
         <img src="/logo.png" alt="Logo 1000 Valle" style={{ width: '150px' }} />
         <h3>ÁREA DO COLABORADOR</h3>
       </div>
-
       <form className="card" onSubmit={handleLogin}>
         <div className="input-group">
           <input
@@ -49,7 +61,6 @@ export default function Login() {
             required
           />
         </div>
-
         <div className="input-group">
           <input
             type="password"
@@ -59,9 +70,7 @@ export default function Login() {
             required
           />
         </div>
-
         {erro && <p style={{ color: '#b33939', fontSize: '0.8rem', textAlign: 'center' }}>{erro}</p>}
-
         <button type="submit" disabled={loading}>
           {loading ? "Verificando..." : "ENTRAR"}
         </button>

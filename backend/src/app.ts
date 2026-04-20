@@ -1,12 +1,16 @@
 import express from 'express';
 import cors from 'cors';
-import routes from './presentation/routes';
+import routes from './router';
 import { errorHandler } from './infrastructure/middleware/errorHandler';
 import { authMiddleware } from './infrastructure/middleware/authMiddleware';
-import authRoutes from './presentation/routes/auth.routes';
+import authRoutes from './resource/Auth/authRoutes';
 
 
 const app = express();
+
+app.get('/', (req, res) => {
+  res.send('🚀 API rodando');
+});
 
 app.use(cors());
 app.use(express.json());

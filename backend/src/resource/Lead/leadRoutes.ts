@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import leadController from '../controllers/LeadController';
+import leadController from '../../resource/Lead/LeadController';
 
 const router = Router();
 

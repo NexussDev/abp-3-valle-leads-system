@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import userRoutes from './userRoutes';
-import leadRoutes from './leadRoutes';
+import userRoutes from '../src/resource/User/userRoutes';
+import leadRoutes from '../src/resource/Lead/leadRoutes';
 
 const router = Router();
 

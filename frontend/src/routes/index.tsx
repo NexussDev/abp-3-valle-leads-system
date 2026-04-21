@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import ClientLogin from "../pages/ClientLogin/ClientLogin";
-import LeadsPage from "../pages/Leads"; // Aponta para a pasta Leads
+import LeadsPage from "../pages/Leads/index"; // Aponta para a pasta Leads
 
 export function AppRoutes() {
   return (

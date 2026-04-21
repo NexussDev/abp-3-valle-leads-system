@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import userService from '../../application/services/UserService';
+import leadService from './LeadService';
 
-class UserController {
+class LeadController {
   async index(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const users = await userService.findAll();
-      res.status(200).json(users);
+      const leads = await leadService.findAll();
+      res.status(200).json(leads);
     } catch (error) {
       next(error);
     }
@@ -14,9 +14,8 @@ class UserController {
   async show(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string;
-      const user = await userService.findById(id);
-      const { password: _, ...userWithoutPassword } = user;
-      res.status(200).json(userWithoutPassword);
+      const lead = await leadService.findById(id);
+      res.status(200).json(lead);
     } catch (error) {
       next(error);
     }
@@ -24,8 +23,8 @@ class UserController {
 
   async store(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const user = await userService.create(req.body);
-      res.status(201).json(user);
+      const lead = await leadService.create(req.body);
+      res.status(201).json(lead);
     } catch (error) {
       next(error);
     }
@@ -34,8 +33,8 @@ class UserController {
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string;
-      const user = await userService.update(id, req.body);
-      res.status(200).json(user);
+      const lead = await leadService.update(id, req.body);
+      res.status(200).json(lead);
     } catch (error) {
       next(error);
     }
@@ -44,7 +43,7 @@ class UserController {
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string;
-      await userService.delete(id);
+      await leadService.delete(id);
       res.status(204).send();
     } catch (error) {
       next(error);
@@ -52,4 +51,4 @@ class UserController {
   }
 }
 
-export default new UserController();
+export default new LeadController();

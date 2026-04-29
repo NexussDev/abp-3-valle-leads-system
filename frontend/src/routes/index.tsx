@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import ClientLogin from "../pages/ClientLogin/ClientLogin";
 import LeadsPage from "../pages/Leads/index"; // Aponta para a pasta Leads
+import Layout from "../components/layout/Layout";
+import Dashboard from "../pages/Dashboard/Dashboard";
 
 export function AppRoutes() {
   return (
@@ -11,6 +13,7 @@ export function AppRoutes() {
         <Route path="/colaborador" element={<Login />} />
         <Route path="/leads" element={<LeadsPage />} />
         <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
       </Routes>
     </BrowserRouter>
   );

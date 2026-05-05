@@ -1,5 +1,10 @@
 import leadRepository from '../../infrastructure/repositories/LeadRepository';
 import { AppError } from '../../shared/errors/AppError';
+import {
+  isValidStage,
+  validateStageMove,
+  LeadStage,
+} from '../../shared/validators/leadStageValidator';
 import { Lead } from '@prisma/client';
 
 class LeadService {
@@ -61,6 +66,19 @@ class LeadService {
   async delete(id: string): Promise<Lead> {
     await this.findById(id);
     return leadRepository.delete(id);
+  }
+
+  async updateStage(id: string, newStage: unknown): Promise<Lead> {
+    if (!isValidStage(newStage)) {
+      throw new AppError(`Etapa inválida: "${String(newStage)}"`, 400);
+    }
+    const lead = await this.findById(id);
+    const currentStage = lead.status as LeadStage | null;
+    const validation = validateStageMove(currentStage, newStage);
+    if (!validation.allowed) {
+      throw new AppError(validation.reason, 422);
+    }
+    return leadRepository.update(id, { status: newStage });
   }
 }
 

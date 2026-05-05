@@ -49,6 +49,17 @@ class LeadController {
       next(error);
     }
   }
+
+  async updateStage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const { stage } = req.body ?? {};
+      const lead = await leadService.updateStage(id, stage);
+      res.status(200).json(lead);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new LeadController();

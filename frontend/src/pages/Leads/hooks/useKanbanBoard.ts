@@ -17,12 +17,14 @@ export type MoveLeadFn = (
 export interface UseKanbanBoard<C> {
   columns: C[];
   moveLead: MoveLeadFn;
+  setColumns: (next: C[]) => void;
 }
 
 export function useKanbanBoard<C extends MinColumn>(
   initial: C[],
 ): UseKanbanBoard<C> {
   const [columns, setColumns] = useState<C[]>(initial);
+  const replaceColumns = useCallback((next: C[]) => setColumns(next), []);
 
   const moveLead = useCallback<MoveLeadFn>(
     (leadId: string, from: LeadStage, to: LeadStage): MoveResult => {
@@ -52,5 +54,5 @@ export function useKanbanBoard<C extends MinColumn>(
     [],
   );
 
-  return { columns, moveLead };
+  return { columns, moveLead, setColumns: replaceColumns };
 }

@@ -1,45 +1,16 @@
 console.log('NOVO CODIGO CARREGADO');
+import { useEffect } from 'react';
 import { LeadStage } from './utils/leadStageValidator';
 import { useKanbanBoard, MoveResult } from './hooks/useKanbanBoard';
+import { Lead, KanbanCol } from './types';
+import { fetchLeads } from '../../services/leadsApi';
+import { apiLeadsToColumns } from './data/leadsAdapter';
 
 // ============================================================
 // TYPES
 // ============================================================
 type StageOption = { id: LeadStage; title: string };
 type MoveLeadFn = (leadId: string, from: LeadStage, to: LeadStage) => MoveResult;
-
-type LeadStatus =
-  | 'Novo Lead'
-  | 'Contato Realizado'
-  | 'Visita Agendada'
-  | 'Proposta Enviada'
-  | 'Proposta Agendada'
-  | 'Em Negociação'
-  | 'Vendido'
-  | 'Entregue';
-
-interface Lead {
-  id: string;
-  name: string;
-  avatar: string;
-  car: string;
-  carImage: string;
-  price: number;
-  stage: LeadStage;
-  status: LeadStatus;
-  timeAgo: string;
-  statusUpdatedAt: string;
-  isVerified?: boolean;
-  hasAlert?: boolean;
-}
-
-interface KanbanCol {
-  id: LeadStage;
-  title: string;
-  totalValue: number;
-  headerColor: string;
-  leads: Lead[];
-}
 
 // ============================================================
 // MOCK DATA
@@ -327,8 +298,23 @@ function KanbanColumn({
 // MAIN PAGE EXPORT
 // ============================================================
 export default function LeadsPage() {
-  const { columns, moveLead } = useKanbanBoard<KanbanCol>(MOCK_DATA);
+  const { columns, moveLead, setColumns } = useKanbanBoard<KanbanCol>(MOCK_DATA);
   const stageOptions: StageOption[] = columns.map(c => ({ id: c.id, title: c.title }));
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchLeads()
+      .then(apiLeads => {
+        if (cancelled) return;
+        setColumns(apiLeadsToColumns(apiLeads, MOCK_DATA));
+      })
+      .catch(() => {
+        // API indisponível ou sem auth — mantém o mock já renderizado
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [setColumns]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#edf2f7', overflow: 'hidden', fontFamily: 'system-ui, sans-serif' }}>

@@ -31,7 +31,7 @@ class LeadService {
     storeId: string;
   }): Promise<Lead> {
     return leadRepository.create({
-      origin: data.origin as any,
+      origin: data.origin,
       client: { connect: { id: data.clientId } },
       user: { connect: { id: data.userId } },
       team: { connect: { id: data.teamId } },

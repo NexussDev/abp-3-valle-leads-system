@@ -23,7 +23,7 @@ class LeadController {
 
   async store(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const lead = await leadService.create(req.body);
+      const lead = await leadService.create(req.body ?? {});
       res.status(201).json(lead);
     } catch (error) {
       next(error);

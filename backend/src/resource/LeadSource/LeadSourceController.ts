@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import leadService from './LeadService';
+import leadSourceService from './LeadSourceService';
 
-class LeadController {
+class LeadSourceController {
   async index(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const leads = await leadService.findAll();
-      res.status(200).json(leads);
+      const sources = await leadSourceService.findAll();
+      res.status(200).json(sources);
     } catch (error) {
       next(error);
     }
@@ -14,8 +14,8 @@ class LeadController {
   async show(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string;
-      const lead = await leadService.findById(id);
-      res.status(200).json(lead);
+      const source = await leadSourceService.findById(id);
+      res.status(200).json(source);
     } catch (error) {
       next(error);
     }
@@ -23,8 +23,8 @@ class LeadController {
 
   async store(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const lead = await leadService.create(req.body ?? {});
-      res.status(201).json(lead);
+      const source = await leadSourceService.create(req.body);
+      res.status(201).json(source);
     } catch (error) {
       next(error);
     }
@@ -33,8 +33,8 @@ class LeadController {
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string;
-      const lead = await leadService.update(id, req.body);
-      res.status(200).json(lead);
+      const source = await leadSourceService.update(id, req.body);
+      res.status(200).json(source);
     } catch (error) {
       next(error);
     }
@@ -43,23 +43,12 @@ class LeadController {
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string;
-      await leadService.delete(id);
+      await leadSourceService.delete(id);
       res.status(204).send();
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async updateStage(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const id = req.params.id as string;
-      const { stage } = req.body ?? {};
-      const lead = await leadService.updateStage(id, stage);
-      res.status(200).json(lead);
     } catch (error) {
       next(error);
     }
   }
 }
 
-export default new LeadController();
+export default new LeadSourceController();

@@ -59,24 +59,16 @@ export default function Header() {
   );
 }
 
-<<<<<<< HEAD
 // Estilos
 const headerStyle: React.CSSProperties = {
   height: '80px',
-=======
-const headerStyle: React.CSSProperties = {
-  height: '80px', // Um pouco mais alto para respirar
->>>>>>> main
   backgroundColor: '#fff',
   borderBottom: '1px solid #f1f5f9',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: '0 40px',
-<<<<<<< HEAD
   flexShrink: 0,
-=======
->>>>>>> main
 };
 
 const userBadge: React.CSSProperties = {
@@ -85,7 +77,6 @@ const userBadge: React.CSSProperties = {
   gap: '12px',
   backgroundColor: '#f8fafc',
   padding: '6px 14px',
-<<<<<<< HEAD
   borderRadius: '50px',
   border: '1px solid #e2e8f0',
   cursor: 'pointer',
@@ -133,10 +124,3 @@ const menuItemStyle: React.CSSProperties = {
   color: '#475569',
   transition: 'background 0.2s',
 };
-=======
-  borderRadius: '50px', // Badge arredondado
-  border: '1px solid #e2e8f0',
-};
-
-const avatar: React.CSSProperties = { width: '35px', height: '35px', backgroundColor: '#3b82f6', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' };
->>>>>>> main

@@ -17,10 +17,15 @@ export interface Lead {
   car: string;
   carImage: string;
   price: number;
+
   stage: LeadStage;
   status: LeadStatus;
+
   timeAgo: string;
   statusUpdatedAt: string;
+
+  // 👇 ADICIONADOS PRA COMPATIBILIDADE COM SEU INDEX
+  origin?: string;
   isVerified?: boolean;
   hasAlert?: boolean;
 }

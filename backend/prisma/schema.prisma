@@ -7,6 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+model Store {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String @db.VarChar(100)
+
+  leads Lead[]
+
+  @@map("store")
+}
+
 model Team {
   id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name  String @db.VarChar(100)
@@ -23,11 +33,22 @@ model User {
   password String  @db.VarChar(255)
   role     String  @db.VarChar(20)
   teamId   String? @map("team_id") @db.Uuid
+  storeId  String? @map("store_id") @db.Uuid
 
   leads Lead[]
-  team  Team? @relation(fields: [teamId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  team  Team?  @relation(fields: [teamId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  store Store? @relation(fields: [storeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@map("user")
+}
+
+model Store {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String @db.VarChar(100)
+  leads Lead[]
+  users User[]
+
+  @@map("store")
 }
 
 model Client {
@@ -67,18 +88,25 @@ model Lead {
   name      String?   @db.VarChar(100)
   phone     String?   @db.VarChar(20)
   status    String?   @db.VarChar(30)
+  origin    String
   userId    String    @map("user_id") @db.Uuid
   teamId    String    @map("team_id") @db.Uuid
+  storeId   String    @map("store_id") @db.Uuid
   clientId  String?   @map("client_id") @db.Uuid
   sourceId  String?   @map("source_id") @db.Uuid
   carId     String?   @map("car_id") @db.Uuid
+  storeId String? @map("store_id") @db.Uuid
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
 
   car         Car?         @relation(fields: [carId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   client      Client?      @relation(fields: [clientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   source      LeadSource?  @relation(fields: [sourceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  store       Store        @relation(fields: [storeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   team        Team         @relation(fields: [teamId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user        User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+store Store? @relation(fields: [storeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   negotiation Negotiation?
 
   @@map("lead")

@@ -6,9 +6,12 @@ import { useNavigate } from "react-router-dom";
 =======
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
 =======
 import { useState, useEffect } from 'react';
 import { getLeads, createLead, getLeadSources, LeadFromAPI, LeadSource, updateLead  } from '../../services/leads';
+>>>>>>> main
 >>>>>>> main
 >>>>>>> main
 >>>>>>> main
@@ -264,7 +267,86 @@ function KanbanColumn({ col }: { col: KanbanCol }) {
 }
 
 // ============================================================
+<<<<<<< HEAD
+// MODAL & FORM
+// ============================================================
+function AddLeadModal({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose: () => void, onAdd: (lead: any) => void }) {
+  const [nome, setNome] = useState('');
+  const [contato, setContato] = useState('');
+  const [carro, setCarro] = useState('');
+  const [preco, setPreco] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nome || !contato || !carro) return alert("Por favor, preencha Nome, Contato e Veículo!");
+    
+    onAdd({
+      id: Math.random().toString(),
+      name: nome,
+      avatar: 'https://i.pravatar.cc/40?img=10',
+      car: carro,
+      carImage: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=160&h=80&fit=crop&auto=format',
+      price: Number(preco) || 0,
+      stage: 'novo_lead',
+      status: 'Novo Lead',
+      timeAgo: 'Agora',
+      statusUpdatedAt: 'Recém criado',
+      contato: contato 
+    });
+    
+    setNome(''); setContato(''); setCarro(''); setPreco('');
+    onClose();
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ background: '#fff', padding: 30, borderRadius: 12, width: 400, boxShadow: '0 20px 25px rgba(0,0,0,0.1)' }}>
+        <h3 style={{ marginBottom: 20, fontSize: 18, fontWeight: 700, color: '#1a202c' }}>Nova Oportunidade</h3>
+        
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Nome do Cliente</label>
+            <input placeholder="Ex: João Silva" style={inputStyle} value={nome} onChange={e => setNome(e.target.value)} />
+          </div>
+
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Email ou Telefone</label>
+            <input placeholder="Ex: (12) 99999-9999 ou joao@email.com" style={inputStyle} value={contato} onChange={e => setContato(e.target.value)} />
+          </div>
+
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Veículo de Interesse</label>
+            <input placeholder="Ex: Ford Ka 2021" style={inputStyle} value={carro} onChange={e => setCarro(e.target.value)} />
+          </div>
+
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Preço Estimado</label>
+            <input placeholder="Ex: 58000" type="number" style={inputStyle} value={preco} onChange={e => setPreco(e.target.value)} />
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+            <button type="button" onClick={onClose} style={btnCancelStyle}>Cancelar</button>
+            <button type="submit" style={btnSaveStyle}>Salvar Lead</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+const fieldStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 4 };
+const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#4a5568' };
+const inputStyle: React.CSSProperties = { padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: 14 };
+const btnCancelStyle: React.CSSProperties = { flex: 1, padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', fontWeight: 500 };
+const btnSaveStyle: React.CSSProperties = { flex: 1, padding: 12, borderRadius: 8, border: 'none', background: '#38a169', color: '#fff', fontWeight: 600, cursor: 'pointer' };
+
+// ============================================================
+// MAIN PAGE EXPORT
+=======
 // CREATE LEAD MODAL
+>>>>>>> main
 // ============================================================
 <<<<<<< HEAD
 =======
@@ -656,7 +738,12 @@ export default function LeadsPage() {
   const [columns, setColumns] = useState<KanbanCol[]>(MOCK_DATA);
   const [isModalOpen, setIsModalOpen] = useState(false);
 =======
+<<<<<<< HEAD
+  const [columns, setColumns] = useState<KanbanCol[]>(MOCK_DATA);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+=======
   const [columns] = useState<KanbanCol[]>(MOCK_DATA);
+>>>>>>> main
 >>>>>>> main
 >>>>>>> main
   const navigate = useNavigate();
@@ -668,6 +755,9 @@ export default function LeadsPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+<<<<<<< HEAD
+          <button onClick={() => setIsModalOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+=======
   
 <<<<<<< HEAD
   {/* BOTÃO ORIGINAL */}
@@ -697,6 +787,7 @@ export default function LeadsPage() {
   <button onClick={() => setIsModalOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
 =======
   <button style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+>>>>>>> main
 >>>>>>> main
 >>>>>>> main
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

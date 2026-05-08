@@ -15,17 +15,26 @@ export default function Login() {
     setErro("");
     setLoading(true);
 
-    // Credenciais fictícias para teste
-    const emailFicticio = "admin@1000valle.com";
-    const senhaFicticia = "123456";
-
     // Simula um pequeno atraso de rede
     setTimeout(() => {
-      if (email === emailFicticio && senha === senhaFicticia) {
-  console.log("Login realizado com sucesso!"); // Adicione este log para testar no F12
-  navigate("/leads"); 
-} else {
-        alert("E-mail ou senha incorretos!");
+      // Regra de negócio mockada para definir o Role baseado no e-mail
+      let role = "";
+      
+      if (senha === "123456") { // Senha padrão para todos os testes
+        if (email === "admin@1000valle.com") role = "ADMIN";
+        else if (email === "gerente@1000valle.com") role = "GERENTE";
+        else if (email === "lider@1000valle.com") role = "LIDER";
+      }
+
+      if (role !== "") {
+        // ✅ SALVANDO PERFIL: Aqui guardamos quem logou para o Dashboard e Leads consultarem
+        localStorage.setItem('@LeadsCar:role', role);
+        localStorage.setItem('@LeadsCar:userName', email.split('@')[0]);
+
+        console.log(`Login como ${role} realizado com sucesso!`);
+        navigate("/dashboard"); 
+      } else {
+        alert("E-mail ou senha incorretos! Use admin@, gerente@ ou lider@ com a senha 123456");
         setErro("Credenciais inválidas");
       }
       setLoading(false);

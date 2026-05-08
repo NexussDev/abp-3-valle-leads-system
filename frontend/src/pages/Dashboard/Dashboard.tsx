@@ -4,18 +4,21 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
 
+// Tipagem dos perfis
+type Role = 'ADMIN' | 'GERENTE' | 'LIDER';
+
 // ============================================================
-// 1. DADOS DE ORIGEM
+// 1. DADOS DE ORIGEM (MOCK)
 // ============================================================
 const MOCK_LEADS_DATABASE = [
-  { id: 1, origin: 'WhatsApp', status: 'Venda' },
-  { id: 2, origin: 'Instagram', status: 'Novo' },
-  { id: 3, origin: 'Instagram', status: 'Venda' },
-  { id: 4, origin: 'Site', status: 'Novo' },
-  { id: 5, origin: 'WhatsApp', status: 'Negociação' },
-  { id: 6, origin: 'Facebook', status: 'Novo' },
-  { id: 7, origin: 'WhatsApp', status: 'Venda' },
-  { id: 8, origin: 'Instagram', status: 'Negociação' },
+  { id: 1, origin: 'WhatsApp', status: 'Venda', equipe: 'Norte' },
+  { id: 2, origin: 'Instagram', status: 'Novo', equipe: 'Sul' },
+  { id: 3, origin: 'Instagram', status: 'Venda', equipe: 'Norte' },
+  { id: 4, origin: 'Site', status: 'Novo', equipe: 'Geral' },
+  { id: 5, origin: 'WhatsApp', status: 'Negociação', equipe: 'Sul' },
+  { id: 6, origin: 'Facebook', status: 'Novo', equipe: 'Norte' },
+  { id: 7, origin: 'WhatsApp', status: 'Venda', equipe: 'Geral' },
+  { id: 8, origin: 'Instagram', status: 'Negociação', equipe: 'Norte' },
 ];
 
 const COLORS: { [key: string]: string } = {
@@ -28,7 +31,7 @@ const COLORS: { [key: string]: string } = {
 // ============================================================
 // 2. COMPONENTE DE GRÁFICOS
 // ============================================================
-const LeadCharts = ({ leads }: { leads: any[] }) => {
+const LeadCharts = ({ leads, role }: { leads: any[], role: Role }) => {
   const dataOrigem = useMemo(() => {
     const counts = leads.reduce((acc: any, lead) => {
       acc[lead.origin] = (acc[lead.origin] || 0) + 1;
@@ -52,9 +55,9 @@ const LeadCharts = ({ leads }: { leads: any[] }) => {
   }, [leads]);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: role === 'LIDER' ? '1fr' : '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
       <div style={chartCardStyle}>
-        <h4 style={chartTitleStyle}>Origem dos Leads (Real Time)</h4>
+        <h4 style={chartTitleStyle}>Origem dos Leads ({role === 'ADMIN' ? 'Geral' : 'Equipe'})</h4>
         <div style={{ height: 250 }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -69,57 +72,88 @@ const LeadCharts = ({ leads }: { leads: any[] }) => {
           </ResponsiveContainer>
         </div>
       </div>
-      <div style={chartCardStyle}>
-        <h4 style={chartTitleStyle}>Taxa de Vendas por Origem (%)</h4>
-        <div style={{ height: 250 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={dataConversao}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
-              <YAxis axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
-              <Tooltip cursor={{ fill: '#f1f5f9' }} />
-              <Bar dataKey="conversao" fill="#38a169" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+
+      {role !== 'LIDER' && (
+        <div style={chartCardStyle}>
+          <h4 style={chartTitleStyle}>Taxa de Vendas por Origem (%)</h4>
+          <div style={{ height: 250 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dataConversao}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
+                <YAxis axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
+                <Tooltip cursor={{ fill: '#f1f5f9' }} />
+                <Bar dataKey="conversao" fill="#38a169" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
 // ============================================================
-// 3. COMPONENTE PRINCIPAL DASHBOARD (CORRIGIDO)
+// 3. COMPONENTE PRINCIPAL DASHBOARD
 // ============================================================
 export default function Dashboard() {
-  const [leads] = useState(MOCK_LEADS_DATABASE);
+  // ✅ DINÂMICO: Lê o cargo que salvamos no Login
+  const USER_ROLE = (localStorage.getItem('@LeadsCar:role') as Role) || 'LIDER';
+  const USER_NAME = localStorage.getItem('@LeadsCar:userName') || 'Colaborador';
 
-  const totalLeads = leads.length;
-  const emNegociacao = leads.filter(l => l.status === 'Negociação').length;
-  const vendas = leads.filter(l => l.status === 'Venda').length;
+  const [allLeads] = useState(MOCK_LEADS_DATABASE);
+
+  const filteredLeads = useMemo(() => {
+    if (USER_ROLE === 'ADMIN') return allLeads;
+    // Gerente e Líder veem apenas a equipe "Norte"
+    return allLeads.filter(l => l.equipe === 'Norte');
+  }, [allLeads, USER_ROLE]);
+
+  const totalLeads = filteredLeads.length;
+  const emNegociacao = filteredLeads.filter(l => l.status === 'Negociação').length;
+  const vendas = filteredLeads.filter(l => l.status === 'Venda').length;
+
+  // ✅ Estilo do Badge movido para cá para evitar erro de tipos no TS
+  const roleBadgeStyle: CSSProperties = {
+    backgroundColor: USER_ROLE === 'ADMIN' ? '#dcfce7' : '#f1f5f9',
+    color: USER_ROLE === 'ADMIN' ? '#166534' : '#475569',
+    padding: '4px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    textTransform: 'uppercase'
+  };
 
   return (
-    <> {/* Removido a div flex e a Sidebar que causavam duplicidade */}
+    <div style={{ padding: '20px' }}>
       <section style={bannerStyle}>
         <div>
-          <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Dashboard</h1>
-          <p style={{ color: '#64748b', fontSize: '16px', marginTop: '4px' }}>Gestão de performance em tempo real.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+             <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b', margin: 0 }}>
+               Olá, {USER_NAME.split('.')[0]}
+             </h1>
+             <span style={roleBadgeStyle}>{USER_ROLE}</span>
+          </div>
+          <p style={{ color: '#64748b', fontSize: '16px', marginTop: '4px' }}>
+            {USER_ROLE === 'ADMIN' ? 'Visão global da operação.' : 'Visão limitada aos dados da sua equipe.'}
+          </p>
         </div>
-        <img src="/logo.png" alt="Carro" style={{ width: '180px' }} />
+        <img src="/logo.png" alt="Logo" style={{ width: '150px' }} />
       </section>
 
-      <LeadCharts leads={leads} />
+      <LeadCharts leads={filteredLeads} role={USER_ROLE} />
 
       <div style={gridStyle}>
-        <StatCard label="Total Leads" value={totalLeads.toString()} trend="Atualizado" color="#3b82f6" icon="👥" />
+        <StatCard label={USER_ROLE === 'ADMIN' ? "Total Leads Geral" : "Leads Equipe"} value={totalLeads.toString()} trend="Sincronizado" color="#3b82f6" icon="👥" />
         <StatCard label="Em Negociação" value={emNegociacao.toString()} trend="Ativos" color="#f59e0b" icon="🤝" />
         <StatCard label="Vendas" value={vendas.toString()} trend="Concluídas" color="#10b981" icon="💰" />
       </div>
-    </>
+    </div>
   );
 }
 
 // ============================================================
-// COMPONENTES AUXILIARES E ESTILOS
+// COMPONENTES AUXILIARES
 // ============================================================
 const StatCard = ({ label, value, trend, color, icon }: any) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -141,6 +175,10 @@ const StatCard = ({ label, value, trend, color, icon }: any) => {
   );
 };
 
+<<<<<<< HEAD
+// Estilos base
+=======
+>>>>>>> main
 const bannerStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: '32px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '24px' };
 const gridStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' };
 const cardStyle: CSSProperties = { backgroundColor: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', position: 'relative', overflow: 'hidden', transition: 'all 0.3s ease' };
@@ -152,4 +190,8 @@ const valueStyle: CSSProperties = { fontSize: '32px', fontWeight: 800, color: '#
 const trendStyle: CSSProperties = { fontSize: '12px', fontWeight: 700 };
 const iconCircle: CSSProperties = { width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const chartCardStyle: CSSProperties = { backgroundColor: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' };
+<<<<<<< HEAD
 const chartTitleStyle: CSSProperties = { fontSize: '16px', fontWeight: 700, color: '#475569', marginBottom: '20px' };
+=======
+const chartTitleStyle: CSSProperties = { fontSize: '16px', fontWeight: 700, color: '#475569', marginBottom: '20px' };
+>>>>>>> main

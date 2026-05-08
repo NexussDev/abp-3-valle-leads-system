@@ -47,12 +47,8 @@ class LeadService {
     storeId?: string; 
 }): Promise<Lead> {
     return leadRepository.create({
-      origin: data.origin as any,
-      name: data.name,
-      phone: data.phone,
-      status: data.status || 'Novo Lead',
-      ...(data.clientId ? { client: { connect: { id: data.clientId } } } : {}),
-      ...(data.sourceId ? { source: { connect: { id: data.sourceId } } } : {}),
+      origin: data.origin,
+      client: { connect: { id: data.clientId } },
       user: { connect: { id: data.userId } },
       team: { connect: { id: data.teamId } },
       store: { connect: { id: data.storeId } },

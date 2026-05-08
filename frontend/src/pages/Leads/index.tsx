@@ -1,5 +1,15 @@
 <<<<<<< HEAD
 console.log('NOVO CODIGO CARREGADO');
+<<<<<<< HEAD
+import { LeadStage } from './utils/leadStageValidator';
+import { useKanbanBoard, MoveResult } from './hooks/useKanbanBoard';
+
+// ============================================================
+// TYPES
+// ============================================================
+type StageOption = { id: LeadStage; title: string };
+type MoveLeadFn = (leadId: string, from: LeadStage, to: LeadStage) => MoveResult;
+=======
 import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 <<<<<<< HEAD
@@ -23,6 +33,7 @@ type LeadStage =
   | 'proposta_enviada'
   | 'em_negociacao'
   | 'vendido';
+>>>>>>> main
 
 interface Lead {
   id: string;
@@ -160,9 +171,21 @@ const groupLeadsIntoColumns = (leads: LeadFromAPI[]): KanbanCol[] => {
 // ============================================================
 // LEAD CARD
 // ============================================================
+<<<<<<< HEAD
+function LeadCard({
+  lead,
+  stageOptions,
+  onMove,
+}: {
+  lead: Lead;
+  stageOptions: StageOption[];
+  onMove: MoveLeadFn;
+}) {
+=======
 function LeadCard({ lead }: { lead: Lead }) {
   const [showModal, setShowModal] = useState(false);
 
+>>>>>>> main
   const st = STATUS_STYLES[lead.status] || { bg: '#718096', color: '#fff' };
   return (
     <div
@@ -215,6 +238,33 @@ function LeadCard({ lead }: { lead: Lead }) {
             {SOURCE_ICONS[lead.origin] || '📋'} {lead.origin}
           </span>
         )}
+<<<<<<< HEAD
+      </div>
+
+      <select
+        aria-label={`Mover ${lead.name} para outra etapa`}
+        value={lead.stage}
+        onChange={e => {
+          const target = e.target.value as LeadStage;
+          if (target === lead.stage) return;
+          const result = onMove(lead.id, lead.stage, target);
+          if (!result.success) {
+            window.alert(result.error);
+            e.target.value = lead.stage;
+          }
+        }}
+        style={{
+          marginTop: 10, width: '100%', padding: '6px 8px',
+          fontSize: 11, color: '#4a5568', background: '#f7fafc',
+          border: '1px solid #e2e8f0', borderRadius: 4, cursor: 'pointer',
+        }}
+      >
+        {stageOptions.map(opt => (
+          <option key={opt.id} value={opt.id}>{opt.title}</option>
+        ))}
+      </select>
+    </div>
+=======
        </div>
 
 {}
@@ -235,13 +285,22 @@ function LeadCard({ lead }: { lead: Lead }) {
   />
 )}
 </div>
+>>>>>>> main
   );
 }
 
 // ============================================================
 // KANBAN COLUMN
 // ============================================================
-function KanbanColumn({ col }: { col: KanbanCol }) {
+function KanbanColumn({
+  col,
+  stageOptions,
+  onMove,
+}: {
+  col: KanbanCol;
+  stageOptions: StageOption[];
+  onMove: MoveLeadFn;
+}) {
   const total = col.leads.reduce((s, l) => s + l.price, 0);
   return (
     <div style={{ minWidth: 235, width: 235, flexShrink: 0, display: 'flex', flexDirection: 'column', borderRadius: 8, overflow: 'hidden', background: '#f7fafc', border: '1px solid #e2e8f0' }}>
@@ -257,10 +316,16 @@ function KanbanColumn({ col }: { col: KanbanCol }) {
         <span style={{ fontSize: 11, color: '#a0aec0' }}> — {col.leads.length} leads</span>
       </div>
       <div style={{ padding: '10px 8px', overflowY: 'auto', flex: 1, maxHeight: 'calc(100vh - 290px)' }}>
+<<<<<<< HEAD
+        {col.leads.map(lead => (
+          <LeadCard key={lead.id} lead={lead} stageOptions={stageOptions} onMove={onMove} />
+        ))}
+=======
         {col.leads.length === 0
           ? <div style={{ textAlign: 'center', color: '#a0aec0', fontSize: 12, padding: '20px 0' }}>Nenhum lead</div>
           : col.leads.map(lead => <LeadCard key={lead.id} lead={lead} />)
         }
+>>>>>>> main
       </div>
     </div>
   );
@@ -731,6 +796,10 @@ const btnSaveStyle: React.CSSProperties = { flex: 1, padding: 12, borderRadius: 
 
 export default function LeadsPage() {
 <<<<<<< HEAD
+  const { columns, moveLead } = useKanbanBoard<KanbanCol>(MOCK_DATA);
+  const stageOptions: StageOption[] = columns.map(c => ({ id: c.id, title: c.title }));
+=======
+<<<<<<< HEAD
   const [columns, setColumns] = useState<KanbanCol[]>(MOCK_DATA);
   const [isModalOpen, setIsModalOpen] = useState(false);
 =======
@@ -747,6 +816,7 @@ export default function LeadsPage() {
 >>>>>>> main
 >>>>>>> main
   const navigate = useNavigate();
+>>>>>>> main
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#edf2f7', overflow: 'hidden', fontFamily: 'system-ui, sans-serif' }}>
@@ -812,7 +882,9 @@ export default function LeadsPage() {
 
       <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', padding: 16 }}>
         <div style={{ display: 'flex', gap: 12, height: '100%', minWidth: 'max-content' }}>
-          {columns.map(col => <KanbanColumn key={col.id} col={col} />)}
+          {columns.map(col => (
+            <KanbanColumn key={col.id} col={col} stageOptions={stageOptions} onMove={moveLead} />
+          ))}
         </div>
       </div>
 

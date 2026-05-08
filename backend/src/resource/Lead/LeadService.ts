@@ -49,10 +49,27 @@ class LeadService {
     sourceId?: string;
     userId: string;
     teamId: string;
-    storeId?: string; 
-}): Promise<Lead> {
-    return leadRepository.create({
+    storeId: string;
+    name?: string;
+    phone?: string;
+  }): Promise<Lead> {
+    const required = {
       origin: data.origin,
+      clientId: data.clientId,
+      userId: data.userId,
+      teamId: data.teamId,
+      storeId: data.storeId,
+    };
+    for (const [field, value] of Object.entries(required)) {
+      if (typeof value !== 'string' || value.trim() === '') {
+        throw new AppError(`Campo obrigatório ausente ou inválido: ${field}`, 400);
+      }
+    }
+
+    return leadRepository.create({
+      origin: data.origin as any,
+      name: data.name,
+      phone: data.phone,
       client: { connect: { id: data.clientId } },
       user: { connect: { id: data.userId } },
       team: { connect: { id: data.teamId } },

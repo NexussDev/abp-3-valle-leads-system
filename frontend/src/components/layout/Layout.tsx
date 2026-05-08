@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import Header from '../Header/Header';
-// ❌ Removida a linha: import { Outlet } from 'react-router-dom';
 
 interface LayoutProps {
   children: ReactNode;

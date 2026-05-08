@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import userRoutes from '../src/resource/User/userRoutes';
-import leadRoutes from '../src/resource/Lead/leadRoutes';
+import userRoutes from './resource/User/userRoutes';
+import leadRoutes from './resource/Lead/leadRoutes';
+import leadSourceRoutes from './resource/LeadSource/leadSourceRoutes';
 
 const router = Router();
 
@@ -10,5 +11,6 @@ router.get('/health', (req, res) => {
 
 router.use('/users', userRoutes);
 router.use('/leads', leadRoutes);
+router.use('/lead-sources', leadSourceRoutes);
 
-export default router;
+export default router;  

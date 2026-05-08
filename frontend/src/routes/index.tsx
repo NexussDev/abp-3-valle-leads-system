@@ -34,6 +34,7 @@ export function AppRoutes() {
 
         {/* Redirecionamento de segurança */}
         <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
       </Routes>
     </BrowserRouter>
   );

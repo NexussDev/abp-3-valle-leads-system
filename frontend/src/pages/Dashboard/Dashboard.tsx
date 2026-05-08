@@ -175,7 +175,10 @@ const StatCard = ({ label, value, trend, color, icon }: any) => {
   );
 };
 
+<<<<<<< HEAD
 // Estilos base
+=======
+>>>>>>> main
 const bannerStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: '32px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '24px' };
 const gridStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' };
 const cardStyle: CSSProperties = { backgroundColor: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', position: 'relative', overflow: 'hidden', transition: 'all 0.3s ease' };
@@ -187,4 +190,8 @@ const valueStyle: CSSProperties = { fontSize: '32px', fontWeight: 800, color: '#
 const trendStyle: CSSProperties = { fontSize: '12px', fontWeight: 700 };
 const iconCircle: CSSProperties = { width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const chartCardStyle: CSSProperties = { backgroundColor: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' };
+<<<<<<< HEAD
 const chartTitleStyle: CSSProperties = { fontSize: '16px', fontWeight: 700, color: '#475569', marginBottom: '20px' };
+=======
+const chartTitleStyle: CSSProperties = { fontSize: '16px', fontWeight: 700, color: '#475569', marginBottom: '20px' };
+>>>>>>> main

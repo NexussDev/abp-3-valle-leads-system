@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import Sidebar from '../Sidebar/Sidebar';
+import { ReactNode, useState } from 'react';
+import { Sidebar } from '../Sidebar/Sidebar';
 import Header from '../Header/Header';
 
 interface LayoutProps {
@@ -7,11 +7,20 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
+  // Estado para controlar se a sidebar está aberta ou fechada
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleSidebar = () => setIsExpanded(!isExpanded);
+
   return (
-    // ✅ Agora 'styles' está sendo lido aqui embaixo
     <div style={styles.layoutContainer}>
-      <Sidebar />
-      <div style={styles.mainWrapper}>
+      {/* Passamos o estado e a função para a Sidebar */}
+      <Sidebar isExpanded={isExpanded} toggleSidebar={toggleSidebar} />
+      
+      <div style={{ 
+        ...styles.mainWrapper, 
+        marginLeft: isExpanded ? '260px' : '80px' // Ajusta o conteúdo conforme a sidebar
+      }}>
         <Header />
         <main style={styles.contentArea}>
           {children}
@@ -21,7 +30,6 @@ export default function Layout({ children }: LayoutProps) {
   );
 }
 
-// ✅ Definição do objeto styles (agora sendo lido pelo componente acima)
 const styles: { [key: string]: React.CSSProperties } = {
   layoutContainer: {
     display: 'flex',
@@ -35,6 +43,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    transition: 'margin-left 0.3s ease', // Suaviza o movimento do conteúdo
   },
   contentArea: {
     flex: 1,

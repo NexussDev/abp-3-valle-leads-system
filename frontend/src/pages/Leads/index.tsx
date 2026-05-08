@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
 =======
 import { useState, useEffect } from 'react';
 import { getLeads, createLead, getLeadSources, LeadFromAPI, LeadSource, updateLead  } from '../../services/leads';
+>>>>>>> main
 >>>>>>> main
 >>>>>>> main
 
@@ -263,6 +266,8 @@ function KanbanColumn({ col }: { col: KanbanCol }) {
 // ============================================================
 // CREATE LEAD MODAL
 // ============================================================
+<<<<<<< HEAD
+=======
 interface CreateLeadModalProps {
   onClose: () => void;
   onSuccess: () => void;
@@ -566,6 +571,7 @@ function ChangeStatusModal({
 // ============================================================
 // MAIN PAGE
 // ============================================================
+>>>>>>> main
 function AddLeadModal({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose: () => void, onAdd: (lead: any) => void }) {
   const [nome, setNome] = useState('');
   const [contato, setContato] = useState(''); // Campo para Email/Telefone
@@ -646,7 +652,12 @@ export default function LeadsPage() {
   const [columns, setColumns] = useState<KanbanCol[]>(MOCK_DATA);
   const [isModalOpen, setIsModalOpen] = useState(false);
 =======
+<<<<<<< HEAD
+  const [columns, setColumns] = useState<KanbanCol[]>(MOCK_DATA);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+=======
   const [columns] = useState<KanbanCol[]>(MOCK_DATA);
+>>>>>>> main
 >>>>>>> main
   const navigate = useNavigate();
 
@@ -658,6 +669,10 @@ export default function LeadsPage() {
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
   
+<<<<<<< HEAD
+  {/* BOTÃO ORIGINAL */}
+  <button onClick={() => setIsModalOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+=======
   <button
   onClick={() => navigate("/dashboard")}
   style={{
@@ -682,6 +697,7 @@ export default function LeadsPage() {
   <button onClick={() => setIsModalOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
 =======
   <button style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+>>>>>>> main
 >>>>>>> main
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

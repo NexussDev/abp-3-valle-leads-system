@@ -9,9 +9,30 @@ export function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Rotas SEM Sidebar (Login) */}
         <Route path="/" element={<ClientLogin />} />
         <Route path="/colaborador" element={<Login />} />
-        <Route path="/leads" element={<LeadsPage />} />
+
+        {/* Rotas COM Sidebar (Envolvidas pelo Layout) */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <Layout>
+              <Dashboard />
+            </Layout>
+          } 
+        />
+        
+        <Route 
+          path="/leads" 
+          element={
+            <Layout>
+              <LeadsPage />
+            </Layout>
+          } 
+        />
+
+        {/* Redirecionamento de segurança */}
         <Route path="*" element={<Navigate to="/" />} />
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
       </Routes>

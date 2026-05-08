@@ -1,57 +1,104 @@
-export default function Sidebar() {
-  return (
-    <aside style={sidebarStyle}>
-      <div style={logoArea}>
-        <span style={{ fontSize: '22px' }}>🏎️</span>
-        <strong style={{ fontSize: '20px', color: '#fff' }}>LeadsCar</strong>
-      </div>
-      
-      <nav style={navStyle}>
-        <a href="/dashboard" style={navItemActive}>Dashboard</a>
-        <a href="/leads" style={navItem}>Leads (Kanban)</a>
-      </nav>
-    </aside>
-  );
+import React, { CSSProperties } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+// 1. Definimos a interface para o TypeScript parar de dar erro
+interface SidebarProps {
+  isExpanded: boolean;
+  toggleSidebar: () => void;
 }
 
-const sidebarStyle: React.CSSProperties = {
-  width: '260px',
-  backgroundColor: '#0f172a',
+// 2. Aplicamos a interface nas propriedades do componente
+export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <div 
+      style={{
+        ...sidebarContainer, 
+        width: isExpanded ? '260px' : '80px'
+      }}
+    >
+      {/* Botão de Expandir/Recolher */}
+      <div onClick={toggleSidebar} style={toggleButtonStyle}>
+        {isExpanded ? '◀' : '▶'}
+      </div>
+
+      {/* Logo Section */}
+      <div style={{...logoSection, justifyContent: isExpanded ? 'flex-start' : 'center'}}>
+        <div style={logoIcon}>🚗</div>
+        {isExpanded && <span style={logoText}>LeadsCar</span>}
+      </div>
+
+      {/* Navigation Links */}
+      <nav style={navStyle}>
+        <div 
+          onClick={() => navigate('/dashboard')}
+          style={isActive('/dashboard') ? activeLinkStyle : linkStyle}
+        >
+          <span>📊</span>
+          {isExpanded && <span style={{ marginLeft: '12px' }}>Dashboard</span>}
+        </div>
+        
+        <div 
+          onClick={() => navigate('/leads')}
+          style={isActive('/leads') ? activeLinkStyle : linkStyle}
+        >
+          <span>📋</span>
+          {isExpanded && <span style={{ marginLeft: '12px' }}>Leads (Kanban)</span>}
+        </div>
+      </nav>
+    </div>
+  );
+};
+
+// --- ESTILOS MANTIDOS ---
+const sidebarContainer: CSSProperties = {
+  height: '100vh',
+  backgroundColor: '#111827',
+  color: '#fff',
   display: 'flex',
   flexDirection: 'column',
-  padding: '24px'
+  padding: '24px 12px',
+  position: 'fixed',
+  left: 0,
+  top: 0,
+  zIndex: 1000,
+  transition: 'width 0.3s ease',
+  overflow: 'hidden'
 };
 
-const logoArea: React.CSSProperties = {
+const toggleButtonStyle: CSSProperties = {
+  position: 'absolute',
+  right: '10px',
+  top: '20px',
+  cursor: 'pointer',
+  backgroundColor: '#374151',
+  borderRadius: '50%',
+  width: '24px',
+  height: '24px',
   display: 'flex',
   alignItems: 'center',
-  gap: '12px',
-  marginBottom: '40px',
-  paddingLeft: '12px'
+  justifyContent: 'center',
+  fontSize: '10px'
 };
 
-const navStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '8px' };
-// Melhore o navItemActive no seu Sidebar.tsx
-const navItemActive: React.CSSProperties = {
+const logoSection: CSSProperties = { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '48px', height: '40px' };
+const logoIcon: CSSProperties = { fontSize: '24px' };
+const logoText: CSSProperties = { fontSize: '20px', fontWeight: 'bold', whiteSpace: 'nowrap' };
+const navStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: '12px' };
+
+const baseLink: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '12px',
-  color: '#fff',
-  backgroundColor: '#3b82f6', // Um azul mais vivo
-  padding: '12px 16px',
+  padding: '12px',
   borderRadius: '10px',
-  textDecoration: 'none',
-  fontWeight: 600,
-  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)', // Efeito de brilho
+  cursor: 'pointer',
+  transition: '0.2s',
+  whiteSpace: 'nowrap'
 };
 
-const navItem: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  color: '#94a3b8',
-  padding: '12px 16px',
-  borderRadius: '10px',
-  textDecoration: 'none',
-  transition: 'all 0.2s ease',
-};
+const activeLinkStyle: CSSProperties = { ...baseLink, backgroundColor: '#3b82f6', color: '#fff' };
+const linkStyle: CSSProperties = { ...baseLink, color: '#9ca3af' };

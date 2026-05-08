@@ -1,5 +1,11 @@
+<<<<<<< HEAD
+console.log('NOVO CODIGO CARREGADO');
+import { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+=======
 import { useState, useEffect } from 'react';
 import { getLeads, createLead, getLeadSources, LeadFromAPI, LeadSource, updateLead  } from '../../services/leads';
+>>>>>>> main
 
 type LeadStage =
   | 'novo_lead'
@@ -558,50 +564,38 @@ function ChangeStatusModal({
 // MAIN PAGE
 // ============================================================
 export default function LeadsPage() {
-  const [columns, setColumns] = useState<KanbanCol[]>(MOCK_DATA);
-  const [sources, setSources] = useState<LeadSource[]>(DEFAULT_SOURCES);
-  const [loading, setLoading] = useState(false);
-  const [usingMock, setUsingMock] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-
-  const fetchLeads = async () => {
-    setLoading(true);
-    try {
-      const leads = await getLeads();
-      setColumns(groupLeadsIntoColumns(leads));
-      setUsingMock(false);
-    } catch (err) {
-      console.warn('API indisponível, usando dados mock:', err);
-      setColumns(MOCK_DATA);
-      setUsingMock(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSources = async () => {
-    try {
-      const data = await getLeadSources();
-      if (data && data.length > 0) setSources(data);
-    } catch {
-      // Mantém origens padrão se API falhar
-      setSources(DEFAULT_SOURCES);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeads();
-    fetchSources();
-  }, []);
+  const [columns] = useState<KanbanCol[]>(MOCK_DATA);
+  const navigate = useNavigate();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#edf2f7', overflow: 'hidden', fontFamily: 'system-ui, sans-serif' }}>
-
-      {showModal && <CreateLeadModal onClose={() => setShowModal(false)} onSuccess={() => fetchLeads()} sources={sources} />}
-
+      
+      {/* Toolbar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+        
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => setShowModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+  
+  <button
+  onClick={() => navigate("/dashboard")}
+  style={{
+    width: 40,
+    height: 40,
+    background: 'red',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 18
+  }}
+>
+  D
+</button>
+
+  {/* BOTÃO ORIGINAL */}
+  <button style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>

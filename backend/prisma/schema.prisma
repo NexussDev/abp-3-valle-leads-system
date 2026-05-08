@@ -7,6 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+model Store {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String @db.VarChar(100)
+
+  leads Lead[]
+
+  @@map("store")
+}
+
 model Team {
   id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name  String @db.VarChar(100)
@@ -85,6 +95,7 @@ model Lead {
   clientId  String?   @map("client_id") @db.Uuid
   sourceId  String?   @map("source_id") @db.Uuid
   carId     String?   @map("car_id") @db.Uuid
+  storeId String? @map("store_id") @db.Uuid
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
 
   car         Car?         @relation(fields: [carId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -93,6 +104,9 @@ model Lead {
   store       Store        @relation(fields: [storeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   team        Team         @relation(fields: [teamId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user        User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+store Store? @relation(fields: [storeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   negotiation Negotiation?
 
   @@map("lead")

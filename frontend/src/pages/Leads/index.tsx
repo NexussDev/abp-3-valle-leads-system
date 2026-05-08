@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getLeads, createLead, getLeadSources, LeadFromAPI, LeadSource } from '../../services/leads';
+import { getLeads, createLead, getLeadSources, LeadFromAPI, LeadSource, updateLead  } from '../../services/leads';
 
 type LeadStage =
   | 'novo_lead'
@@ -146,9 +146,12 @@ const groupLeadsIntoColumns = (leads: LeadFromAPI[]): KanbanCol[] => {
 // LEAD CARD
 // ============================================================
 function LeadCard({ lead }: { lead: Lead }) {
+  const [showModal, setShowModal] = useState(false);
+
   const st = STATUS_STYLES[lead.status] || { bg: '#718096', color: '#fff' };
   return (
     <div
+    onClick={() => setShowModal(true)}
       style={{ background: '#fff', borderRadius: 8, padding: '10px 12px', marginBottom: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #edf2f7', cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.13)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
@@ -197,8 +200,26 @@ function LeadCard({ lead }: { lead: Lead }) {
             {SOURCE_ICONS[lead.origin] || '📋'} {lead.origin}
           </span>
         )}
-      </div>
-    </div>
+       </div>
+
+{}
+{showModal && (
+  <ChangeStatusModal
+    lead={lead}
+    onClose={() => setShowModal(false)}
+    onSave={async (status, justification) => {
+      try {
+        await updateLead(lead.id, { status, justification });
+        setShowModal(false);
+        window.location.reload();
+      } catch (err: any) {
+        console.error('ERRO COMPLETO:', err);
+        alert(err.message || 'Erro ao atualizar lead');
+      }
+    }}
+  />
+)}
+</div>
   );
 }
 
@@ -349,6 +370,183 @@ function CreateLeadModal({ onClose, onSuccess, sources }: CreateLeadModalProps) 
           <button onClick={onClose} style={{ flex: 1, padding: '10px 0', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', color: '#4a5568', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
           <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '10px 0', border: 'none', borderRadius: 6, background: loading ? '#9ae6b4' : '#38a169', color: '#fff', fontSize: 13, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer' }}>
             {loading ? 'Salvando...' : '+ Criar Lead'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function ChangeStatusModal({
+  lead,
+  onClose,
+  onSave
+}: {
+  lead: Lead;
+  onClose: () => void;
+  onSave: (status: string, justification?: string) => void;
+}) {
+  const [status, setStatus] = useState(lead.status);
+  const [justification, setJustification] = useState('');
+  const [error, setError] = useState('');
+
+  const FLOW = [
+    'Novo Lead',
+    'Contato Realizado',
+    'Proposta Enviada',
+    'Em Negociação',
+    'Vendido'
+  ];
+
+  const currentIndex = FLOW.indexOf(lead.status);
+  const newIndex = FLOW.indexOf(status);
+
+  const handleSave = () => {
+    if (newIndex > currentIndex + 1 && !justification) {
+      setError('Justificativa obrigatória ao pular etapas');
+      return;
+    }
+
+    if (status === 'Vendido' && currentIndex < FLOW.length - 2) {
+      setError('Não pode fechar sem passar por todas as etapas');
+      return;
+    }
+
+    setError('');
+    onSave(status, justification);
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    border: '1px solid #e2e8f0',
+    borderRadius: 6,
+    fontSize: 13,
+    background: '#f7fafc'
+  };
+
+  const labelStyle = {
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#4a5568',
+    marginBottom: 6
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        style={{
+          background: '#fff',
+          borderRadius: 12,
+          padding: 24,
+          width: 420,
+          maxWidth: '90vw',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* HEADER */}
+        <div style={{ marginBottom: 20 }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1a202c' }}>
+            Alterar Status
+          </h2>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#718096' }}>
+            Atualize a etapa do lead
+          </p>
+        </div>
+
+        {/* FORM */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          
+          <div>
+            <label style={labelStyle}>Novo status</label>
+            <select
+              style={inputStyle}
+              value={status}
+              onChange={e => setStatus(e.target.value)}
+            >
+              {FLOW.map(s => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          {newIndex > currentIndex + 1 && (
+            <div>
+              <label style={labelStyle}>Justificativa *</label>
+              <textarea
+                style={{ ...inputStyle, minHeight: 80, resize: 'none' }}
+                placeholder="Explique por que está pulando etapas..."
+                value={justification}
+                onChange={e => setJustification(e.target.value)}
+              />
+            </div>
+          )}
+
+          {error && (
+            <div
+              style={{
+                background: '#fff5f5',
+                border: '1px solid #fed7d7',
+                borderRadius: 6,
+                padding: '10px 12px',
+                fontSize: 13,
+                color: '#c53030'
+              }}
+            >
+              {error}
+            </div>
+          )}
+        </div>
+
+        {/* ACTIONS */}
+        <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: '10px 0',
+              border: '1px solid #e2e8f0',
+              borderRadius: 6,
+              background: '#fff',
+              color: '#4a5568',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Cancelar
+          </button>
+
+          <button
+            onClick={handleSave}
+            style={{
+              flex: 2,
+              padding: '10px 0',
+              border: 'none',
+              borderRadius: 6,
+              background: '#38a169',
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Salvar
           </button>
         </div>
       </div>

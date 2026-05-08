@@ -64,3 +64,21 @@ export const createLead = async (lead: CreateLeadInput): Promise<LeadFromAPI> =>
   });
   return data;
 };
+
+export async function updateLead(id: string, data: any) {
+  const response = await fetch(`http://localhost:3000/api/leads/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(text || 'Erro ao atualizar lead');
+  }
+
+  return text ? JSON.parse(text) : {};
+}

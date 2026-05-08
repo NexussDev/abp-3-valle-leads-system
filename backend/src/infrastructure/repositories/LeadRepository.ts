@@ -4,14 +4,12 @@ import { Lead, Prisma } from '@prisma/client';
 class LeadRepository {
   async findAll(): Promise<Lead[]> {
     return prisma.lead.findMany({
+      orderBy: { createdAt: 'desc' },
       include: {
         client: true,
         user: {
           select: { id: true, name: true, email: true, role: true }
         },
-        team: true,
-        store: true,
-        negotiation: true,
       }
     });
   }

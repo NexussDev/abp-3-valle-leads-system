@@ -4,11 +4,15 @@ import ClientLogin from "../pages/ClientLogin/ClientLogin";
 import LeadsPage from "../pages/Leads/index"; // Aponta para a pasta Leads
 import Layout from "../components/layout/Layout";
 import Dashboard from "../pages/Dashboard/Dashboard";
+import Catalogo from "../pages/Catalogo/Catalogo";
 
 export function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+
+       <Route path="/catalogo" element={<Catalogo />} />
+
         {/* Rotas SEM Sidebar (Login) */}
         <Route path="/" element={<ClientLogin />} />
         <Route path="/colaborador" element={<Login />} />

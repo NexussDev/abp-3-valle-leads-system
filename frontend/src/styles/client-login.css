@@ -1,62 +1,414 @@
-.card-top-client {
-  background-color: #1c1c25;
-  width: 100%;
-  max-width: 450px;
-  padding: 20px;
-  border-radius: 15px 15px 0 0;
-  color: white;
-  position: relative;
-}
+/* ============================================================
+   CLIENT LOGIN — 1000 Valle  |  consistente com login.css
+   ============================================================ */
 
-.welcome-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 10px;
-}
+   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
 
-.text-box {
-  max-width: 50%;
-}
-
-.text-box h2 { font-size: 1.1rem; }
-.text-box p { font-size: 0.75rem; color: #ccc; }
-
-.car-img {
-  width: 160px;
-  height: auto;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  width: 100%;
-}
-
-.input-group label {
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: #555;
-  margin-bottom: 5px;
-}
-
-.btn-acesso-colaborador {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: transparent;
-  border: 1px solid #555;
-  color: #888;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.7rem;
-  transition: 0.3s;
-}
-
-.btn-acesso-colaborador:hover {
-  color: white;
-  border-color: white;
-  background: rgba(255, 255, 255, 0.1);
-}
+   /* ── tokens (espelha login.css) ── */
+   :root {
+     --red:       #c0392b;
+     --red-dark:  #962d22;
+     --dark:      #0f0f14;
+     --dark-2:    #16161e;
+     --surface:   #ffffff;
+     --border:    #e4e4ea;
+     --text:      #1a1a2e;
+     --muted:     #6b6b80;
+     --radius:    14px;
+     --shadow:    0 24px 64px rgba(0,0,0,.12);
+   }
+   
+   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+   body { font-family: 'DM Sans', sans-serif; }
+   
+   /* ============================================================
+      ROOT
+      ============================================================ */
+   .cl-root {
+     display: flex;
+     min-height: 100vh;
+     background: var(--dark);
+   }
+   
+   /* ============================================================
+      LEFT PANEL
+      ============================================================ */
+   .cl-left {
+     position: relative;
+     flex: 1 1 55%;
+     background: linear-gradient(145deg, #1a0a08 0%, #2c0f0a 40%, #0f0f14 100%);
+     overflow: hidden;
+     display: flex;
+     flex-direction: column;
+     padding: 40px 52px;
+   }
+   
+   .cl-left__overlay {
+     position: absolute;
+     inset: 0;
+     background:
+       radial-gradient(ellipse 70% 60% at 30% 35%, rgba(192,57,43,.22) 0%, transparent 70%),
+       radial-gradient(ellipse 40% 40% at 85% 75%, rgba(192,57,43,.1) 0%, transparent 60%);
+     pointer-events: none;
+   }
+   
+   /* decorative circles */
+   .cl-deco {
+     position: absolute;
+     border-radius: 50%;
+     border: 1px solid rgba(255,255,255,.05);
+     pointer-events: none;
+   }
+   .cl-deco--1 { width: 520px; height: 520px; top: -160px; left: -160px; }
+   .cl-deco--2 { width: 300px; height: 300px; bottom: 60px; right: -60px; border-color: rgba(192,57,43,.15); }
+   .cl-deco--3 { width: 160px; height: 160px; bottom: 200px; right: 90px; background: rgba(192,57,43,.05); border: none; }
+   
+   /* ── top bar: logo + switch button ── */
+   .cl-left__top {
+     position: relative;
+     z-index: 2;
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+   }
+   
+   .cl-left__logo {
+     width: 130px;
+     filter: brightness(0) invert(1);
+     opacity: .92;
+   }
+   
+   .cl-switch {
+     display: flex;
+     align-items: center;
+     gap: 7px;
+     background: rgba(255,255,255,.07);
+     border: 1px solid rgba(255,255,255,.14);
+     color: rgba(255,255,255,.65);
+     font-family: 'DM Sans', sans-serif;
+     font-size: .75rem;
+     font-weight: 500;
+     padding: 8px 14px;
+     border-radius: 99px;
+     cursor: pointer;
+     transition: background .2s, color .2s, border-color .2s;
+     letter-spacing: .02em;
+   }
+   .cl-switch svg { width: 14px; height: 14px; }
+   .cl-switch:hover {
+     background: rgba(255,255,255,.13);
+     color: #fff;
+     border-color: rgba(255,255,255,.3);
+   }
+   
+   /* ── main content ── */
+   .cl-left__content {
+     position: relative;
+     z-index: 2;
+     margin-top: 48px;
+     flex: 1;
+   }
+   
+   .cl-left__badge {
+     display: inline-block;
+     background: rgba(192,57,43,.25);
+     color: #f5a89a;
+     font-size: .7rem;
+     font-weight: 600;
+     letter-spacing: .09em;
+     text-transform: uppercase;
+     padding: 5px 13px;
+     border-radius: 99px;
+     border: 1px solid rgba(192,57,43,.35);
+     margin-bottom: 20px;
+   }
+   
+   .cl-left__headline {
+     font-family: 'Syne', sans-serif;
+     font-size: clamp(2rem, 3.5vw, 3rem);
+     font-weight: 800;
+     color: #fff;
+     line-height: 1.1;
+     letter-spacing: -.025em;
+     margin-bottom: 18px;
+   }
+   
+   .cl-left__sub {
+     font-size: .95rem;
+     color: rgba(255,255,255,.48);
+     line-height: 1.65;
+     max-width: 360px;
+     margin-bottom: 44px;
+   }
+   
+   /* stats row */
+   .cl-left__stats {
+     display: flex;
+     align-items: center;
+     gap: 24px;
+   }
+   
+   .cl-stat {
+     display: flex;
+     flex-direction: column;
+     gap: 3px;
+   }
+   .cl-stat strong {
+     font-family: 'Syne', sans-serif;
+     font-size: 1.25rem;
+     font-weight: 700;
+     color: #fff;
+   }
+   .cl-stat span {
+     font-size: .72rem;
+     color: rgba(255,255,255,.38);
+     white-space: nowrap;
+   }
+   
+   .cl-stat-divider {
+     width: 1px;
+     height: 36px;
+     background: rgba(255,255,255,.12);
+   }
+   
+   /* car image */
+   .cl-left__car {
+     position: relative;
+     z-index: 2;
+     width: min(380px, 75%);
+     margin-top: auto;
+     margin-left: auto;
+     margin-right: -20px;
+     filter: drop-shadow(0 20px 40px rgba(0,0,0,.5));
+     animation: floatCar 4s ease-in-out infinite;
+   }
+   
+   @keyframes floatCar {
+     0%, 100% { transform: translateY(0); }
+     50%       { transform: translateY(-10px); }
+   }
+   
+   .cl-left__copy {
+     position: relative;
+     z-index: 2;
+     margin-top: 20px;
+     font-size: .72rem;
+     color: rgba(255,255,255,.22);
+     letter-spacing: .04em;
+   }
+   
+   /* ============================================================
+      RIGHT PANEL
+      ============================================================ */
+   .cl-right {
+     flex: 0 0 45%;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     background: #f4f4f7;
+     padding: 40px 32px;
+   }
+   
+   /* ── card ── */
+   .cl-card {
+     width: 100%;
+     max-width: 430px;
+     background: var(--surface);
+     border-radius: 24px;
+     padding: 44px 40px 36px;
+     box-shadow: var(--shadow);
+     animation: cardIn .55s cubic-bezier(.22,.68,0,1.2) both;
+   }
+   
+   @keyframes cardIn {
+     from { opacity: 0; transform: translateY(28px) scale(.97); }
+     to   { opacity: 1; transform: none; }
+   }
+   
+   .cl-card__badge {
+     display: inline-block;
+     background: #fdecea;
+     color: var(--red);
+     font-size: .68rem;
+     font-weight: 600;
+     letter-spacing: .08em;
+     text-transform: uppercase;
+     padding: 5px 12px;
+     border-radius: 99px;
+     margin-bottom: 20px;
+     border: 1px solid rgba(192,57,43,.15);
+   }
+   
+   .cl-card__title {
+     font-family: 'Syne', sans-serif;
+     font-size: 1.55rem;
+     font-weight: 700;
+     color: var(--text);
+     letter-spacing: -.02em;
+     margin-bottom: 6px;
+   }
+   
+   .cl-card__subtitle {
+     font-size: .86rem;
+     color: var(--muted);
+     line-height: 1.55;
+     margin-bottom: 30px;
+   }
+   
+   /* ============================================================
+      FORM
+      ============================================================ */
+   .cl-form {
+     display: flex;
+     flex-direction: column;
+     gap: 16px;
+   }
+   
+   .clf-group { display: flex; flex-direction: column; gap: 7px; }
+   
+   .clf-label {
+     font-size: .78rem;
+     font-weight: 600;
+     color: var(--text);
+     letter-spacing: .03em;
+   }
+   
+   .clf-input-wrap {
+     position: relative;
+     display: flex;
+     align-items: center;
+   }
+   
+   .clf-icon {
+     position: absolute;
+     left: 14px;
+     width: 17px;
+     height: 17px;
+     color: var(--muted);
+     pointer-events: none;
+   }
+   
+   .clf-input {
+     width: 100%;
+     padding: 13px 16px 13px 42px;
+     background: #f9f9fb;
+     border: 1.5px solid var(--border);
+     border-radius: var(--radius);
+     font-family: 'DM Sans', sans-serif;
+     font-size: .9rem;
+     color: var(--text);
+     transition: border-color .2s, box-shadow .2s, background .2s;
+     outline: none;
+   }
+   .clf-input::placeholder { color: #b0b0be; }
+   .clf-input:focus {
+     border-color: var(--red);
+     background: #fff;
+     box-shadow: 0 0 0 4px rgba(192,57,43,.09);
+   }
+   
+   /* submit */
+   .clf-submit {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 10px;
+     width: 100%;
+     padding: 14px 24px;
+     background: var(--red);
+     color: #fff;
+     border: none;
+     border-radius: var(--radius);
+     font-family: 'DM Sans', sans-serif;
+     font-size: .92rem;
+     font-weight: 600;
+     letter-spacing: .02em;
+     cursor: pointer;
+     margin-top: 6px;
+     transition: background .2s, transform .15s, box-shadow .2s;
+     box-shadow: 0 6px 20px rgba(192,57,43,.3);
+   }
+   .clf-submit svg { width: 18px; height: 18px; transition: transform .2s; }
+   .clf-submit:hover:not(:disabled) {
+     background: var(--red-dark);
+     transform: translateY(-1px);
+     box-shadow: 0 10px 28px rgba(192,57,43,.35);
+   }
+   .clf-submit:hover:not(:disabled) svg { transform: translateX(4px); }
+   .clf-submit:active:not(:disabled) { transform: translateY(0); }
+   .clf-submit:disabled { opacity: .75; cursor: not-allowed; }
+   
+   /* success state */
+   .clf-submit:disabled:not(:has(.clf-spinner)) {
+     background: #27ae60;
+     box-shadow: 0 6px 20px rgba(39,174,96,.3);
+     opacity: 1;
+   }
+   
+   /* spinner */
+   .clf-spinner {
+     width: 18px;
+     height: 18px;
+     border: 2.5px solid rgba(255,255,255,.35);
+     border-top-color: #fff;
+     border-radius: 50%;
+     animation: spin .7s linear infinite;
+   }
+   @keyframes spin { to { transform: rotate(360deg); } }
+   
+   .cl-card__hint {
+     margin-top: 20px;
+     text-align: center;
+     font-size: .75rem;
+     color: var(--muted);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 6px;
+   }
+   .cl-card__hint::before {
+     content: '';
+     display: inline-block;
+     width: 12px;
+     height: 12px;
+     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b80' stroke-width='2'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
+     background-size: contain;
+     background-repeat: no-repeat;
+   }
+   
+   /* ============================================================
+      RESPONSIVE
+      ============================================================ */
+   @media (max-width: 900px) {
+     .cl-root { flex-direction: column; }
+   
+     .cl-left {
+       flex: 0 0 auto;
+       padding: 32px 28px 0;
+       min-height: auto;
+     }
+   
+     .cl-left__content { margin-top: 32px; }
+     .cl-left__headline { font-size: 1.7rem; }
+     .cl-left__sub { display: none; }
+     .cl-left__stats { display: none; }
+     .cl-left__copy { display: none; }
+   
+     .cl-left__car {
+       width: min(260px, 70%);
+       margin: 20px auto 0;
+       display: block;
+     }
+   
+     .cl-right {
+       flex: 1;
+       padding: 32px 20px 40px;
+     }
+   
+     .cl-card { padding: 32px 28px 28px; }
+   }
+   
+   @media (max-width: 480px) {
+     .cl-card { border-radius: 18px; }
+     .cl-card__title { font-size: 1.3rem; }
+   }

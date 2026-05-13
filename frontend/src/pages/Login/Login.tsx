@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Importe o hook de navegação
+import { useNavigate } from "react-router-dom";
 import "../../styles/login.css";
 
 export default function Login() {
@@ -7,74 +7,165 @@ export default function Login() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  const navigate = useNavigate(); // Inicializa o navegador do React Router
+  const [showPassword, setShowPassword] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro("");
     setLoading(true);
 
-    // Simula um pequeno atraso de rede
     setTimeout(() => {
-      // Regra de negócio mockada para definir o Role baseado no e-mail
       let role = "";
-      
-      if (senha === "123456") { // Senha padrão para todos os testes
+
+      if (senha === "123456") {
         if (email === "admin@1000valle.com") role = "ADMIN";
         else if (email === "gerente@1000valle.com") role = "GERENTE";
         else if (email === "lider@1000valle.com") role = "LIDER";
       }
 
       if (role !== "") {
-        // ✅ SALVANDO PERFIL: Aqui guardamos quem logou para o Dashboard e Leads consultarem
-        localStorage.setItem('@LeadsCar:role', role);
-        localStorage.setItem('@LeadsCar:userName', email.split('@')[0]);
-
+        localStorage.setItem("@LeadsCar:role", role);
+        localStorage.setItem("@LeadsCar:userName", email.split("@")[0]);
         console.log(`Login como ${role} realizado com sucesso!`);
-        navigate("/dashboard"); 
+        navigate("/dashboard");
       } else {
-        alert("E-mail ou senha incorretos! Use admin@, gerente@ ou lider@ com a senha 123456");
-        setErro("Credenciais inválidas");
+        setErro("E-mail ou senha incorretos.");
+        alert(
+          "E-mail ou senha incorretos! Use admin@, gerente@ ou lider@ com a senha 123456"
+        );
       }
       setLoading(false);
     }, 800);
   };
 
   return (
-    <div className="container">
-      <div className="card-top">
-        <img src="/logo.png" alt="Logo 1000 Valle" style={{ width: '150px' }} />
-        <h3>ÁREA DO COLABORADOR</h3>
+    <div className="login-root">
+      {/* ── Left panel ── */}
+      <div className="login-left">
+        <div className="login-left__overlay" />
+
+        {/* decorative circles */}
+        <span className="deco deco--1" />
+        <span className="deco deco--2" />
+        <span className="deco deco--3" />
+
+        <div className="login-left__content">
+          <img src="/logo.png" alt="1000 Valle" className="login-left__logo" />
+          <h1 className="login-left__headline">
+            A melhor experiência <br /> em negócios automotivos.
+          </h1>
+          <p className="login-left__sub">
+            Gestão de leads, equipes e resultados — tudo em um só lugar.
+          </p>
+        </div>
+
+        <p className="login-left__copy">© 2026 1000 Valle. Todos os direitos reservados.</p>
       </div>
 
-      <form className="card" onSubmit={handleLogin}>
-        <div className="input-group">
-          <input
-            type="email"
-            placeholder="EMAIL"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+      {/* ── Right panel ── */}
+      <div className="login-right">
+        <div className="login-card">
+          {/* header */}
+          <div className="login-card__header">
+            <span className="login-card__badge">Área do Colaborador</span>
+            <h2 className="login-card__title">Bem-vindo de volta</h2>
+            <p className="login-card__subtitle">
+              Faça login com seu e-mail e senha
+            </p>
+          </div>
+
+          {/* form */}
+          <form className="login-form" onSubmit={handleLogin} noValidate>
+            {/* email */}
+            <div className="lf-group">
+              <label className="lf-label" htmlFor="email">
+                E-mail
+              </label>
+              <div className="lf-input-wrap">
+                <svg className="lf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="2" y="4" width="20" height="16" rx="3" />
+                  <path d="M2 8l10 6 10-6" />
+                </svg>
+                <input
+                  id="email"
+                  type="email"
+                  className="lf-input"
+                  placeholder="Digite seu e-mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+            </div>
+
+            {/* password */}
+            <div className="lf-group">
+              <label className="lf-label" htmlFor="senha">
+                Senha
+              </label>
+              <div className="lf-input-wrap">
+                <svg className="lf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <input
+                  id="senha"
+                  type={showPassword ? "text" : "password"}
+                  className="lf-input"
+                  placeholder="Digite sua senha"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="lf-eye"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPassword ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* error */}
+            {erro && <p className="lf-error">{erro}</p>}
+
+            {/* submit */}
+            <button type="submit" className="lf-submit" disabled={loading}>
+              {loading ? (
+                <span className="lf-spinner" />
+              ) : (
+                <>
+                  Entrar na plataforma
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="login-card__hint">
+            Problemas para acessar? Fale com o seu gestor.
+          </p>
         </div>
-
-        <div className="input-group">
-          <input
-            type="password"
-            placeholder="SENHA"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            required
-          />
-        </div>
-
-        {erro && <p style={{ color: '#b33939', fontSize: '0.8rem', textAlign: 'center' }}>{erro}</p>}
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Verificando..." : "ENTRAR"}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

@@ -129,6 +129,7 @@ function VeiculoCard({
             <span className="cat-price-value">{v.preco}</span>
           </div>
 
+        <div className="cat-card__actions">
           <button
             className="cat-btn-save"
             onClick={() => setSalvo(s => !s)}
@@ -164,6 +165,7 @@ function VeiculoCard({
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }

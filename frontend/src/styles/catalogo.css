@@ -447,9 +447,15 @@ body {
   gap: .6rem;
   border-top: 1px solid var(--border);
   padding-top: 1rem;
+
+  flex-wrap: wrap; 
 }
 
-.cat-card__price { display: flex; flex-direction: column; margin-right: auto; }
+.cat-card__price {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 100%;
+}
 .cat-price-label {
   font-size: .62rem;
   color: var(--muted);
@@ -463,6 +469,22 @@ body {
   color: var(--red);
   letter-spacing: -.01em;
   line-height: 1;
+}
+
+/* card actions teste */
+.cat-card__actions {
+  display: flex;
+  gap: .5rem;
+  width: 100%;
+}
+
+.cat-btn-save {
+  flex-shrink: 0;
+}
+
+.cat-btn-interesse {
+  flex: 1;
+  min-width: 0; 
 }
 
 /* save button */

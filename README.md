@@ -93,15 +93,103 @@ abp-3-valle-leads-system/
 
 ## 🚀 Como Executar o Projeto
 
+### Pré-requisitos
+
+Antes de começar, você precisa ter instalado:
+
+- Docker
+- Docker Compose
+- Node.js
+- npm
+
+---
+
+### Clonar o repositório
+
 ```bash
-# Clonar o repositório
-git clone https://github.com/seu-repositorio.git
-
-# Acessar a pasta
+git clone https://github.com/NexussDev/abp-3-valle-leads-system.git
 cd abp-3-valle-leads-system
+```
 
-# Subir os containers
-docker-compose up
+---
+
+### Configurar variáveis de ambiente
+
+O projeto utiliza um arquivo `.env` para armazenar as configurações do banco de dados.
+
+Crie um arquivo `.env` nas pastas do backend e frontend com base nas informações do seu ambiente local.
+
+> O arquivo `.env` não é enviado para o GitHub por questões de segurança.
+
+---
+
+### Instalar dependências
+
+#### Backend
+
+```bash
+cd backend
+npm install
+```
+
+#### Frontend
+
+```bash
+cd ../frontend
+npm install
+```
+
+---
+
+### Subir o banco de dados com Docker
+
+```bash
+cd ..
+docker-compose up --build
+```
+
+O banco de dados já está integrado ao Docker.
+
+---
+
+### Rodar as migrations do Prisma
+
+```bash
+cd backend
+npx prisma migrate dev
+```
+
+---
+
+### Iniciar o projeto
+
+#### Backend
+
+```bash
+npm run dev
+```
+
+Backend disponível em:
+
+```txt
+http://localhost:3000
+```
+
+---
+
+#### Frontend
+
+Em outro terminal:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Frontend disponível em:
+
+```txt
+http://localhost:5173
 ```
 ---
 

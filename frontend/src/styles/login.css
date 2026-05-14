@@ -211,7 +211,7 @@
      border-radius: var(--radius);
      font-family: 'DM Sans', sans-serif;
      font-size: .9rem;
-     color: var(--text);
+     color: black;
      transition: border-color .2s, box-shadow .2s, background .2s;
      outline: none;
    }

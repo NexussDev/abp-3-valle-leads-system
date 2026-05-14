@@ -9,11 +9,14 @@ export default function ClientLogin() {
     whatsapp: "",
     cidade: "",
     veiculo: "",
+    origem: "",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -172,6 +175,35 @@ export default function ClientLogin() {
                   onChange={handleChange}
                   required
                 />
+              </div>
+            </div>
+
+            {/* origem */}
+            <div className="clf-group">
+              <label className="clf-label" htmlFor="origem">Como nos conheceu?</label>
+              <div className="clf-input-wrap">
+                <svg className="clf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M3 12h18" />
+                  <path d="M12 3l9 9-9 9" />
+                </svg>
+                
+                <select
+                  name="origem"
+                  className="clf-input"
+                  required
+                  value={formData.origem}
+                  onChange={handleChange}
+                >
+                  <option value="" disabled hidden>
+                    Selecione a origem
+                  </option>
+                  <option value="instagram">Instagram</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="site">Site</option>
+                  <option value="outros">Outros</option>
+
+                </select>
               </div>
             </div>
 

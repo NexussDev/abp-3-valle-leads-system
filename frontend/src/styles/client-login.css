@@ -290,23 +290,53 @@
    
    .clf-input {
      width: 100%;
-     padding: 13px 16px 13px 42px;
+     padding: 13px 40px 13px 42px;
      background: #f9f9fb;
      border: 1.5px solid var(--border);
      border-radius: var(--radius);
      font-family: 'DM Sans', sans-serif;
      font-size: .9rem;
-     color: var(--text);
+     color: black;
      transition: border-color .2s, box-shadow .2s, background .2s;
      outline: none;
+
+      appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
    }
-   .clf-input::placeholder { color: #b0b0be; }
+    .clf-input::placeholder {
+      color: #6b7280;
+    }
    .clf-input:focus {
      border-color: var(--red);
      background: #fff;
      box-shadow: 0 0 0 4px rgba(192,57,43,.09);
    }
-   
+
+         .clf-input-wrap:has(select)::after {
+           content: "";
+           position: absolute;
+           right: 14px;
+           width: 8px;
+           height: 8px;
+           border-right: 2px solid var(--muted);
+           border-bottom: 2px solid var(--muted);
+           transform: rotate(45deg);
+           pointer-events: none;
+         }
+
+          select.clf-input {
+                   cursor: pointer;
+                 }
+        
+          select.clf-input:invalid {
+                   color: #9ca3af;
+                   /* mesma vibe do placeholder */
+                 }
+          select.clf-input option {
+                      color: #1a1a2e;
+                    }
+
    /* submit */
    .clf-submit {
      display: flex;

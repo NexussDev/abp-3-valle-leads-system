@@ -1,3 +1,4 @@
+import { createLead } from '../../services/leads';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/client-login.css";
@@ -20,15 +21,25 @@ export default function ClientLogin() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      console.log("Dados do cliente cadastrados:", formData);
+  
+    try {
+      await createLead({
+        name: formData.nome,
+        phone: formData.whatsapp,
+        origin: formData.origem || 'Site',
+        status: 'novo_lead',
+      });
+  
       setLoading(false);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    }, 900);
+    } catch {
+      setLoading(false);
+      alert('Erro ao cadastrar. Tente novamente.');
+    }
   };
 
   return (

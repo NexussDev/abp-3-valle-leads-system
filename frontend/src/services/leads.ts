@@ -1,4 +1,4 @@
-import { api } from './api';
+import { client } from './leadsApi'; 
 
 export interface LeadFromAPI {
   id: string;
@@ -28,35 +28,33 @@ export interface CreateLeadInput {
   sourceId?: string;
 }
 
-// ⚠️ Atualize esses IDs após o setup do banco
-const DEFAULT_USER_ID   = 'COLE_O_USER_ID_AQUI';
-const DEFAULT_TEAM_ID   = 'COLE_O_TEAM_ID_AQUI';
-const DEFAULT_STORE_ID  = 'COLE_O_STORE_ID_AQUI';
-const DEFAULT_CLIENT_ID = 'COLE_O_CLIENT_ID_AQUI';
+const DEFAULT_USER_ID   = 'c4711469-a44f-4bdf-8c30-23a47865bb27';
+const DEFAULT_TEAM_ID   = '06d1ca8c-40b3-42cb-bb13-e7d05fb8cb1d';
+const DEFAULT_STORE_ID  = '10f3b81a-6cf7-48ec-8fcd-ea0268fbfc22';
+const DEFAULT_CLIENT_ID = '58c0cf8e-9462-4637-99d3-68e237ab6696';
 
 export const getLeads = async (): Promise<LeadFromAPI[]> => {
-  const data = await api.get('/api/leads');
+  const { data } = await client.get<LeadFromAPI[]>('/leads'); // ← .data
   return data;
 };
 
 export const getLeadById = async (id: string): Promise<LeadFromAPI> => {
-  const data = await api.get(`/api/leads/${id}`);
+  const { data } = await client.get<LeadFromAPI>(`/leads/${id}`); // ← .data
   return data;
 };
 
-// Busca origens de leads da API
 export const getLeadSources = async (): Promise<LeadSource[]> => {
-  const data = await api.get('/api/lead-sources');
+  const { data } = await client.get<LeadSource[]>('/lead-sources'); // ← .data
   return data;
 };
 
 export const createLead = async (lead: CreateLeadInput): Promise<LeadFromAPI> => {
-  const data = await api.post('/api/leads', {
+  const { data } = await client.post<LeadFromAPI>('/leads', {
     name: lead.name,
     phone: lead.phone,
     status: lead.status,
     origin: lead.origin,
-    sourceId: lead.sourceId,
+    sourceId: lead.sourceId ?? undefined,
     clientId: DEFAULT_CLIENT_ID,
     userId: DEFAULT_USER_ID,
     teamId: DEFAULT_TEAM_ID,
@@ -65,20 +63,7 @@ export const createLead = async (lead: CreateLeadInput): Promise<LeadFromAPI> =>
   return data;
 };
 
-export async function updateLead(id: string, data: any) {
-  const response = await fetch(`http://localhost:3000/api/leads/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  const text = await response.text();
-
-  if (!response.ok) {
-    throw new Error(text || 'Erro ao atualizar lead');
-  }
-
-  return text ? JSON.parse(text) : {};
+export async function updateLead(id: string, updateData: Record<string, unknown>) {
+  const { data } = await client.put(`/leads/${id}`, updateData); // ← usa Axios
+  return data;
 }

@@ -15,29 +15,30 @@ export default function Login() {
     e.preventDefault();
     setErro("");
     setLoading(true);
-
-    setTimeout(() => {
-      let role = "";
-
-      if (senha === "123456") {
-        if (email === "admin@1000valle.com") role = "ADMIN";
-        else if (email === "gerente@1000valle.com") role = "GERENTE";
-        else if (email === "lider@1000valle.com") role = "LIDER";
+  
+    try {
+      const response = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: senha }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.message || "Credenciais inválidas");
       }
-
-      if (role !== "") {
-        localStorage.setItem("@LeadsCar:role", role);
-        localStorage.setItem("@LeadsCar:userName", email.split("@")[0]);
-        console.log(`Login como ${role} realizado com sucesso!`);
-        navigate("/dashboard");
-      } else {
-        setErro("E-mail ou senha incorretos.");
-        alert(
-          "E-mail ou senha incorretos! Use admin@, gerente@ ou lider@ com a senha 123456"
-        );
-      }
+  
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("@LeadsCar:role", data.role ?? "");
+      localStorage.setItem("@LeadsCar:userName", email.split("@")[0]);
+  
+      navigate("/dashboard");
+    } catch (err: any) {
+      setErro(err.message || "E-mail ou senha incorretos.");
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (

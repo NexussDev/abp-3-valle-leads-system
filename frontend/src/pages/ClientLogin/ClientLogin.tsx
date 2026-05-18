@@ -1,4 +1,4 @@
-import { createLead } from '../../services/leads';
+import { saveClientLead } from '../Leads/data/mockLeadStorage'
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/client-login.css";
@@ -21,26 +21,35 @@ export default function ClientLogin() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-  
-    try {
-      await createLead({
-        name: formData.nome,
-        phone: formData.whatsapp,
-        origin: formData.origem || 'Site',
-        status: 'novo_lead',
-      });
-  
-      setLoading(false);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-    } catch {
-      setLoading(false);
-      alert('Erro ao cadastrar. Tente novamente.');
-    }
-  };
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    saveClientLead({
+      name: formData.nome,
+      phone: formData.whatsapp,
+      city: formData.cidade,
+      car: formData.veiculo,
+      origin: formData.origem || 'Site',
+    });
+
+    setFormData({
+      nome: '',
+      whatsapp: '',
+      cidade: '',
+      veiculo: '',
+      origem: '',
+    });
+
+    setLoading(false);
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+  } catch {
+    setLoading(false);
+    alert('Erro ao cadastrar. Tente novamente.');
+  }
+};
 
   return (
     <div className="cl-root">

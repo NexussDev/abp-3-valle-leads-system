@@ -12,6 +12,7 @@ export type LeadStatus =
 
 export interface Lead {
   id: string;
+  leadNumber?: string;
   name: string;
   avatar: string;
   car: string;
@@ -24,8 +25,9 @@ export interface Lead {
   timeAgo: string;
   statusUpdatedAt: string;
 
-  // 👇 ADICIONADOS PRA COMPATIBILIDADE COM SEU INDEX
   origin?: string;
+  phone?: string;
+  city?: string;
   isVerified?: boolean;
   hasAlert?: boolean;
 }

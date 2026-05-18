@@ -5,6 +5,7 @@ import { apiLeadsToColumns } from './data/leadsAdapter';
 import { createLead } from '../../services/leads';
 import { Lead, KanbanCol } from './types';
 import { STAGE_ORDER, LeadStage } from './utils/leadStageValidator';
+import { getStoredLeads, updateStoredLeadStage } from './data/mockLeadStorage';
 
 // ─── COLUNAS INICIAIS ────────────────────────────────────────────────────────
 const INITIAL_COLUMNS: KanbanCol[] = [
@@ -68,6 +69,11 @@ function LeadCard({ lead, onMove, stages }: {
           <div style={{ fontWeight: 700, fontSize: 14, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {lead.name}
           </div>
+          {lead.leadNumber && (
+  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+    {lead.leadNumber}
+  </div>
+)}
           {lead.timeAgo && (
             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{lead.timeAgo}</div>
           )}
@@ -75,6 +81,17 @@ function LeadCard({ lead, onMove, stages }: {
       </div>
 
       {/* Origem */}
+      {lead.phone && (
+  <div style={{ fontSize: 12, color: '#475569', marginBottom: 6 }}>
+    📞 {lead.phone}
+  </div>
+)}
+
+{lead.car && (
+  <div style={{ fontSize: 12, color: '#475569', marginBottom: 6 }}>
+    🚗 {lead.car}
+  </div>
+)}
       {lead.origin && (
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -232,6 +249,23 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: (lead
   );
 }
 
+function addMockLeadsToColumns(columns: KanbanCol[]): KanbanCol[] {
+  const storedLeads = getStoredLeads();
+
+  return columns.map(col => {
+    const existingIds = new Set(col.leads.map(lead => lead.id));
+
+    const leadsFromStorage = storedLeads.filter(
+      lead => lead.stage === col.id && !existingIds.has(lead.id)
+    );
+
+    return {
+      ...col,
+      leads: [...leadsFromStorage, ...col.leads],
+    };
+  });
+}
+
 // ─── PAGE PRINCIPAL ───────────────────────────────────────────────────────────
 export default function LeadsPage() {
   const { columns, setColumns, moveLead } = useKanbanBoard<KanbanCol>(INITIAL_COLUMNS);
@@ -240,22 +274,56 @@ export default function LeadsPage() {
   const [erro, setErro] = useState('');
 
   useEffect(() => {
-    fetchLeads()
-      .then(data => setColumns(apiLeadsToColumns(data, INITIAL_COLUMNS)))
-      .catch(() => setErro('Erro ao carregar leads.'))
-      .finally(() => setLoading(false));
-  }, [setColumns]);
+  fetchLeads()
+    .then(data => {
+      const apiColumns = apiLeadsToColumns(data, INITIAL_COLUMNS);
+      setColumns(addMockLeadsToColumns(apiColumns));
+    })
+    .catch(() => {
+  setColumns(addMockLeadsToColumns(INITIAL_COLUMNS));
+  setErro('');
+})
+    .finally(() => setLoading(false));
 
-  const handleMove = (leadId: string, from: LeadStage, to: LeadStage) => {
-    const result = moveLead(leadId, from, to);
-    if (!result.success) alert(result.error);
+  const handleMockLeadsUpdate = () => {
+   setColumns(addMockLeadsToColumns(columns));
   };
 
-  const handleNovoLead = (novoLead: any) => {
-    fetchLeads()
-      .then(data => setColumns(apiLeadsToColumns(data, INITIAL_COLUMNS)))
-      .catch(() => {});
+  window.addEventListener('mock-leads-updated', handleMockLeadsUpdate);
+
+  return () => {
+    window.removeEventListener('mock-leads-updated', handleMockLeadsUpdate);
   };
+}, [setColumns]);
+
+useEffect(() => {
+  const syncMockLeads = () => {
+    setColumns(addMockLeadsToColumns(INITIAL_COLUMNS));
+  };
+
+  window.addEventListener('focus', syncMockLeads);
+  document.addEventListener('visibilitychange', syncMockLeads);
+
+  return () => {
+    window.removeEventListener('focus', syncMockLeads);
+    document.removeEventListener('visibilitychange', syncMockLeads);
+  };
+}, [setColumns]);
+
+const handleMove = (leadId: string, from: LeadStage, to: LeadStage) => {
+  const result = moveLead(leadId, from, to);
+
+  if (!result.success) {
+    alert(result.error);
+    return;
+  }
+
+  updateStoredLeadStage(leadId, to);
+};
+
+  const handleNovoLead = () => {
+  setColumns(addMockLeadsToColumns(columns));
+};
 
   const totalLeads = columns.reduce((sum, col) => sum + col.leads.length, 0);
 

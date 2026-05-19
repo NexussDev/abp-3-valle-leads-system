@@ -1,0 +1,73 @@
+import { Request, Response, NextFunction } from 'express';
+import leadService from '../../application/services/LeadService';
+import logService from '../../application/services/LogService';
+
+const DEFAULT_DAYS = 30;
+
+class LeadController {
+  async index(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { startDate: sd, endDate: ed } = req.query as Record<string, string>;
+
+      if (sd && isNaN(new Date(sd).getTime())) {
+        res.status(400).json({ status: 'error', message: 'startDate inválido' });
+        return;
+      }
+      if (ed && isNaN(new Date(ed).getTime())) {
+        res.status(400).json({ status: 'error', message: 'endDate inválido' });
+        return;
+      }
+
+      const endDate = ed ? new Date(ed) : new Date();
+      const startDate = sd
+        ? new Date(sd)
+        : new Date(endDate.getTime() - DEFAULT_DAYS * 24 * 60 * 60 * 1000);
+
+      const leads = await leadService.findAll(req.user!, startDate, endDate);
+      res.status(200).json(leads);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async show(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const lead = await leadService.findById(req.params['id'] as string);
+      res.status(200).json(lead);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async store(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const lead = await leadService.create(req.body);
+      await logService.log(req.user!.id, 'CREATE', 'Lead', lead.id);
+      res.status(201).json(lead);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const lead = await leadService.update(req.params['id'] as string, req.body);
+      await logService.log(req.user!.id, 'UPDATE', 'Lead', lead.id);
+      res.status(200).json(lead);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async destroy(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await leadService.delete(req.params['id'] as string);
+      await logService.log(req.user!.id, 'DELETE', 'Lead', req.params['id'] as string);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+export default new LeadController();

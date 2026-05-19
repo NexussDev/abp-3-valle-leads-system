@@ -8,6 +8,7 @@ export enum Role {
 export interface AuthUser {
   id: string;
   role: Role;
+  teamId: string | null;
 }
 
 declare global {

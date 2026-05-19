@@ -1,190 +1,503 @@
-import React, { useState, CSSProperties, useMemo } from 'react';
-import { 
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+import { useEffect, useMemo, useState, CSSProperties } from 'react';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from 'recharts';
 
-// Tipagem dos perfis
+import { getStoredLeads } from '../Leads/data/mockLeadStorage';
+import { Lead } from '../Leads/types';
+
 type Role = 'ADMIN' | 'GERENTE' | 'LIDER';
 
-// ============================================================
-// 1. DADOS DE ORIGEM (MOCK)
-// ============================================================
-const MOCK_LEADS_DATABASE = [
-  { id: 1, origin: 'WhatsApp', status: 'Venda', equipe: 'Norte' },
-  { id: 2, origin: 'Instagram', status: 'Novo', equipe: 'Sul' },
-  { id: 3, origin: 'Instagram', status: 'Venda', equipe: 'Norte' },
-  { id: 4, origin: 'Site', status: 'Novo', equipe: 'Geral' },
-  { id: 5, origin: 'WhatsApp', status: 'Negociação', equipe: 'Sul' },
-  { id: 6, origin: 'Facebook', status: 'Novo', equipe: 'Norte' },
-  { id: 7, origin: 'WhatsApp', status: 'Venda', equipe: 'Geral' },
-  { id: 8, origin: 'Instagram', status: 'Negociação', equipe: 'Norte' },
-];
-
-const COLORS: { [key: string]: string } = {
-  Instagram: '#E1306C',
-  WhatsApp: '#25D366',
-  Facebook: '#1877F2',
-  Site: '#3b82f6',
+const STAGE_LABELS: Record<string, string> = {
+  novo_lead: 'Novos Leads',
+  contato_realizado: 'Contato Realizado',
+  agendamento_visita: 'Visita Agendada',
+  proposta_enviada: 'Proposta Enviada',
+  em_negociacao: 'Em Negociação',
+  vendido: 'Vendido',
 };
 
-// ============================================================
-// 2. COMPONENTE DE GRÁFICOS
-// ============================================================
-const LeadCharts = ({ leads, role }: { leads: any[], role: Role }) => {
-  const dataOrigem = useMemo(() => {
-    const counts = leads.reduce((acc: any, lead) => {
-      acc[lead.origin] = (acc[lead.origin] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.keys(counts).map(key => ({
-      name: key,
-      value: counts[key],
-      color: COLORS[key] || '#cbd5e1'
-    }));
-  }, [leads]);
-
-  const dataConversao = useMemo(() => {
-    const origins = ['Instagram', 'WhatsApp', 'Facebook', 'Site'];
-    return origins.map(origin => {
-      const leadsDaOrigem = leads.filter(l => l.origin === origin);
-      const vendas = leadsDaOrigem.filter(l => l.status === 'Venda').length;
-      const taxa = leadsDaOrigem.length > 0 ? (vendas / leadsDaOrigem.length) * 100 : 0;
-      return { name: origin, conversao: Math.round(taxa) };
-    });
-  }, [leads]);
-
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: role === 'LIDER' ? '1fr' : '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-      <div style={chartCardStyle}>
-        <h4 style={chartTitleStyle}>Origem dos Leads ({role === 'ADMIN' ? 'Geral' : 'Equipe'})</h4>
-        <div style={{ height: 250 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={dataOrigem} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                {dataOrigem.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {role !== 'LIDER' && (
-        <div style={chartCardStyle}>
-          <h4 style={chartTitleStyle}>Taxa de Vendas por Origem (%)</h4>
-          <div style={{ height: 250 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dataConversao}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
-                <YAxis axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
-                <Tooltip cursor={{ fill: '#f1f5f9' }} />
-                <Bar dataKey="conversao" fill="#38a169" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+const STAGE_COLORS: Record<string, string> = {
+  novo_lead: '#3b82f6',
+  contato_realizado: '#8b5cf6',
+  agendamento_visita: '#f59e0b',
+  proposta_enviada: '#ec4899',
+  em_negociacao: '#f97316',
+  vendido: '#10b981',
 };
 
-// ============================================================
-// 3. COMPONENTE PRINCIPAL DASHBOARD
-// ============================================================
+const ORIGIN_COLORS: Record<string, string> = {
+  instagram: '#d4395b',
+  whatsapp: '#25d366',
+  facebook: '#0857be',
+  site: '#f6f03b',
+  indicação: '#8b5cf6',
+  outro: '#64748b',
+  outros: '#64748b',
+  'não informado': '#94a3b8',
+};
+
+function formatLabel(value: string) {
+  return value
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export default function Dashboard() {
-  // ✅ DINÂMICO: Lê o cargo que salvamos no Login
   const USER_ROLE = (localStorage.getItem('@LeadsCar:role') as Role) || 'LIDER';
   const USER_NAME = localStorage.getItem('@LeadsCar:userName') || 'Colaborador';
 
-  const [allLeads] = useState(MOCK_LEADS_DATABASE);
+  const [leads, setLeads] = useState<Lead[]>([]);
 
-  const filteredLeads = useMemo(() => {
-    if (USER_ROLE === 'ADMIN') return allLeads;
-    // Gerente e Líder veem apenas a equipe "Norte"
-    return allLeads.filter(l => l.equipe === 'Norte');
-  }, [allLeads, USER_ROLE]);
+  useEffect(() => {
+    const loadLeads = () => {
+      setLeads(getStoredLeads());
+    };
 
-  const totalLeads = filteredLeads.length;
-  const emNegociacao = filteredLeads.filter(l => l.status === 'Negociação').length;
-  const vendas = filteredLeads.filter(l => l.status === 'Venda').length;
+    loadLeads();
 
-  // ✅ Estilo do Badge movido para cá para evitar erro de tipos no TS
-  const roleBadgeStyle: CSSProperties = {
-    backgroundColor: USER_ROLE === 'ADMIN' ? '#dcfce7' : '#f1f5f9',
-    color: USER_ROLE === 'ADMIN' ? '#166534' : '#475569',
-    padding: '4px 12px',
-    borderRadius: '20px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    textTransform: 'uppercase'
-  };
+    window.addEventListener('mock-leads-updated', loadLeads);
+    window.addEventListener('focus', loadLeads);
+    document.addEventListener('visibilitychange', loadLeads);
+
+    return () => {
+      window.removeEventListener('mock-leads-updated', loadLeads);
+      window.removeEventListener('focus', loadLeads);
+      document.removeEventListener('visibilitychange', loadLeads);
+    };
+  }, []);
+
+  const totalLeads = leads.length;
+  const novosLeads = leads.filter(lead => lead.stage === 'novo_lead').length;
+  const emNegociacao = leads.filter(lead => lead.stage === 'em_negociacao').length;
+  const vendas = leads.filter(lead => lead.stage === 'vendido').length;
+
+  const taxaConversao = totalLeads > 0 ? Math.round((vendas / totalLeads) * 100) : 0;
+
+  const origemData = useMemo(() => {
+    const counts = leads.reduce<Record<string, number>>((acc, lead) => {
+      const origin = formatLabel(lead.origin || 'Não informado');
+      acc[origin] = (acc[origin] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts).map(([name, value]) => ({
+      name,
+      value,
+      color: ORIGIN_COLORS[name.toLowerCase()] || '#94a3b8',
+    }));
+  }, [leads]);
+
+  const funilData = useMemo(() => {
+    const counts = leads.reduce<Record<string, number>>((acc, lead) => {
+      acc[lead.stage] = (acc[lead.stage] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts).map(([stage, value]) => ({
+      name: STAGE_LABELS[stage] || formatLabel(stage),
+      value,
+      color: STAGE_COLORS[stage] || '#94a3b8',
+    }));
+  }, [leads]);
+
+  const barData = useMemo(() => {
+    return Object.keys(STAGE_LABELS).map(stage => ({
+      name: STAGE_LABELS[stage],
+      total: leads.filter(lead => lead.stage === stage).length,
+      fill: STAGE_COLORS[stage],
+    }));
+  }, [leads]);
+
+  const latestLeads = [...leads].slice(-5).reverse();
 
   return (
-    <div style={{ padding: '20px' }}>
-      <section style={bannerStyle}>
+    <div style={pageStyle}>
+      <section style={heroStyle}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-             <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b', margin: 0 }}>
-               Olá, {USER_NAME.split('.')[0]}
-             </h1>
-             <span style={roleBadgeStyle}>{USER_ROLE}</span>
-          </div>
-          <p style={{ color: '#64748b', fontSize: '16px', marginTop: '4px' }}>
-            {USER_ROLE === 'ADMIN' ? 'Visão global da operação.' : 'Visão limitada aos dados da sua equipe.'}
+          <span style={badgeStyle}>Dashboard Operacional</span>
+          <h1 style={titleStyle}>Olá, {USER_NAME.split('.')[0]}!</h1>
+          <p style={subtitleStyle}>
+            {USER_ROLE === 'ADMIN'
+              ? 'Visão geral dos leads cadastrados no sistema.'
+              : 'Acompanhamento dos leads da sua equipe e do funil comercial.'}
           </p>
         </div>
-        <img src="/logo.png" alt="Logo" style={{ width: '150px' }} />
+
+        <img src="/logo.png" alt="1000 Valle" style={logoStyle} />
       </section>
 
-      <LeadCharts leads={filteredLeads} role={USER_ROLE} />
-
-      <div style={gridStyle}>
-        <StatCard label={USER_ROLE === 'ADMIN' ? "Total Leads Geral" : "Leads Equipe"} value={totalLeads.toString()} trend="Sincronizado" color="#3b82f6" icon="👥" />
-        <StatCard label="Em Negociação" value={emNegociacao.toString()} trend="Ativos" color="#f59e0b" icon="🤝" />
-        <StatCard label="Vendas" value={vendas.toString()} trend="Concluídas" color="#10b981" icon="💰" />
+      <div style={cardsGridStyle}>
+        <StatCard label="Total de Leads" value={totalLeads} color="#c0392b" />
+        <StatCard label="Novos Leads" value={novosLeads} color="#3b82f6" />
+        <StatCard label="Em Negociação" value={emNegociacao} color="#f97316" />
+        <StatCard label="Vendas" value={vendas} color="#10b981" />
       </div>
+
+      <div style={mainGridStyle}>
+        <section style={chartCardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div>
+              <h2 style={sectionTitleStyle}>Origem dos Leads</h2>
+              <p style={sectionSubtitleStyle}>Canais que trouxeram novos interessados</p>
+            </div>
+          </div>
+
+          <div style={{ height: 230 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={origemData}
+                  innerRadius={50}
+                  outerRadius={76}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {origemData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend
+  formatter={(value) => (
+    <span
+      style={{
+        color: '#111827',
+        fontWeight: 400,
+      }}
+    >
+      {formatLabel(String(value))}
+    </span>
+  )}
+/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section style={chartCardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div>
+              <h2 style={sectionTitleStyle}>Status do Funil</h2>
+              <p style={sectionSubtitleStyle}>Distribuição entre novos leads e negociações</p>
+            </div>
+          </div>
+
+          <div style={{ height: 230 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={funilData}
+                  innerRadius={48}
+                  outerRadius={76}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {funilData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend
+  formatter={(value) => (
+    <span
+      style={{
+        color: '#111827',
+        fontWeight: 400,
+      }}
+    >
+      {formatLabel(String(value))}
+    </span>
+  )}
+/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+      </div>
+
+      <div style={secondaryGridStyle}>
+        <section style={chartCardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div>
+              <h2 style={sectionTitleStyle}>Leads por Etapa</h2>
+              <p style={sectionSubtitleStyle}>Quantidade de leads em cada coluna do Kanban</p>
+            </div>
+          </div>
+
+          <div style={{ height: 260 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-12} textAnchor="end" height={60} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="total" radius={[8, 8, 0, 0]}>
+                  {barData.map((entry, index) => (
+                    <Cell key={index} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section style={latestCardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div>
+              <h2 style={sectionTitleStyle}>Últimas Leads</h2>
+              <p style={sectionSubtitleStyle}>Novos interesses recebidos pelo formulário</p>
+            </div>
+          </div>
+
+          {latestLeads.length === 0 ? (
+            <div style={emptyStyle}>Nenhuma lead cadastrada ainda.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {latestLeads.map(lead => (
+                <div key={lead.id} style={leadItemStyle}>
+                  <div>
+                    <strong style={{ color: '#1a1a2e', fontSize: 14 }}>
+                      {lead.name}
+                    </strong>
+                    <p style={{ color: '#6b6b80', fontSize: 12, margin: '3px 0 0' }}>
+                      {lead.leadNumber} • {lead.car || 'Veículo não informado'}
+                    </p>
+                  </div>
+
+                  <span style={originPillStyle}>
+                    {formatLabel(lead.origin || 'Sem origem')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <section style={conversionStyle}>
+        <div>
+          <h2 style={sectionTitleStyle}>Taxa de Conversão</h2>
+          <p style={sectionSubtitleStyle}>
+            Percentual de leads que chegaram até a etapa de venda.
+          </p>
+        </div>
+
+        <strong style={conversionValueStyle}>{taxaConversao}%</strong>
+      </section>
     </div>
   );
 }
 
-// ============================================================
-// COMPONENTES AUXILIARES
-// ============================================================
-const StatCard = ({ label, value, trend, color, icon }: any) => {
-  const [isHovered, setIsHovered] = useState(false);
+function StatCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color: string;
+}) {
   return (
-    <div 
-      style={{...cardStyle, transform: isHovered ? 'translateY(-5px)' : 'translateY(0)', boxShadow: isHovered ? '0 12px 24px -10px rgba(0,0,0,0.15)' : '0 4px 6px -1px rgba(0,0,0,0.05)'}}
-      onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}
-    >
+    <div style={statCardStyle}>
       <div style={{ ...topLineStyle, backgroundColor: color }} />
-      <div style={contentWrapper}>
-        <div style={textSection}>
-          <span style={labelStyle}>{label}</span>
-          <strong style={valueStyle}>{value}</strong>
-          <span style={{ ...trendStyle, color: color }}>{trend}</span>
-        </div>
-        <div style={{ ...iconCircle, backgroundColor: `${color}15`, color: color }}>{icon}</div>
-      </div>
+      <span style={statLabelStyle}>{label}</span>
+      <strong style={statValueStyle}>{value}</strong>
     </div>
   );
+}
+
+const pageStyle: CSSProperties = {
+  minHeight: '100%',
+  padding: '28px',
+  background: '#f4f4f7',
+  fontFamily: 'DM Sans, sans-serif',
 };
 
-// Estilos base
-const bannerStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: '32px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '24px' };
-const gridStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' };
-const cardStyle: CSSProperties = { backgroundColor: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', position: 'relative', overflow: 'hidden', transition: 'all 0.3s ease' };
-const topLineStyle: CSSProperties = { position: 'absolute', top: 0, left: 0, right: 0, height: '4px' };
-const contentWrapper: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-const textSection: CSSProperties = { display: 'flex', flexDirection: 'column' };
-const labelStyle: CSSProperties = { fontSize: '13px', fontWeight: 600, color: '#64748b' };
-const valueStyle: CSSProperties = { fontSize: '32px', fontWeight: 800, color: '#1e293b' };
-const trendStyle: CSSProperties = { fontSize: '12px', fontWeight: 700 };
-const iconCircle: CSSProperties = { width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-const chartCardStyle: CSSProperties = { backgroundColor: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0' };
-const chartTitleStyle: CSSProperties = { fontSize: '16px', fontWeight: 700, color: '#475569', marginBottom: '20px' };
+const heroStyle: CSSProperties = {
+  background: 'linear-gradient(135deg, #1a0a08 0%, #2c0f0a 48%, #0f0f14 100%)',
+  borderRadius: 24,
+  padding: '32px',
+  marginBottom: 24,
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  color: '#fff',
+  boxShadow: '0 24px 64px rgba(0,0,0,.12)',
+};
+
+const badgeStyle: CSSProperties = {
+  display: 'inline-block',
+  background: '#fdecea',
+  color: '#c0392b',
+  fontSize: 11,
+  fontWeight: 800,
+  letterSpacing: '.08em',
+  textTransform: 'uppercase',
+  padding: '6px 12px',
+  borderRadius: 999,
+  marginBottom: 14,
+};
+
+const titleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: 34,
+  fontWeight: 800,
+  letterSpacing: '-.03em',
+};
+
+const subtitleStyle: CSSProperties = {
+  margin: '8px 0 0',
+  color: 'rgba(255,255,255,.62)',
+  fontSize: 15,
+};
+
+const logoStyle: CSSProperties = {
+  width: 140,
+  filter: 'brightness(0) invert(1)',
+};
+
+const cardsGridStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+  gap: 18,
+  marginBottom: 24,
+};
+
+const statCardStyle: CSSProperties = {
+  position: 'relative',
+  overflow: 'hidden',
+  background: '#fff',
+  border: '1px solid #e4e4ea',
+  borderRadius: 18,
+  padding: 22,
+  boxShadow: '0 12px 30px rgba(15,15,20,.06)',
+};
+
+const topLineStyle: CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  height: 4,
+};
+
+const statLabelStyle: CSSProperties = {
+  display: 'block',
+  fontSize: 13,
+  color: '#6b6b80',
+  fontWeight: 700,
+  marginBottom: 8,
+};
+
+const statValueStyle: CSSProperties = {
+  display: 'block',
+  fontSize: 34,
+  color: '#1a1a2e',
+  fontWeight: 800,
+};
+
+const mainGridStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: 18,
+  marginBottom: 24,
+};
+
+const secondaryGridStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1.35fr .85fr',
+  gap: 18,
+  marginBottom: 24,
+};
+
+const chartCardStyle: CSSProperties = {
+  background: '#fff',
+  border: '1px solid #e4e4ea',
+  borderRadius: 20,
+  padding: 22,
+  boxShadow: '0 12px 30px rgba(15,15,20,.06)',
+};
+
+const latestCardStyle: CSSProperties = {
+  ...chartCardStyle,
+};
+
+const sectionHeaderStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  marginBottom: 12,
+};
+
+const sectionTitleStyle: CSSProperties = {
+  margin: 0,
+  color: '#1a1a2e',
+  fontSize: 17,
+  fontWeight: 800,
+};
+
+const sectionSubtitleStyle: CSSProperties = {
+  margin: '4px 0 0',
+  color: '#6b6b80',
+  fontSize: 13,
+};
+
+const leadItemStyle: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: 12,
+  alignItems: 'center',
+  background: '#f9f9fb',
+  border: '1px solid #e4e4ea',
+  borderRadius: 14,
+  padding: '12px 14px',
+};
+
+const originPillStyle: CSSProperties = {
+  background: '#fdecea',
+  color: '#c0392b',
+  borderRadius: 999,
+  padding: '5px 10px',
+  fontSize: 11,
+  fontWeight: 800,
+  whiteSpace: 'nowrap',
+};
+
+const emptyStyle: CSSProperties = {
+  color: '#6b6b80',
+  fontSize: 14,
+  background: '#f9f9fb',
+  borderRadius: 14,
+  padding: 18,
+  textAlign: 'center',
+};
+
+const conversionStyle: CSSProperties = {
+  background: '#fff',
+  border: '1px solid #e4e4ea',
+  borderRadius: 20,
+  padding: 24,
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  boxShadow: '0 12px 30px rgba(15,15,20,.06)',
+};
+
+const conversionValueStyle: CSSProperties = {
+  color: '#c0392b',
+  fontSize: 42,
+  fontWeight: 900,
+};

@@ -52,7 +52,10 @@ Cada sprint possui objetivos definidos, priorização contínua do backlog e rev
 
 ▶️ [Vídeo Sprint 1](https://youtu.be/JZl4LicdbPs?si=BHBxFvGHBrTLPN_v)
 
-- **Sprint 2:** 15/04 → 21/05  
+- **Sprint 2:** 15/04 → 21/05
+
+▶️ [Vídeo Sprint 2](https://youtu.be/Wsxu8rLZHuE)
+
 - **Sprint 3:** 22/05 → 11/06  
 - **Entrega Final:** Julho de 2026  
 

@@ -10,8 +10,13 @@ function buildLeadWhere(user: AuthUser, range: DateRange) {
   const where: Record<string, unknown> = {
     createdAt: { gte: range.startDate, lte: range.endDate },
   };
-  if (user.role === Role.ATENDENTE) where.userId = user.id;
-  else if (user.role === Role.GERENTE && user.teamId) where.teamId = user.teamId;
+  if (user.role === Role.ATENDENTE) {
+    where.userId = user.id;
+  } else if (user.role === Role.LIDER_EQUIPE && user.teamId) {
+    where.teamId = user.teamId;
+  } else if (user.role === Role.GERENTE && user.storeId) {
+    where.storeId = user.storeId;
+  }
   return where;
 }
 

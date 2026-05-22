@@ -50,8 +50,6 @@ class LeadService {
     userId: string;
     teamId: string;
     storeId: string;
-    name?: string;
-    phone?: string;
   }): Promise<Lead> {
     const required = {
       origin: data.origin,

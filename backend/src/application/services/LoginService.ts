@@ -18,6 +18,7 @@ export class LoginService {
       sub: user.id,
       role: user.role,
       teamId: user.teamId ?? null,
+      storeId: user.storeId ?? null,
     };
 
     const token = generateToken(payload);
@@ -31,6 +32,7 @@ export class LoginService {
         email: user.email,
         role: user.role,
         teamId: user.teamId,
+        storeId: user.storeId,
       },
       token,
     };

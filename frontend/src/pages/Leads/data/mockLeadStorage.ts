@@ -17,15 +17,25 @@ function getNextLeadNumber(): string {
   return `LD-${String(nextNumber).padStart(3, '0')}`;
 }
 
+// Mapa de etapas antigas → novas (remoção de agendamento_visita, renomeações)
+const STAGE_MIGRATION: Record<string, Lead['stage']> = {
+  contato_realizado:  'contato',
+  agendamento_visita: 'contato',
+  proposta_enviada:   'proposta',
+  em_negociacao:      'negociacao',
+  vendido:            'fechado',
+};
+
 export function getStoredLeads(): Lead[] {
   const raw = localStorage.getItem(STORAGE_KEY);
-
-  if (!raw) {
-    return [];
-  }
+  if (!raw) return [];
 
   try {
-    return JSON.parse(raw) as Lead[];
+    const leads = JSON.parse(raw) as Lead[];
+    return leads.map(lead => {
+      const migrated = STAGE_MIGRATION[lead.stage as string];
+      return migrated ? { ...lead, stage: migrated } : lead;
+    });
   } catch {
     return [];
   }
@@ -68,12 +78,11 @@ export function updateStoredLeadStage(leadId: string, stage: Lead['stage']) {
           ...lead,
           stage,
           status:
-            stage === 'novo_lead' ? 'Novo Lead' :
-            stage === 'contato_realizado' ? 'Contato Realizado' :
-            stage === 'agendamento_visita' ? 'Visita Agendada' :
-            stage === 'proposta_enviada' ? 'Proposta Enviada' :
-            stage === 'em_negociacao' ? 'Em Negociação' :
-            'Vendido',
+            stage === 'novo_lead'  ? 'Novo Lead'   :
+            stage === 'contato'    ? 'Contato'     :
+            stage === 'proposta'   ? 'Proposta'    :
+            stage === 'negociacao' ? 'Negociação'  :
+            'Fechado',
           statusUpdatedAt: new Date().toISOString(),
         }
       : lead

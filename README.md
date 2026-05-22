@@ -1,252 +1,246 @@
-# 🚀 ABP 3º DSM – Sistema de Gestão de Leads
+# ABP 3º DSM – Sistema de Gestão de Leads · 1000 Valle
 
-Sistema desenvolvido para a disciplina de Aprendizagem Baseada em Projetos (ABP), com foco na gestão de leads comerciais e análise de desempenho.
-
----
-
-## 📌 Sobre o Projeto
-
-O Sistema de Gestão de Leads tem como objetivo gerenciar todo o ciclo de um cliente em potencial, desde a captação até a conversão em venda.
-
-A aplicação permite o controle de leads, acompanhamento de negociações, organização por equipes e análise de desempenho por meio de dashboards.
+Sistema desenvolvido para a disciplina de Aprendizagem Baseada em Projetos (ABP), com foco na gestão de leads comerciais e análise de desempenho por equipe.
 
 ---
 
-## 🎯 Funcionalidades
+## Sobre o Projeto
 
-- 🔐 Autenticação com e-mail e senha (JWT)
-- 🛡️ Controle de acesso por perfil (RBAC)
-- 👥 Gestão de usuários e equipes
-- 📊 Gestão de leads
-- 💰 Controle de negociações
-- 📈 Dashboard com indicadores de desempenho
-- ⏱️ Filtros por período
-- 🧾 Registro de logs do sistema
+O Sistema de Gestão de Leads gerencia todo o ciclo de um cliente em potencial, desde a captação até a conversão em venda. A aplicação permite controle de leads, acompanhamento de negociações, organização por equipes e lojas, e análise de desempenho por meio de dashboards diferenciados por perfil de acesso.
+
+**Parceiro:** 1000 Valle Automóveis  
+**Período:** 2026-1  
+**Metodologia:** Scrum com sprints de 3 semanas
 
 ---
 
-## 🧱 Arquitetura
+## Funcionalidades
 
-O sistema segue boas práticas de desenvolvimento, incluindo:
-
-- Separação entre frontend e backend
-- API REST estruturada
-- Organização em camadas:
-  - Controller
-  - Service
-  - Repository
-  - Domain
-- Banco de dados relacional (PostgreSQL)
-
----
-
-## 🔄 Abordagem de Desenvolvimento
-
-Este projeto segue práticas ágeis baseadas em Scrum, com ciclos iterativos e entregas incrementais.
-
-Cada sprint possui objetivos definidos, priorização contínua do backlog e revisões para melhoria do processo.
-
-### 📅 Planejamento de Sprints
-
-- **Sprint 1:** 24/03 → 14/04  ▶️ [Vídeo Sprint 1](https://youtu.be/JZl4LicdbPs?si=BHBxFvGHBrTLPN_v)
-- **Sprint 2:** 15/04 → 21/05  ▶️ [Vídeo Sprint 2](https://youtu.be/Wsxu8rLZHuE)
-- **Sprint 3:** 22/05 → 11/06  
-- **Entrega Final:** Julho de 2026  
+- Autenticação com e-mail e senha (JWT com expiração)
+- Controle de acesso baseado em perfis (RBAC): Atendente, Líder de Equipe, Gerente, Admin
+- Gestão de leads com Kanban (5 etapas com validação de transições)
+- Gestão de clientes e associação com leads
+- Controle de negociações vinculadas a leads
+- Dashboards distintos por perfil de acesso
+- Filtros por período, equipe e vendedor
+- Registro de logs de acesso e operações
+- Formulário público de captação de leads
 
 ---
 
-### 📌 Backlog do Produto
-Em evolução contínua ao longo do projeto.
+## Tecnologias
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | React 18 + TypeScript + Vite |
+| Backend | Node.js + Express + TypeScript |
+| Banco de dados | PostgreSQL 15 |
+| ORM | Prisma |
+| Autenticação | JWT (jsonwebtoken) |
+| Containerização | Docker + Docker Compose |
+| Gráficos | Recharts |
 
 ---
 
-### 🚀 Progresso das Sprints
+## Arquitetura
 
-**Sprint 1**
-> Definição inicial das funcionalidades e estrutura do sistema.
+O backend segue **Clean Architecture** com separação em camadas:
 
-**Sprint 2**
-> Implementação das principais features e refinamentos.
+```
+presentation/     → Controllers e Routes (entrada/saída HTTP)
+application/      → Services (regras de negócio)
+infrastructure/   → Repositories, Middlewares, Database
+domain/           → Entities e Interfaces
+shared/           → Types, Utils, Errors
+```
 
-**Sprint 3**
-> Ajustes finais, testes e preparação para entrega.
+O frontend segue organização por responsabilidade:
+
+```
+pages/      → Páginas da aplicação
+components/ → Componentes reutilizáveis
+services/   → Chamadas à API
+hooks/      → Lógica reutilizável
+```
+
+Padrões de projeto utilizados: **Repository**, **Service Layer**, **Middleware Chain**, **GoF State** (validação de transições de lead). Ver [docs/padroes-de-projeto.md](docs/padroes-de-projeto.md).
 
 ---
 
-## 📁 Estrutura do Projeto
-```bash
+## Estrutura de Diretórios
+
+```
 abp-3-valle-leads-system/
-│
 ├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma        # Definição do banco
+│   │   ├── migrations/          # Histórico de migrações
+│   │   └── seed.ts              # Dados iniciais
+│   └── src/
+│       ├── application/services/  # Regras de negócio
+│       ├── domain/                # Entidades e interfaces
+│       ├── infrastructure/        # Repositories, middlewares
+│       ├── presentation/          # Controllers e routes
+│       └── shared/                # Types, utils, errors
 ├── frontend/
-├── database/
+│   └── src/
+│       ├── components/   # Componentes reutilizáveis
+│       ├── hooks/        # Custom hooks
+│       ├── pages/        # Páginas (Dashboard, Leads, etc.)
+│       └── services/     # Serviços de API
 ├── docs/
-│
+│   ├── backlog/          # Product Backlog e Sprint Backlogs
+│   ├── diagramas/        # DER e diagramas UML
+│   ├── retrospectivas/   # Retrospectivas por sprint
+│   └── api.md            # Documentação dos endpoints
 ├── docker-compose.yml
 └── README.md
 ```
 
 ---
 
-## 🚀 Como Executar o Projeto
+## Como Executar (Docker — recomendado)
 
-### Pré-requisitos
-
-Antes de começar, você precisa ter instalado:
-
-- Docker
-- Docker Compose
-- Node.js
-- npm
-
----
-
-### Clonar o repositório
+> Único requisito: **Docker Desktop** instalado e em execução.
 
 ```bash
+# 1. Clonar o repositório
 git clone https://github.com/NexussDev/abp-3-valle-leads-system.git
 cd abp-3-valle-leads-system
+
+# 2. Subir todos os containers
+docker compose up --build
+```
+
+O comando sobe automaticamente:
+- PostgreSQL (porta 5433)
+- Backend com migrations e seed aplicados (porta 3000)
+- Frontend (porta 5173)
+
+**Acessar:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
+
+> Não é necessário instalar Node.js, configurar banco ou rodar migrations manualmente.
+
+---
+
+## Contas de Teste
+
+| E-mail | Senha | Perfil | Acesso |
+|--------|-------|--------|--------|
+| admin@1000valle.com | 123456 | Admin | Tudo |
+| pedro@1000valle.com | 123456 | Líder de Equipe | Equipe Norte |
+| maria@1000valle.com | 123456 | Gerente | Toda a loja |
+| joao@1000valle.com | 123456 | Atendente | Seus leads |
+| carlos@1000valle.com | 123456 | Atendente | Seus leads |
+
+---
+
+## Variáveis de Ambiente
+
+As variáveis já estão configuradas no `docker-compose.yml` para execução local. Para execução manual (sem Docker):
+
+**Backend** — criar `backend/.env`:
+```env
+DATABASE_URL=postgresql://postgres:1234@localhost:5433/valle_leads
+JWT_SECRET=segredo_super_forte
+```
+
+**Frontend** — criar `frontend/.env`:
+```env
+VITE_API_URL=http://localhost:3000/api
 ```
 
 ---
 
-### Configurar variáveis de ambiente
-
-O projeto utiliza um arquivo `.env` para armazenar as configurações do banco de dados.
-
-Crie um arquivo `.env` nas pastas do backend e frontend com base nas informações do seu ambiente local.
-
-> O arquivo `.env` não é enviado para o GitHub por questões de segurança.
-
----
-
-### Instalar dependências
-
-#### Backend
+## Execução Manual (sem Docker)
 
 ```bash
+# Terminal 1 — Banco de dados
+docker compose up postgres
+
+# Terminal 2 — Backend
 cd backend
 npm install
-```
-
-#### Frontend
-
-```bash
-cd ../frontend
-npm install
-```
-
----
-
-### Subir o banco de dados com Docker
-
-```bash
-cd ..
-docker-compose up --build
-```
-
-O banco de dados já está integrado ao Docker.
-
----
-
-### Rodar as migrations do Prisma
-
-```bash
-cd backend
-npx prisma migrate dev
-```
-
----
-
-### Iniciar o projeto
-
-#### Backend
-
-```bash
+npx prisma migrate deploy
+npx prisma db seed
 npm run dev
-```
 
-Backend disponível em:
-
-```txt
-http://localhost:3000
-```
-
----
-
-#### Frontend
-
-Em outro terminal:
-
-```bash
+# Terminal 3 — Frontend
 cd frontend
+npm install
 npm run dev
 ```
 
-Frontend disponível em:
-
-```txt
-http://localhost:5173
-```
 ---
 
-## 🤝 Time de Desenvolvimento
+## API REST
 
-### 👥 Equipe
+Documentação completa dos endpoints em [docs/api.md](docs/api.md).
 
-| **Função** | **Nome** | **Links** |
-|------------|----------|-----------|
-| **Product Owner** | **Pedro Claudino** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/PeClaudino2006) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://br.linkedin.com/in/pedro-claudino-0566472b9) |
-| **Scrum Master** | **Manuela Castro** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/manuelalemes) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/manuela-lemes-castro) |
-| **Backend Developer & Database** | **Gabrielly Neu** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/gabriellyneu) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabrielly-neu-753906239) |
-| **Backend Developer** | **Gabriel Teodoro** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/teodoroooo) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabrielteodoroo?utm_source=share_via&utm_content=profile&utm_medium=member_ios)|
-| **Frontend Developer** | **Alicia Dias** | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/TIALICIA) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/alicia-silva-dias-656b2817a/) |
+**Base URL:** `http://localhost:3000`
 
----
+| Prefixo | Descrição |
+|---------|-----------|
+| `POST /auth/login` | Autenticação |
+| `GET/POST/PUT/DELETE /api/users` | Gestão de usuários |
+| `GET/POST/PUT/DELETE /api/leads` | Gestão de leads |
+| `GET/POST/PUT/DELETE /api/leads/:id/negotiation` | Negociações |
+| `GET /api/dashboard/operacional` | Dashboard operacional |
+| `GET /api/dashboard/analitico` | Dashboard analítico |
+| `GET /api/logs` | Logs do sistema |
+| `GET /api/lead-sources` | Origens de leads |
 
-## 📋 Requisitos do Sistema
-
-| ✅ Funcionais | ⚙️ Não Funcionais |
-|--------------|------------------|
-| Autenticação com JWT | API REST estruturada |
-| Controle de acesso (RBAC) | Segurança com criptografia |
-| Gestão de usuários | Interface responsiva |
-| Gestão de leads | Uso de Docker |
-| Controle de negociações | Versionamento com Git |
-| Dashboard de indicadores | Arquitetura em camadas |
-| Filtros por período | Boas práticas de código |
-| Registro de logs | Escalabilidade e manutenção |  
+Rotas protegidas exigem header: `Authorization: Bearer <token>`
 
 ---
 
-## 📄 Documentação
+## Definition of Done (DoD)
 
-A documentação do projeto inclui:
+Uma tarefa é considerada concluída quando:
 
-- Product Backlog
-- DER (Diagrama Entidade-Relacionamento)
-- Diagramas UML
-- Endpoints da API
-
-## 📌 Objetivo Acadêmico
-
-Este projeto tem como objetivo aplicar conceitos de:
-
-- Engenharia de Software
-- Arquitetura de Sistemas
-- Banco de Dados
-- Metodologias Ágeis (Scrum)
-- Desenvolvimento Full Stack
-
---- 
-
-## ⚙️ Tecnologias Utilizadas
-
-
-[![My Skills](https://skillicons.dev/icons?i=nodejs,express,prisma,react,typescript,postgres,docker)](https://skillicons.dev)
+- [ ] Funcionalidade implementada e testável
+- [ ] Regras de negócio aplicadas no backend (não só no frontend)
+- [ ] Dados persistidos corretamente no banco
+- [ ] RBAC aplicado — usuário acessa apenas o que tem permissão
+- [ ] Sem erros de console no frontend
+- [ ] Build Docker funcional (`docker compose up --build` sem erros)
+- [ ] Código commitado na branch correspondente com mensagem descritiva
+- [ ] Sem credenciais sensíveis expostas no código
 
 ---
 
-## 🏁 Status do Projeto
+## Planejamento de Sprints
 
- ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow) 
+| Sprint | Período | Status |
+|--------|---------|--------|
+| Sprint 1 | 24/03 → 14/04 | Concluída ✓ |
+| Sprint 2 | 15/04 → 21/05 | Concluída ✓ |
+| Sprint 3 | 22/05 → 11/06 | Em andamento |
+| Entrega Final | Julho 2026 | — |
+
+[▶️ Vídeo Sprint 1](https://youtu.be/JZl4LicdbPs?si=BHBxFvGHBrTLPN_v)
+
+Backlog completo: [docs/backlog/](docs/backlog/)  
+Retrospectivas: [docs/retrospectivas/](docs/retrospectivas/)
+
+---
+
+## Time de Desenvolvimento
+
+| Função | Nome | Links |
+|--------|------|-------|
+| Product Owner | Pedro Claudino | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/PeClaudino2006) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://br.linkedin.com/in/pedro-claudino-0566472b9) |
+| Scrum Master | Manuela Castro | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/manuelalemes) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/manuela-lemes-castro) |
+| Backend & Database | Gabrielly Neu | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/gabriellyneu) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabrielly-neu-753906239) |
+| Backend Developer | Gabriel Teodoro | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/teodoroooo) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabrielteodoroo) |
+| Frontend Developer | Alicia Dias | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/TIALICIA) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/alicia-silva-dias-656b2817a/) |
+
+---
+
+![Status](https://img.shields.io/badge/status-Sprint%202%20concluída-green)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql)](https://www.postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com)

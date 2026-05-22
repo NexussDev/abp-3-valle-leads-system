@@ -12,6 +12,7 @@ const LEAD_INCLUDE = {
 export interface LeadFilter {
   userId?: string;
   teamId?: string;
+  storeId?: string;
   startDate?: Date;
   endDate?: Date;
 }
@@ -19,8 +20,9 @@ export interface LeadFilter {
 class LeadRepository {
   async findAll(filter: LeadFilter = {}): Promise<Lead[]> {
     const where: Prisma.LeadWhereInput = {};
-    if (filter.userId) where.userId = filter.userId;
-    if (filter.teamId) where.teamId = filter.teamId;
+    if (filter.userId)  where.userId  = filter.userId;
+    if (filter.teamId)  where.teamId  = filter.teamId;
+    if (filter.storeId) where.storeId = filter.storeId;
     if (filter.startDate || filter.endDate) {
       where.createdAt = {
         ...(filter.startDate && { gte: filter.startDate }),

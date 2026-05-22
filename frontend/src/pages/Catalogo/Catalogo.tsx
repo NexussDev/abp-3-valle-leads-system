@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/catalogo.css";
+import { carPhotoPexels } from "../../services/carApi";
 
 // ── tipos ──────────────────────────────────────────────────
 type Categoria = "all" | "suv" | "sedan" | "hatch" | "pickup";
@@ -74,21 +75,36 @@ function VeiculoCard({
   idx: number;
   onInteresse: (nome: string) => void;
 }) {
-  const [enviado, setEnviado] = useState(false);
-  const [salvo,   setSalvo]   = useState(false);
+  const navigate = useNavigate();
+  const [salvo, setSalvo] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    carPhotoPexels(v.marca, v.nome).then(url => {
+      if (url) setPhotoUrl(url);
+    });
+  }, [v.marca, v.nome]);
 
   function handleInteresse() {
-    setEnviado(true);
     onInteresse(`${v.marca} ${v.nome}`);
+    navigate(`/demonstrar-interesse?veiculo=${encodeURIComponent(`${v.marca} ${v.nome}`)}`);
   }
 
   return (
     <div className="cat-card" style={{ animationDelay: `${idx * 0.06}s` }}>
       <Badge type={v.badge} />
 
-      {/* imagem mockada */}
       <div className="cat-card__img">
-        <CarSVG color={v.accentColor} />
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            className="cat-card__photo"
+            loading="lazy"
+            alt={`${v.marca} ${v.nome}`}
+          />
+        ) : (
+          <CarSVG color={v.accentColor} />
+        )}
       </div>
 
       <div className="cat-card__body">
@@ -143,25 +159,13 @@ function VeiculoCard({
           </button>
 
           <button
-            className={`cat-btn-interesse ${enviado ? "cat-btn-interesse--ativo" : ""}`}
+            className="cat-btn-interesse"
             onClick={handleInteresse}
-            disabled={enviado}
           >
-            {enviado ? (
-              <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M20 6L9 17l-5-5"/>
-                </svg>
-                Interesse Enviado
-              </>
-            ) : (
-              <>
-                Demonstrar Interesse
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <path d="M5 12h14M13 6l6 6-6 6"/>
-                </svg>
-              </>
-            )}
+            Demonstrar Interesse
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -227,8 +231,8 @@ export default function Catalogo() {
           <a href="#" className="cat-nav__link">Sobre</a>
         </nav>
 
-        <button className="cat-header__cta" onClick={() => navigate("/cliente")}>
-          Área do Cliente
+        <button className="cat-header__cta" onClick={() => navigate("/colaborador")}>
+          Acesso Colaborador
         </button>
       </header>
 

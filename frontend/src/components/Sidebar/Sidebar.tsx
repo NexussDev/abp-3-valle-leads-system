@@ -1,104 +1,144 @@
 import React, { CSSProperties } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-// 1. Definimos a interface para o TypeScript parar de dar erro
 interface SidebarProps {
   isExpanded: boolean;
-  toggleSidebar: () => void;
 }
 
-// 2. Aplicamos a interface nas propriedades do componente
-export const Sidebar = ({ isExpanded, toggleSidebar }: SidebarProps) => {
+const NAV_ITEMS = [
+  {
+    path: '/dashboard',
+    label: 'Dashboard',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    path: '/leads',
+    label: 'Pipeline',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+];
+
+export const Sidebar = ({ isExpanded }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div 
-      style={{
-        ...sidebarContainer, 
-        width: isExpanded ? '260px' : '80px'
-      }}
-    >
-      {/* Botão de Expandir/Recolher */}
-      <div onClick={toggleSidebar} style={toggleButtonStyle}>
-        {isExpanded ? '◀' : '▶'}
+    <div style={{ ...sidebarContainer, width: isExpanded ? '260px' : '72px' }}>
+      {/* Logo */}
+      <div style={{ ...logoSection, justifyContent: isExpanded ? 'flex-start' : 'center', overflow: 'hidden' }}>
+        <img
+          src="/logo.png"
+          alt="1000 Valle"
+          style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }}
+          onError={e => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+        {isExpanded && (
+          <span style={logoText}>1000 Valle</span>
+        )}
       </div>
 
-      {/* Logo Section */}
-      <div style={{...logoSection, justifyContent: isExpanded ? 'flex-start' : 'center'}}>
-        <div style={logoIcon}>🚗</div>
-        {isExpanded && <span style={logoText}>LeadsCar</span>}
-      </div>
+      <div style={divider} />
 
-      {/* Navigation Links */}
+      {/* Nav */}
       <nav style={navStyle}>
-        <div 
-          onClick={() => navigate('/dashboard')}
-          style={isActive('/dashboard') ? activeLinkStyle : linkStyle}
-        >
-          <span>📊</span>
-          {isExpanded && <span style={{ marginLeft: '12px' }}>Dashboard</span>}
-        </div>
-        
-        <div 
-          onClick={() => navigate('/leads')}
-          style={isActive('/leads') ? activeLinkStyle : linkStyle}
-        >
-          <span>📋</span>
-          {isExpanded && <span style={{ marginLeft: '12px' }}>Leads (Kanban)</span>}
-        </div>
+        {NAV_ITEMS.map(item => (
+          <div
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            title={!isExpanded ? item.label : undefined}
+            style={{
+              ...baseLink,
+              ...(isActive(item.path) ? activeLinkExtra : inactiveLinkExtra),
+              justifyContent: isExpanded ? 'flex-start' : 'center',
+            }}
+          >
+            <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+              {item.icon}
+            </span>
+            {isExpanded && <span style={{ marginLeft: 12, whiteSpace: 'nowrap' }}>{item.label}</span>}
+          </div>
+        ))}
       </nav>
     </div>
   );
 };
 
-// --- ESTILOS MANTIDOS ---
 const sidebarContainer: CSSProperties = {
   height: '100vh',
-  backgroundColor: '#111827',
+  backgroundColor: '#0f172a',
   color: '#fff',
   display: 'flex',
   flexDirection: 'column',
-  padding: '24px 12px',
-  position: 'fixed',
-  left: 0,
-  top: 0,
-  zIndex: 1000,
-  transition: 'width 0.3s ease',
-  overflow: 'hidden'
+  padding: '20px 10px',
+  transition: 'width 0.25s ease',
+  overflow: 'hidden',
+  boxShadow: '2px 0 12px rgba(0,0,0,0.15)',
 };
 
-const toggleButtonStyle: CSSProperties = {
-  position: 'absolute',
-  right: '10px',
-  top: '20px',
-  cursor: 'pointer',
-  backgroundColor: '#374151',
-  borderRadius: '50%',
-  width: '24px',
-  height: '24px',
+const logoSection: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '10px'
+  gap: 10,
+  marginBottom: 16,
+  height: 40,
+  paddingLeft: 4,
 };
 
-const logoSection: CSSProperties = { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '48px', height: '40px' };
-const logoIcon: CSSProperties = { fontSize: '24px' };
-const logoText: CSSProperties = { fontSize: '20px', fontWeight: 'bold', whiteSpace: 'nowrap' };
-const navStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: '12px' };
+const logoText: CSSProperties = {
+  fontSize: 16,
+  fontWeight: 700,
+  whiteSpace: 'nowrap',
+  color: '#f8fafc',
+  letterSpacing: '-0.3px',
+};
+
+const divider: CSSProperties = {
+  height: 1,
+  background: 'rgba(255,255,255,0.08)',
+  marginBottom: 16,
+  marginLeft: -10,
+  marginRight: -10,
+};
+
+const navStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+};
 
 const baseLink: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  padding: '12px',
-  borderRadius: '10px',
+  padding: '10px 12px',
+  borderRadius: 10,
   cursor: 'pointer',
-  transition: '0.2s',
-  whiteSpace: 'nowrap'
+  transition: 'all 0.15s ease',
+  fontSize: 14,
+  fontWeight: 500,
 };
 
-const activeLinkStyle: CSSProperties = { ...baseLink, backgroundColor: '#3b82f6', color: '#fff' };
-const linkStyle: CSSProperties = { ...baseLink, color: '#9ca3af' };
+const activeLinkExtra: CSSProperties = {
+  backgroundColor: '#c0392b',
+  color: '#fff',
+};
+
+const inactiveLinkExtra: CSSProperties = {
+  color: '#94a3b8',
+};

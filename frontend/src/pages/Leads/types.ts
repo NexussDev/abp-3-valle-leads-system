@@ -2,13 +2,10 @@ import { LeadStage } from './utils/leadStageValidator';
 
 export type LeadStatus =
   | 'Novo Lead'
-  | 'Contato Realizado'
-  | 'Visita Agendada'
-  | 'Proposta Enviada'
-  | 'Proposta Agendada'
-  | 'Em Negociação'
-  | 'Vendido'
-  | 'Entregue';
+  | 'Contato'
+  | 'Proposta'
+  | 'Negociação'
+  | 'Fechado';
 
 export interface Lead {
   id: string;
@@ -30,6 +27,13 @@ export interface Lead {
   city?: string;
   isVerified?: boolean;
   hasAlert?: boolean;
+
+  storeId?: string;
+  storeName?: string;
+  teamId?: string;
+  teamName?: string;
+  userId?: string;
+  userName?: string;
 }
 
 export interface KanbanCol {

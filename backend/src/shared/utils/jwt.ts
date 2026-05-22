@@ -5,6 +5,7 @@ export interface TokenPayload {
   sub: string;
   role: string;
   teamId: string | null;
+  storeId: string | null;
 }
 
 export function generateToken(payload: TokenPayload): string {

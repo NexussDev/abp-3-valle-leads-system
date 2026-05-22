@@ -7,19 +7,21 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  // Estado para controlar se a sidebar está aberta ou fechada
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const toggleSidebar = () => setIsExpanded(!isExpanded);
 
   return (
     <div style={styles.layoutContainer}>
-      {/* Passamos o estado e a função para a Sidebar */}
-      <Sidebar isExpanded={isExpanded} toggleSidebar={toggleSidebar} />
-      
-      <div style={{ 
-        ...styles.mainWrapper, 
-        marginLeft: isExpanded ? '260px' : '80px' // Ajusta o conteúdo conforme a sidebar
+      <div
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+        style={{ position: 'fixed', left: 0, top: 0, zIndex: 1000, height: '100vh' }}
+      >
+        <Sidebar isExpanded={isExpanded} />
+      </div>
+
+      <div style={{
+        ...styles.mainWrapper,
+        marginLeft: isExpanded ? '260px' : '72px',
       }}>
         <Header />
         <main style={styles.contentArea}>
@@ -43,11 +45,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
-    transition: 'margin-left 0.3s ease', // Suaviza o movimento do conteúdo
+    transition: 'margin-left 0.3s ease',
+    minWidth: 0,
   },
   contentArea: {
     flex: 1,
     overflowY: 'auto',
-    padding: '32px',
+    overflowX: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
+    scrollBehavior: 'smooth',
   },
 };

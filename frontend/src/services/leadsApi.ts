@@ -26,7 +26,9 @@ export interface ApiLead {
   origin?: string;
   createdAt: string | null;
   client?: { id: string; name: string } | null;
-  user?: { id: string; name: string; email: string; role: string };
+  user?:  { id: string; name: string; email: string; role: string } | null;
+  team?:  { id: string; name: string } | null;
+  store?: { id: string; name: string } | null;
 }
 
 export async function fetchLeads(): Promise<ApiLead[]> {

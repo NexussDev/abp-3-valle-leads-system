@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import leadService from '../../application/services/LeadService';
 import logService from '../../application/services/LogService';
+import userRepository from '../../infrastructure/repositories/UserRepository';
 
 const DEFAULT_DAYS = 30;
 
@@ -41,8 +42,28 @@ class LeadController {
 
   async store(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const lead = await leadService.create(req.body);
-      await logService.log(req.user!.id, 'CREATE', 'Lead', lead.id);
+      // Ownership deriva da sessão autenticada, nunca do body
+      const authUser = req.user!;
+
+      const user = await userRepository.findById(authUser.id);
+      if (!user?.teamId || !user?.storeId) {
+        res.status(422).json({
+          status: 'error',
+          message: 'Usuário sem loja ou equipe configurada. Contate o administrador.',
+        });
+        return;
+      }
+
+      const lead = await leadService.create({
+        name:    req.body.name,
+        phone:   req.body.phone,
+        origin:  req.body.origin,
+        userId:  authUser.id,   // ← sessão, não body
+        teamId:  user.teamId,   // ← banco, não body
+        storeId: user.storeId,  // ← banco, não body
+      });
+
+      await logService.log(authUser.id, 'CREATE', 'Lead', lead.id);
       res.status(201).json(lead);
     } catch (error) {
       next(error);

@@ -21,6 +21,8 @@ export class LoginService {
     const token = generateToken({
       sub: user.id,
       role: user.role,
+      teamId: user.teamId ?? null,
+      storeId: user.storeId ?? null,
     });
 
     return {
@@ -29,6 +31,8 @@ export class LoginService {
         name: user.name,
         email: user.email,
         role: user.role,
+        teamId: user.teamId,
+        storeId: user.storeId,
       },
       token,
     };

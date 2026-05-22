@@ -30,8 +30,10 @@ export default function Login() {
       }
   
       localStorage.setItem("token", data.token);
-      localStorage.setItem("@LeadsCar:role", data.role ?? "");
-      localStorage.setItem("@LeadsCar:userName", email.split("@")[0]);
+      localStorage.setItem("@LeadsCar:role",    data.user?.role    ?? "");
+      localStorage.setItem("@LeadsCar:userName", data.user?.name   ?? email.split("@")[0]);
+      localStorage.setItem("@LeadsCar:teamId",  data.user?.teamId  ?? "");
+      localStorage.setItem("@LeadsCar:storeId", data.user?.storeId ?? "");
   
       navigate("/dashboard");
     } catch (err: any) {

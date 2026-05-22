@@ -4,10 +4,10 @@ import { ApiLead } from "../../../services/leadsApi";
 import { KanbanCol } from "../types";
 
 const TEMPLATE: KanbanCol[] = [
-  { id: "novo_lead", title: "Novo Lead", totalValue: 0, headerColor: "#000", leads: [] },
-  { id: "contato_realizado", title: "Contato Realizado", totalValue: 0, headerColor: "#000", leads: [] },
-  { id: "em_negociacao", title: "Em Negociação", totalValue: 0, headerColor: "#000", leads: [] },
-  { id: "vendido", title: "Vendido", totalValue: 0, headerColor: "#000", leads: [] },
+  { id: "novo_lead",  title: "Novo Lead",  totalValue: 0, headerColor: "#000", leads: [] },
+  { id: "contato",    title: "Contato",    totalValue: 0, headerColor: "#000", leads: [] },
+  { id: "negociacao", title: "Negociação", totalValue: 0, headerColor: "#000", leads: [] },
+  { id: "fechado",    title: "Fechado",    totalValue: 0, headerColor: "#000", leads: [] },
 ];
 
 const apiLead = (over: Partial<ApiLead> = {}): ApiLead => ({
@@ -33,8 +33,8 @@ describe("toLead", () => {
   });
 
   it("mapeia status válido para a stage correspondente", () => {
-    expect(toLead(apiLead({ status: "em_negociacao" })).stage).toBe("em_negociacao");
-    expect(toLead(apiLead({ status: "vendido" })).stage).toBe("vendido");
+    expect(toLead(apiLead({ status: "negociacao" })).stage).toBe("negociacao");
+    expect(toLead(apiLead({ status: "fechado" })).stage).toBe("fechado");
   });
 
   it("usa novo_lead como default quando o status é desconhecido ou nulo", () => {
@@ -43,8 +43,8 @@ describe("toLead", () => {
   });
 
   it("preenche o status legível compatível com a stage", () => {
-    expect(toLead(apiLead({ status: "em_negociacao" })).status).toBe("Em Negociação");
-    expect(toLead(apiLead({ status: "vendido" })).status).toBe("Vendido");
+    expect(toLead(apiLead({ status: "negociacao" })).status).toBe("Negociação");
+    expect(toLead(apiLead({ status: "fechado" })).status).toBe("Fechado");
   });
 });
 
@@ -106,13 +106,13 @@ describe("apiLeadsToColumns", () => {
     const apiLeads: ApiLead[] = [
       apiLead({ id: "1", status: "novo_lead" }),
       apiLead({ id: "2", status: "novo_lead" }),
-      apiLead({ id: "3", status: "em_negociacao" }),
+      apiLead({ id: "3", status: "negociacao" }),
     ];
 
     const result = apiLeadsToColumns(apiLeads, TEMPLATE);
     expect(result.find(c => c.id === "novo_lead")?.leads).toHaveLength(2);
-    expect(result.find(c => c.id === "em_negociacao")?.leads).toHaveLength(1);
-    expect(result.find(c => c.id === "vendido")?.leads).toHaveLength(0);
+    expect(result.find(c => c.id === "negociacao")?.leads).toHaveLength(1);
+    expect(result.find(c => c.id === "fechado")?.leads).toHaveLength(0);
   });
 
   it("preserva os metadados do template (title, headerColor)", () => {

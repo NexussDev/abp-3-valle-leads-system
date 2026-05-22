@@ -35,6 +35,7 @@ export function authMiddleware(
       id: decoded.sub,
       role: decoded.role as Role,
       teamId: (decoded.teamId as string | null) ?? null,
+      storeId: (decoded.storeId as string | null) ?? null,
     };
 
     next();

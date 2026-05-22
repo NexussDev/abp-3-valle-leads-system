@@ -12,8 +12,10 @@ class LeadService {
 
     if (user.role === Role.ATENDENTE) {
       filter.userId = user.id;
-    } else if (user.role === Role.GERENTE && user.teamId) {
+    } else if (user.role === Role.LIDER_EQUIPE && user.teamId) {
       filter.teamId = user.teamId;
+    } else if (user.role === Role.GERENTE && user.storeId) {
+      filter.storeId = user.storeId;
     }
     // GERENTE_GERAL e ADMIN: sem filtro de scope
 
@@ -36,18 +38,22 @@ class LeadService {
 
   async create(data: {
     origin: string;
-    clientId: string;
     userId: string;
     teamId: string;
     storeId: string;
+    name?: string;
+    phone?: string;
+    clientId?: string;
   }): Promise<Lead> {
     return leadRepository.create({
       status: 'novo_lead',
       origin: data.origin as any,
-      client: { connect: { id: data.clientId } },
-      user: { connect: { id: data.userId } },
-      team: { connect: { id: data.teamId } },
+      ...(data.name  && { name: data.name }),
+      ...(data.phone && { phone: data.phone }),
+      user:  { connect: { id: data.userId } },
+      team:  { connect: { id: data.teamId } },
       store: { connect: { id: data.storeId } },
+      ...(data.clientId && { client: { connect: { id: data.clientId } } }),
     });
   }
 

@@ -3,12 +3,11 @@ import { Lead, LeadStatus, KanbanCol } from '../types';
 import { ApiLead } from '../../../services/leadsApi';
 
 const STAGE_TO_STATUS: Record<LeadStage, LeadStatus> = {
-  novo_lead: 'Novo Lead',
-  contato_realizado: 'Contato Realizado',
-  agendamento_visita: 'Visita Agendada',
-  proposta_enviada: 'Proposta Enviada',
-  em_negociacao: 'Em Negociação',
-  vendido: 'Vendido',
+  novo_lead:  'Novo Lead',
+  contato:    'Contato',
+  proposta:   'Proposta',
+  negociacao: 'Negociação',
+  fechado:    'Fechado',
 };
 
 function isStage(value: unknown): value is LeadStage {
@@ -44,6 +43,14 @@ export function toLead(api: ApiLead): Lead {
     status: STAGE_TO_STATUS[stage],
     timeAgo: timeAgo(api.createdAt),
     statusUpdatedAt: '',
+    storeId:   api.store?.id,
+    storeName: api.store?.name,
+    teamId:    api.team?.id,
+    teamName:  api.team?.name,
+    userId:    api.user?.id,
+    userName:  api.user?.name,
+    origin:    api.origin,
+    phone:     api.phone ?? undefined,
   };
 }
 

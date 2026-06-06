@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import clientService from '../../application/services/ClientService';
+import logService from '../../application/services/LogService';
 
 class ClientController {
   async index(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -23,6 +24,7 @@ class ClientController {
   async store(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const client = await clientService.create(req.body);
+      await logService.log(req.user!.id, 'CREATE', 'Client', client.id);
       res.status(201).json(client);
     } catch (error) {
       next(error);
@@ -31,7 +33,9 @@ class ClientController {
 
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const client = await clientService.update(req.params['id'] as string, req.body);
+      const id = req.params['id'] as string;
+      const client = await clientService.update(id, req.body);
+      await logService.log(req.user!.id, 'UPDATE', 'Client', id);
       res.status(200).json(client);
     } catch (error) {
       next(error);
@@ -40,7 +44,9 @@ class ClientController {
 
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      await clientService.delete(req.params['id'] as string);
+      const id = req.params['id'] as string;
+      await clientService.delete(id);
+      await logService.log(req.user!.id, 'DELETE', 'Client', id);
       res.status(204).send();
     } catch (error) {
       next(error);

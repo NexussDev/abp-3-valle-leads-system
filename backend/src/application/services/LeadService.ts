@@ -14,17 +14,18 @@ class LeadService {
       filter.userId = user.id;
     } else if (user.role === Role.LIDER_EQUIPE && user.teamId) {
       filter.teamId = user.teamId;
-    } else if (user.role === Role.GERENTE && user.storeId) {
-      filter.storeId = user.storeId;
+    } else if (user.role === Role.GERENTE && user.teamId) {
+      filter.teamId = user.teamId;
     }
     // GERENTE_GERAL e ADMIN: sem filtro de scope
 
     return leadRepository.findAll(filter);
   }
 
-  async findById(id: string): Promise<Lead> {
+  async findById(id: string, user: AuthUser): Promise<Lead> {
     const lead = await leadRepository.findById(id);
     if (!lead) throw new AppError('Lead não encontrado', 404);
+    this.assertCanAccessLead(user, lead);
     return lead;
   }
 
@@ -59,6 +60,7 @@ class LeadService {
 
   async update(
     id: string,
+    user: AuthUser,
     data: {
       status?: string;
       closingReason?: string;
@@ -71,7 +73,7 @@ class LeadService {
       storeId?: string;
     },
   ): Promise<Lead> {
-    const existing = await this.findById(id);
+    const existing = await this.findById(id, user);
 
     if (data.status && data.status !== (existing as any).status) {
       validateStageTransition(
@@ -95,9 +97,32 @@ class LeadService {
     return leadRepository.update(id, updateData);
   }
 
-  async delete(id: string): Promise<Lead> {
-    await this.findById(id);
+  async delete(id: string, user: AuthUser): Promise<Lead> {
+    await this.findById(id, user);
     return leadRepository.delete(id);
+  }
+
+  /**
+   * Bloqueia acesso a leads fora do escopo do usuário.
+   * Espelha exatamente o filtro aplicado em findAll para manter
+   * a regra de RBAC consistente entre listagem e acesso por ID.
+   */
+  private assertCanAccessLead(user: AuthUser, lead: Lead): void {
+    if (user.role === Role.ADMIN || user.role === Role.GERENTE_GERAL) return;
+
+    if (user.role === Role.ATENDENTE) {
+      if (lead.userId !== user.id) throw new AppError('Acesso negado a este lead', 403);
+      return;
+    }
+
+    if (user.role === Role.LIDER_EQUIPE || user.role === Role.GERENTE) {
+      if (!user.teamId || lead.teamId !== user.teamId) {
+        throw new AppError('Acesso negado a este lead', 403);
+      }
+      return;
+    }
+
+    throw new AppError('Acesso negado a este lead', 403);
   }
 }
 

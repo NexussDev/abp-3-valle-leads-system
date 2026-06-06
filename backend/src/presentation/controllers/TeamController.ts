@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import teamService from '../../application/services/TeamService';
+import logService from '../../application/services/LogService';
 
 class TeamController {
   async index(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -23,6 +24,7 @@ class TeamController {
   async store(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const team = await teamService.create(req.body);
+      await logService.log(req.user!.id, 'CREATE', 'Team', team.id);
       res.status(201).json(team);
     } catch (error) {
       next(error);
@@ -31,7 +33,9 @@ class TeamController {
 
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const team = await teamService.update(req.params['id'] as string, req.body);
+      const id = req.params['id'] as string;
+      const team = await teamService.update(id, req.body);
+      await logService.log(req.user!.id, 'UPDATE', 'Team', id);
       res.status(200).json(team);
     } catch (error) {
       next(error);
@@ -40,7 +44,9 @@ class TeamController {
 
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      await teamService.delete(req.params['id'] as string);
+      const id = req.params['id'] as string;
+      await teamService.delete(id);
+      await logService.log(req.user!.id, 'DELETE', 'Team', id);
       res.status(204).send();
     } catch (error) {
       next(error);

@@ -1,4 +1,4 @@
-import { saveClientLead } from '../Leads/data/mockLeadStorage';
+import { submitPublicLead } from '../../services/publicLeadsApi';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import '../../styles/client-login.css';
@@ -86,12 +86,12 @@ export default function ClientLogin() {
     e.preventDefault();
     setLoading(true);
     try {
-      saveClientLead({
-        name: formData.nome,
-        phone: formData.whatsapp,
-        city: formData.cidade || formData.estado,
-        car: formData.veiculo,
-        origin: formData.origem || 'Site',
+      await submitPublicLead({
+        nome: formData.nome,
+        whatsapp: formData.whatsapp,
+        cidade: formData.cidade || formData.estado,
+        veiculo: formData.veiculo,
+        origem: formData.origem || 'Site',
       });
       setFormData({ nome: '', whatsapp: '', estado: '', cidade: '', veiculo: veiculoParam, origem: '' });
       setCidadeFiltro('');

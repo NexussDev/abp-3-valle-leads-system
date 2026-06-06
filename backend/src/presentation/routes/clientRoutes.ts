@@ -8,6 +8,6 @@ router.get('/', clientController.index);
 router.get('/:id', clientController.show);
 router.post('/', clientController.store);
 router.put('/:id', clientController.update);
-router.delete('/:id', roleMiddleware('ADMIN', 'GERENTE_GERAL'), clientController.destroy);
+router.delete('/:id', roleMiddleware('ADMIN'), clientController.destroy);
 
 export default router;

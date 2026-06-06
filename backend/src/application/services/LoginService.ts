@@ -1,18 +1,24 @@
 import { IUserRepository } from '../../domain/interfaces/IUserRepository';
+import { AppError } from '../../shared/errors/AppError';
 import { comparePassword } from '../../shared/utils/hash';
 import { generateToken, TokenPayload } from '../../shared/utils/jwt';
 import logService from './LogService';
+
+const INVALID_CREDENTIALS_MESSAGE = 'E-mail ou senha inválidos';
 
 export class LoginService {
   constructor(private userRepository: IUserRepository) {}
 
   async execute(email: string, password: string) {
-    const user = await this.userRepository.findByEmail(email);
+    if (!email || !password) {
+      throw new AppError(INVALID_CREDENTIALS_MESSAGE, 401);
+    }
 
-    if (!user) throw new Error('E-mail ou senha inválidos');
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) throw new AppError(INVALID_CREDENTIALS_MESSAGE, 401);
 
     const passwordMatch = await comparePassword(password, user.password);
-    if (!passwordMatch) throw new Error('E-mail ou senha inválidos');
+    if (!passwordMatch) throw new AppError(INVALID_CREDENTIALS_MESSAGE, 401);
 
     const payload: TokenPayload = {
       sub: user.id,

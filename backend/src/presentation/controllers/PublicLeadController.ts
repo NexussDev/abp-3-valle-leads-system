@@ -4,13 +4,14 @@ import publicLeadService from '../../application/services/PublicLeadService';
 class PublicLeadController {
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { nome, whatsapp, cidade, veiculo } = req.body;
+      const { nome, whatsapp, cidade, veiculo, origem } = req.body ?? {};
 
       const lead = await publicLeadService.registerLead({
         nome,
         whatsapp,
         cidade,
         veiculo,
+        origem,
       });
 
       res.status(201).json({

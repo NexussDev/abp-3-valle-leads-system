@@ -4,14 +4,17 @@ import UserRepository from '../../infrastructure/repositories/UserRepository';
 import logService from '../../application/services/LogService';
 
 export class AuthController {
-  async login(req: Request, res: Response) {
-    const { email, password } = req.body;
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, password } = req.body ?? {};
 
-    const loginService = new LoginService(UserRepository);
+      const loginService = new LoginService(UserRepository);
+      const result = await loginService.execute(email, password);
 
-    const result = await loginService.execute(email, password);
-
-    return res.status(200).json(result);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
   }
 
   /**

@@ -40,11 +40,11 @@ describe('LeadService RBAC — findAll', () => {
     );
   });
 
-  it('GERENTE deve filtrar por storeId', async () => {
+  it('GERENTE deve filtrar por teamId (escopo de equipe, não de loja)', async () => {
     await LeadServiceModule.findAll(makeUser(Role.GERENTE, 'user-mgr', 'team-xyz', 'store-abc'));
-    expect(leadRepository.findAll).toHaveBeenCalledWith(
-      expect.objectContaining({ storeId: 'store-abc' })
-    );
+    const call = (leadRepository.findAll as jest.Mock).mock.calls[0][0];
+    expect(call.teamId).toBe('team-xyz');
+    expect(call.storeId).toBeUndefined();
   });
 
   it('ADMIN não deve ter filtro de scope', async () => {
@@ -63,8 +63,8 @@ describe('LeadService RBAC — findAll', () => {
     expect(call.storeId).toBeUndefined();
   });
 
-  it('GERENTE com storeId null não deve ter filtro de scope', async () => {
-    await LeadServiceModule.findAll(makeUser(Role.GERENTE, 'user-mgr', 'team-1', null));
+  it('GERENTE com teamId null não deve ter filtro de scope', async () => {
+    await LeadServiceModule.findAll(makeUser(Role.GERENTE, 'user-mgr', null, 'store-1'));
     const call = (leadRepository.findAll as jest.Mock).mock.calls[0][0];
     expect(call.userId).toBeUndefined();
     expect(call.teamId).toBeUndefined();

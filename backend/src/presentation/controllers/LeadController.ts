@@ -33,7 +33,7 @@ class LeadController {
 
   async show(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const lead = await leadService.findById(req.params['id'] as string);
+      const lead = await leadService.findById(req.params['id'] as string, req.user!);
       res.status(200).json(lead);
     } catch (error) {
       next(error);
@@ -72,7 +72,7 @@ class LeadController {
 
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const lead = await leadService.update(req.params['id'] as string, req.body);
+      const lead = await leadService.update(req.params['id'] as string, req.user!, req.body);
       await logService.log(req.user!.id, 'UPDATE', 'Lead', lead.id);
       res.status(200).json(lead);
     } catch (error) {
@@ -82,7 +82,7 @@ class LeadController {
 
   async destroy(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      await leadService.delete(req.params['id'] as string);
+      await leadService.delete(req.params['id'] as string, req.user!);
       await logService.log(req.user!.id, 'DELETE', 'Lead', req.params['id'] as string);
       res.status(204).send();
     } catch (error) {

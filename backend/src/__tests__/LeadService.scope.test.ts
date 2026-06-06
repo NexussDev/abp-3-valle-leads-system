@@ -115,19 +115,27 @@ describe('LeadService — escopo em acesso por ID', () => {
       expect(err.statusCode).toBe(403);
     });
 
-    it('GERENTE acessa lead da própria loja', async () => {
-      repoMock.findById.mockResolvedValue(leadOwnedBy({ storeId: 'store-A' }));
+    it('GERENTE acessa lead da própria equipe', async () => {
+      repoMock.findById.mockResolvedValue(leadOwnedBy({ teamId: 'team-A' }));
       const lead = await leadService.findById(
         'lead-1',
-        makeUser(Role.GERENTE, 'user-mgr', 'team-1', 'store-A'),
+        makeUser(Role.GERENTE, 'user-mgr', 'team-A', 'store-1'),
       );
       expect(lead.id).toBe('lead-1');
     });
 
-    it('GERENTE recebe 403 ao acessar lead de outra loja', async () => {
-      repoMock.findById.mockResolvedValue(leadOwnedBy({ storeId: 'store-B' }));
+    it('GERENTE recebe 403 ao acessar lead de outra equipe', async () => {
+      repoMock.findById.mockResolvedValue(leadOwnedBy({ teamId: 'team-B' }));
       const err = await captureError(
-        leadService.findById('lead-1', makeUser(Role.GERENTE, 'user-mgr', 'team-1', 'store-A')),
+        leadService.findById('lead-1', makeUser(Role.GERENTE, 'user-mgr', 'team-A', 'store-1')),
+      );
+      expect(err.statusCode).toBe(403);
+    });
+
+    it('GERENTE com teamId null recebe 403', async () => {
+      repoMock.findById.mockResolvedValue(leadOwnedBy({ teamId: 'team-A' }));
+      const err = await captureError(
+        leadService.findById('lead-1', makeUser(Role.GERENTE, 'user-mgr', null, 'store-1')),
       );
       expect(err.statusCode).toBe(403);
     });

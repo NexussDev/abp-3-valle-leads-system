@@ -14,8 +14,8 @@ class LeadService {
       filter.userId = user.id;
     } else if (user.role === Role.LIDER_EQUIPE && user.teamId) {
       filter.teamId = user.teamId;
-    } else if (user.role === Role.GERENTE && user.storeId) {
-      filter.storeId = user.storeId;
+    } else if (user.role === Role.GERENTE && user.teamId) {
+      filter.teamId = user.teamId;
     }
     // GERENTE_GERAL e ADMIN: sem filtro de scope
 
@@ -115,15 +115,8 @@ class LeadService {
       return;
     }
 
-    if (user.role === Role.LIDER_EQUIPE) {
+    if (user.role === Role.LIDER_EQUIPE || user.role === Role.GERENTE) {
       if (!user.teamId || lead.teamId !== user.teamId) {
-        throw new AppError('Acesso negado a este lead', 403);
-      }
-      return;
-    }
-
-    if (user.role === Role.GERENTE) {
-      if (!user.storeId || lead.storeId !== user.storeId) {
         throw new AppError('Acesso negado a este lead', 403);
       }
       return;

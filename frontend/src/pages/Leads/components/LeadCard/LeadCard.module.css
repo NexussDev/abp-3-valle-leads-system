@@ -69,3 +69,12 @@
   width: 60px;
   opacity: 0.9;
 }
+
+/* Cores de fundo por importância baseada no tempo */
+.leadRecente {
+  background-color: #fdf6e2 !important; /* Bege para leads novos/recentes */
+}
+
+.leadEstourando {
+  background-color: #fde8e8 !important; /* Vermelho claro para alertar o tempo estourando */
+}

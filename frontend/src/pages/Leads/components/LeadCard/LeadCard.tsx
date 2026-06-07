@@ -7,8 +7,18 @@ interface Props {
 }
 
 export default function LeadCard({ item, statusColor }: Props) {
+  // Lógica para definir a classe de cor de fundo sem alterar a estrutura
+  let importanciaClass = "";
+
+  if (item.temperatura === "quente") {
+    importanciaClass = styles.leadEstourando; // Aplica o fundo vermelho (quase estourando)
+  } else if (item.temperatura === "frio") {
+    importanciaClass = styles.leadRecente;    // Aplica o fundo bege (criado há pouco tempo)
+  }
+
   return (
-    <div className={styles.card}>
+    /* Apenas concatenamos a classe de importância na div que você já tinha */
+    <div className={`${styles.card} ${importanciaClass}`}>
       <div className={styles.top}>
         <img src={item.avatar} className={styles.avatar} />
         <div>
@@ -23,7 +33,7 @@ export default function LeadCard({ item, statusColor }: Props) {
       </div>
 
       <div className={styles.footer}>
-        <span 
+        <span
           className={styles.status}
           style={{ backgroundColor: statusColor }}
         >

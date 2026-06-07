@@ -5,7 +5,8 @@ export interface Lead {
   price: number;
   time: string;
   status: string;
-  date: string; // 👈 ADICIONE ISSO
+  date: string; 
   avatar: string;
   image: string;
+  temperatura?: 'frio' | 'morno' | 'quente';
 }

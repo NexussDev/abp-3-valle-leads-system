@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import leadSourceService from '../../resource/LeadSource/LeadSourceService';
+import leadSourceService from '../../application/services/LeadSourceService';
 
 class LeadSourceController {
   async index(req: Request, res: Response, next: NextFunction): Promise<void> {

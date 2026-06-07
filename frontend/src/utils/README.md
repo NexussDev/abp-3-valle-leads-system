@@ -1,4 +1,0 @@
-#Utils
-
-##Descrição
-Funções auxiliares.

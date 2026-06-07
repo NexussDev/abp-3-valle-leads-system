@@ -5,10 +5,12 @@ interface SidebarProps {
   isExpanded: boolean;
 }
 
+// 1. Definimos quais perfis podem visualizar cada item de menu
 const NAV_ITEMS = [
   {
     path: '/dashboard',
     label: 'Dashboard',
+    allowedRoles: ['Atendente', 'Gerente', 'Gerente Geral', 'Admin'], // Todos visualizam
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -21,6 +23,7 @@ const NAV_ITEMS = [
   {
     path: '/leads',
     label: 'Pipeline',
+    allowedRoles: ['Atendente', 'Gerente', 'Gerente Geral', 'Admin'], // Todos visualizam
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -30,12 +33,30 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    path: '/perfil',
+    label: 'Perfil',
+    allowedRoles: ['Atendente', 'Gerente', 'Gerente Geral', 'Admin'], // Todos visualizam
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+    ),
+  },
 ];
 
 export const Sidebar = ({ isExpanded }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
+
+  // 2. Buscamos o perfil do usuário logado. 
+  // Padrão adotado "Atendente" caso o localStorage esteja vazio temporariamente.
+  const userRole = localStorage.getItem('role') || 'Atendente';
+
+  // 3. Filtramos a lista de navegação antes de renderizar na tela
+  const visibleItems = NAV_ITEMS.filter(item => item.allowedRoles.includes(userRole));
 
   return (
     <div style={{ ...sidebarContainer, width: isExpanded ? '260px' : '72px' }}>
@@ -56,9 +77,9 @@ export const Sidebar = ({ isExpanded }: SidebarProps) => {
 
       <div style={divider} />
 
-      {/* Nav */}
+      {/* Nav Dinâmica e Condicional */}
       <nav style={navStyle}>
-        {NAV_ITEMS.map(item => (
+        {visibleItems.map(item => (
           <div
             key={item.path}
             onClick={() => navigate(item.path)}
@@ -80,6 +101,7 @@ export const Sidebar = ({ isExpanded }: SidebarProps) => {
   );
 };
 
+// --- Estilos originais preservados ---
 const sidebarContainer: CSSProperties = {
   height: '100vh',
   backgroundColor: '#0f172a',

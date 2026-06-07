@@ -6,6 +6,7 @@ import Layout from "../components/layout/Layout";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Catalogo from "../pages/Catalogo/Catalogo";
 import Perfil from "../pages/Perfil/Perfil";
+import PrivateRoute from "./PrivateRoute";
 
 export function AppRoutes() {
   return (
@@ -18,9 +19,11 @@ export function AppRoutes() {
         <Route path="/colaborador" element={<Login />} />
 
         {/* Rotas protegidas (com sidebar) */}
-        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-        <Route path="/leads" element={<Layout><LeadsPage /></Layout>} />
-        <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
+        <Route element={<PrivateRoute />}>
+          <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+          <Route path="/leads" element={<Layout><LeadsPage /></Layout>} />
+          <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
+        </Route>
 
         <Route path="*" element={<Navigate to="/catalogo" />} />
       </Routes>

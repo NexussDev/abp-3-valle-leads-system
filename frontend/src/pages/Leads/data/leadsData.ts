@@ -16,7 +16,8 @@ export const leadsData: Column[] = [
         status: "Novo",
         date: "2026-04-11",
         avatar: "https://i.pravatar.cc/150?img=1",
-        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png"
+        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png",
+        temperatura: "quente" // <--- ADICIONADO (Quase estourando - Fundo Vermelho)
       },
       {
         id: 2,
@@ -27,7 +28,8 @@ export const leadsData: Column[] = [
         status: "Novo",
         date: "2026-04-13",
         avatar: "https://i.pravatar.cc/150?img=2",
-        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png"
+        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png",
+        temperatura: "frio" // <--- ADICIONADO (Criado há pouco tempo - Fundo Bege)
       }
     ]
   },
@@ -46,7 +48,8 @@ export const leadsData: Column[] = [
         status: "Contato",
         date: "2026-04-12",
         avatar: "https://i.pravatar.cc/150?img=3",
-        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png"
+        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png",
+        temperatura: "morno" // <--- ADICIONADO (Padrão, sem cor de alerta)
       },
       {
         id: 4,
@@ -57,7 +60,8 @@ export const leadsData: Column[] = [
         status: "Negociação",
         date: "2026-04-13",
         avatar: "https://i.pravatar.cc/150?img=4",
-        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png"
+        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png",
+        temperatura: "frio" // <--- ADICIONADO (Fundo Bege)
       }
     ]
   },
@@ -76,7 +80,8 @@ export const leadsData: Column[] = [
         status: "Proposta",
         date: "2026-04-10",
         avatar: "https://i.pravatar.cc/150?img=5",
-        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png"
+        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png",
+        temperatura: "quente" // <--- ADICIONADO (Fundo Vermelho)
       }
     ]
   },
@@ -95,7 +100,8 @@ export const leadsData: Column[] = [
         status: "Vendido",
         date: "2026-04-12",
         avatar: "https://i.pravatar.cc/150?img=6",
-        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png"
+        image: "https://cdn-icons-png.flaticon.com/512/743/743131.png",
+        temperatura: "morno" // <--- ADICIONADO
       }
     ]
   }

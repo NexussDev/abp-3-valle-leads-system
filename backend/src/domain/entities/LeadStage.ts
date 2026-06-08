@@ -1,55 +1,44 @@
 import { AppError } from '../../shared/errors/AppError';
 
-export const LEAD_STAGES = ['novo_lead', 'contato', 'proposta', 'negociacao', 'fechado'] as const;
-export type LeadStage = (typeof LEAD_STAGES)[number];
+export const STAGE_ORDER = [
+  'novo_lead',
+  'contato',
+  'proposta',
+  'negociacao',
+  'fechado',
+] as const;
 
-export const STAGE_LABELS: Record<LeadStage, string> = {
-  novo_lead: 'Novo Lead',
-  contato: 'Contato',
-  proposta: 'Proposta',
-  negociacao: 'Negociação',
-  fechado: 'Fechado',
-};
+export type LeadStage = typeof STAGE_ORDER[number];
 
 export function validateStageTransition(
-  currentStage: string | null | undefined,
-  newStage: string,
+  currentStage: string,
+  nextStage: string,
   closingReason?: string,
 ): void {
-  const current = (currentStage ?? 'novo_lead') as LeadStage;
+  if (currentStage === nextStage) return;
 
-  if (!LEAD_STAGES.includes(newStage as LeadStage)) {
-    throw new AppError(`Etapa inválida: "${newStage}". Valores aceitos: ${LEAD_STAGES.join(', ')}`, 400);
+  const currentIndex = STAGE_ORDER.indexOf(currentStage as LeadStage);
+  const nextIndex = STAGE_ORDER.indexOf(nextStage as LeadStage);
+
+  if (currentIndex === -1 || nextIndex === -1) {
+    throw new AppError('Status inválido.', 400);
   }
 
-  const currentIdx = LEAD_STAGES.indexOf(current);
-  const newIdx = LEAD_STAGES.indexOf(newStage as LeadStage);
+  const diff = nextIndex - currentIndex;
 
-  if (newIdx <= currentIdx) {
-    throw new AppError(
-      `Não é permitido retroceder etapas. Etapa atual: "${STAGE_LABELS[current]}"`,
-      422,
-    );
+  if (diff > 1) {
+    throw new AppError('Não é permitido pular etapas.', 400);
   }
 
-  if (newIdx - currentIdx > 1) {
-    const next = LEAD_STAGES[currentIdx + 1];
-    throw new AppError(
-      `Não é permitido pular etapas. Próxima etapa obrigatória: "${STAGE_LABELS[next]}"`,
-      422,
-    );
+  if (diff < -1) {
+    throw new AppError('Não é permitido retroceder mais de uma etapa por vez.', 400);
   }
 
-  if (newStage === 'fechado') {
-    if (current !== 'negociacao') {
-      throw new AppError('Lead só pode ser fechado a partir da etapa "Negociação"', 422);
-    }
-    if (!closingReason || closingReason.trim().length === 0) {
-      throw new AppError('Motivo de fechamento é obrigatório ao fechar um lead', 422);
-    }
+  if (nextStage === 'fechado' && !closingReason) {
+    throw new AppError('Informe o motivo de fechamento.', 400);
   }
 }
 
-export function isValidStage(value: unknown): value is LeadStage {
-  return LEAD_STAGES.includes(value as LeadStage);
+export function isValidStage(value: string): value is LeadStage {
+  return STAGE_ORDER.includes(value as LeadStage);
 }

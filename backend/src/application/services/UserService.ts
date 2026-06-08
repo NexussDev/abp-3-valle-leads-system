@@ -47,9 +47,20 @@ class UserService {
   }
 
   async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
-    await this.findById(id);
-    return userRepository.update(id, data);
+  await this.findById(id);
+
+  const updateData: Prisma.UserUpdateInput = { ...data };
+
+  if (typeof updateData.password === 'string') {
+    if (updateData.password.length < 6) {
+      throw new AppError('Senha deve ter pelo menos 6 caracteres', 400);
+    }
+
+    updateData.password = await bcrypt.hash(updateData.password, 10);
   }
+
+  return userRepository.update(id, updateData);
+}
 
   async updateMe(
     userId: string,

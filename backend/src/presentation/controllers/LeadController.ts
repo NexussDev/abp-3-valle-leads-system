@@ -72,6 +72,7 @@ class LeadController {
 
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      console.log('Body recebido:', JSON.stringify(req.body));
       const lead = await leadService.update(req.params['id'] as string, req.user!, req.body);
       await logService.log(req.user!.id, 'UPDATE', 'Lead', lead.id);
       res.status(200).json(lead);

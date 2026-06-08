@@ -27,6 +27,8 @@ export interface Lead {
   city?: string;
   isVerified?: boolean;
   hasAlert?: boolean;
+  closingReason?: string;   // linha nova
+  converted?: boolean;      // linha nova
 
   storeId?: string;
   storeName?: string;

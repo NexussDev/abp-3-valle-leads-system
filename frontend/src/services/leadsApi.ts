@@ -4,10 +4,19 @@ const API_URL =
   (import.meta.env.VITE_API_URL as string | undefined) ??
   'http://localhost:3000/api';
 
-const TOKEN_KEY = 'token';
+const TOKEN_KEYS = ['token', '@LeadsCar:token'];
+
+function getStoredToken(): string | null {
+  for (const key of TOKEN_KEYS) {
+    const token = localStorage.getItem(key);
+    if (token) return token;
+  }
+
+  return null;
+}
 
 function clearSessionAndRedirect() {
-  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem('token');
   localStorage.removeItem('@LeadsCar:token');
   localStorage.removeItem('@LeadsCar:user');
   localStorage.removeItem('@LeadsCar:role');
@@ -23,9 +32,7 @@ export const client = axios.create({
 });
 
 client.interceptors.request.use(config => {
-  const token =
-    localStorage.getItem(TOKEN_KEY) ??
-    localStorage.getItem('@LeadsCar:token');
+  const token = getStoredToken();
 
   if (token) {
     config.headers = config.headers ?? {};
@@ -40,7 +47,6 @@ client.interceptors.response.use(
   error => {
     const status = error.response?.status;
     const requestUrl = error.config?.url ?? '';
-
     const isLoginRequest = requestUrl.includes('/auth/login');
 
     if (status === 401 && !isLoginRequest) {
@@ -48,7 +54,7 @@ client.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export interface ApiLead {

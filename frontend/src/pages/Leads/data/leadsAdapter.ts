@@ -43,14 +43,16 @@ export function toLead(api: ApiLead): Lead {
     status: STAGE_TO_STATUS[stage],
     timeAgo: timeAgo(api.createdAt),
     statusUpdatedAt: '',
-    storeId:   api.store?.id,
-    storeName: api.store?.name,
-    teamId:    api.team?.id,
-    teamName:  api.team?.name,
-    userId:    api.user?.id,
-    userName:  api.user?.name,
-    origin:    api.origin,
-    phone:     api.phone ?? undefined,
+    storeId:      api.store?.id,
+    storeName:    api.store?.name,
+    teamId:       api.team?.id,
+    teamName:     api.team?.name,
+    userId:       api.user?.id,
+    userName:     api.user?.name,
+    origin:       api.origin,
+    phone:        api.phone ?? undefined,
+    closingReason: api.closingReason ?? undefined,  // linha nova
+    converted:     api.converted ?? undefined,       // linha nova
   };
 }
 

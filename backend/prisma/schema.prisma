@@ -81,6 +81,7 @@ model Lead {
   status    String?   @db.VarChar(30)
   origin        String
   closingReason String?   @map("closing_reason") @db.VarChar(255)
+  converted     Boolean?  @default(false) @map("converted")
   userId    String    @map("user_id") @db.Uuid
   teamId    String    @map("team_id") @db.Uuid
   storeId   String    @map("store_id") @db.Uuid

@@ -47,49 +47,62 @@ class ClientRepository {
 
 ## 2. State Pattern (GoF: Comportamental)
 
-**Categoria:** Padrão de Comportamento  
+**Categoria:** Padrão de Comportamento
 **Classificação GoF:** Comportamental
 
 ### O que é
+
 Permite que um objeto altere seu comportamento quando seu estado interno muda. No sistema, o ciclo de vida de um Lead segue uma máquina de estados com transições válidas definidas por regra de negócio.
 
 ### Onde está implementado
 
-| Arquivo | Responsabilidade |
-|---|---|
-| `backend/src/domain/entities/LeadStage.ts` | Define os estados válidos do Lead |
-| `backend/src/shared/validators/leadStageValidator.ts` | Valida transições de estado permitidas |
-| `frontend/src/pages/Leads/utils/leadStageValidator.ts` | Espelha as validações no frontend |
+| Arquivo                                                | Responsabilidade                       |
+| ------------------------------------------------------ | -------------------------------------- |
+| `backend/src/domain/entities/LeadStage.ts`             | Define os estados válidos do Lead      |
+| `backend/src/shared/validators/leadStageValidator.ts`  | Valida transições de estado permitidas |
+| `frontend/src/pages/Leads/utils/leadStageValidator.ts` | Espelha as validações no frontend      |
 
 ### Estados do Lead
 
 ```
-NOVO → EM_CONTATO → EM_NEGOCIACAO → FECHADO_GANHO
-                                  ↘ FECHADO_PERDIDO
+novo_lead → contato → proposta → negociacao → fechado
 ```
 
 ### Exemplo
-```typescript
-// leadStageValidator.ts
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  NOVO: ['EM_CONTATO'],
-  EM_CONTATO: ['EM_NEGOCIACAO', 'FECHADO_PERDIDO'],
-  EM_NEGOCIACAO: ['FECHADO_GANHO', 'FECHADO_PERDIDO'],
-  FECHADO_GANHO: [],
-  FECHADO_PERDIDO: [],
-};
 
-export function isValidTransition(from: string, to: string): boolean {
-  return VALID_TRANSITIONS[from]?.includes(to) ?? false;
+```typescript
+const STAGE_ORDER = [
+  'novo_lead',
+  'contato',
+  'proposta',
+  'negociacao',
+  'fechado',
+] as const;
+
+export function validateStageMove(from: LeadStage, to: LeadStage) {
+  const fromIdx = STAGE_ORDER.indexOf(from);
+  const toIdx = STAGE_ORDER.indexOf(to);
+
+  if (toIdx - fromIdx > 1) {
+    throw new Error('Não é permitido pular etapas.');
+  }
+
+  if (toIdx < fromIdx) {
+    throw new Error('Não é permitido retroceder etapas.');
+  }
+
+  return true;
 }
 ```
 
 ### Por que foi usado
-- Impede transições inválidas no Kanban (ex: FECHADO → EM_CONTATO)
-- Garante integridade dos dados de funil de vendas
-- Facilita auditoria do histórico de negociações via `NegotiationHistory`
 
----
+* Impede transições inválidas no Kanban.
+* Garante integridade dos dados do funil de vendas.
+* Centraliza as regras de mudança de estágio.
+* Mantém frontend e backend sincronizados na validação dos estados.
+* Facilita auditoria do histórico de negociações.
+
 
 ## 3. Service Layer Pattern (Camada de Serviço)
 

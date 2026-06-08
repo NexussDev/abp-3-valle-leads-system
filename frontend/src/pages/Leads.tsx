@@ -1,17 +1,22 @@
 import { useState, useEffect, CSSProperties } from 'react';
 import { fetchLeads, ApiLead } from '../services/leadsApi';
+import CloseLeadModal from '../components/CloseLeadModal/CloseLeadModal';
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   novo_lead:    { bg: '#dbeafe', color: '#1d4ed8' },
-  negociacao:   { bg: '#fef9c3', color: '#a16207' },
-  venda:        { bg: '#dcfce7', color: '#166534' },
-  perdido:      { bg: '#fee2e2', color: '#991b1b' },
+  contato:      { bg: '#f3e8ff', color: '#7e22ce' },
+  proposta:     { bg: '#fef9c3', color: '#a16207' },
+  negociacao:   { bg: '#ffedd5', color: '#c2410c' },
+  fechado:      { bg: '#dcfce7', color: '#166534' },
 };
 
 function statusLabel(s: string | null) {
   const map: Record<string, string> = {
-    novo_lead: 'Novo Lead', negociacao: 'Negociação',
-    venda: 'Venda', perdido: 'Perdido',
+    novo_lead:  'Novo Lead',
+    contato:    'Contato',
+    proposta:   'Proposta',
+    negociacao: 'Negociação',
+    fechado:    'Fechado',
   };
   return map[s ?? ''] ?? s ?? '—';
 }
@@ -21,13 +26,16 @@ export default function Leads() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
   const [search, setSearch] = useState('');
+  const [closingLead, setClosingLead] = useState<ApiLead | null>(null);
 
-  useEffect(() => {
+  function load() {
     fetchLeads()
       .then(setLeads)
       .catch(() => setErro('Erro ao carregar leads.'))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { load(); }, []);
 
   const filtered = leads.filter(l =>
     (l.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
@@ -39,12 +47,18 @@ export default function Leads() {
 
   return (
     <div style={{ padding: '24px' }}>
-      {/* Header */}
+      {closingLead && (
+        <CloseLeadModal
+          leadId={closingLead.id}
+          leadName={closingLead.name}
+          onClose={() => setClosingLead(null)}
+          onSuccess={() => { setClosingLead(null); load(); }}
+        />
+      )}
+
       <div style={headerStyle}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#1e293b' }}>
-            Leads
-          </h1>
+          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#1e293b' }}>Leads</h1>
           <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
             {leads.length} lead{leads.length !== 1 ? 's' : ''} cadastrado{leads.length !== 1 ? 's' : ''}
           </p>
@@ -57,7 +71,6 @@ export default function Leads() {
         />
       </div>
 
-      {/* Tabela */}
       {filtered.length === 0 ? (
         <div style={emptyStyle}>
           <span style={{ fontSize: '48px' }}>📋</span>
@@ -70,7 +83,7 @@ export default function Leads() {
           <table style={tableStyle}>
             <thead>
               <tr>
-                {['Nome', 'Telefone', 'Origem', 'Status', 'Criado em'].map(h => (
+                {['Nome', 'Telefone', 'Origem', 'Status', 'Criado em', ''].map(h => (
                   <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
@@ -78,6 +91,7 @@ export default function Leads() {
             <tbody>
               {filtered.map(lead => {
                 const st = STATUS_COLORS[lead.status ?? ''] ?? { bg: '#f1f5f9', color: '#475569' };
+                const podeFechar = lead.status !== 'fechado';
                 return (
                   <tr key={lead.id} style={trStyle}>
                     <td style={tdStyle}>{lead.name ?? '—'}</td>
@@ -92,6 +106,16 @@ export default function Leads() {
                       {lead.createdAt
                         ? new Date(lead.createdAt).toLocaleDateString('pt-BR')
                         : '—'}
+                    </td>
+                    <td style={tdStyle}>
+                      {podeFechar && (
+                        <button
+                          style={closeButtonStyle}
+                          onClick={() => setClosingLead(lead)}
+                        >
+                          Fechar Lead
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -114,3 +138,4 @@ const tdStyle: CSSProperties = { padding: '14px 20px', fontSize: '14px', color: 
 const trStyle: CSSProperties = { transition: 'background 0.15s' };
 const badgeStyle: CSSProperties = { padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 };
 const emptyStyle: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px', backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0' };
+const closeButtonStyle: CSSProperties = { padding: '6px 14px', borderRadius: 8, border: 'none', background: '#fdecea', color: '#c0392b', fontWeight: 700, fontSize: 12, cursor: 'pointer' };

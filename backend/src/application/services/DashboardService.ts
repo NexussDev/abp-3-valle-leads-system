@@ -39,7 +39,8 @@ class DashboardService {
     const stores = await prisma.store.findMany({ where: { id: { in: storeIds } } });
 
     const fechados = byStageRaw.find(s => s.status === 'fechado')?._count._all ?? 0;
-    const conversao = total > 0 ? ((fechados / total) * 100).toFixed(1) : '0';
+    const convertidos = await prisma.lead.count({ where: { ...where, status: 'fechado', converted: true } });
+    const conversao = fechados > 0 ? ((convertidos / fechados) * 100).toFixed(1) : '0';
 
     const byImportance = negotiations.reduce((acc, n) => {
       const key = n.importance ?? 'indefinido';
@@ -50,6 +51,7 @@ class DashboardService {
     return {
       total,
       fechados,
+      convertidos,
       conversao: `${conversao}%`,
       byStage: Object.fromEntries(byStageRaw.map(s => [s.status ?? 'indefinido', s._count._all])),
       byOrigin: Object.fromEntries(byOriginRaw.map(o => [o.origin, o._count._all])),
@@ -95,6 +97,8 @@ class DashboardService {
       }),
     ]);
 
+    const convertidos = await prisma.lead.count({ where: { ...where, status: 'fechado', converted: true } });
+
     const userIds = byAtendenteRaw.map(r => r.userId);
     const teamIds = byEquipeRaw.map(r => r.teamId);
     const [users, teams] = await Promise.all([
@@ -120,8 +124,9 @@ class DashboardService {
     return {
       total,
       fechados,
-      naoConvertidos: total - fechados,
-      taxaConversao: total > 0 ? `${((fechados / total) * 100).toFixed(1)}%` : '0%',
+      convertidos,
+      naoConvertidos: fechados - convertidos,
+      taxaConversao: fechados > 0 ? `${((convertidos / fechados) * 100).toFixed(1)}%` : '0%',
       byAtendente: byAtendenteRaw.map(r => ({
         atendente: users.find(u => u.id === r.userId)?.name ?? r.userId,
         count: r._count._all,

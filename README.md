@@ -32,7 +32,7 @@ O Sistema de Gestão de Leads gerencia todo o ciclo de um cliente em potencial, 
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Frontend | React 18 + TypeScript + Vite |
+| Frontend | React 19.2.4 + TypeScript + Vite |
 | Backend | Node.js + Express + TypeScript |
 | Banco de dados | PostgreSQL 15 |
 | ORM | Prisma |
@@ -114,8 +114,14 @@ docker compose up --build
 
 O comando sobe automaticamente:
 - PostgreSQL (porta 5433)
-- Backend com migrations e seed aplicados (porta 3000)
+- Backend com migrations aplicadas (porta 3000)
 - Frontend (porta 5173)
+
+> **Atenção:** o seed com dados iniciais **não é executado automaticamente** pelo Docker.
+> Para popular o banco, execute manualmente após subir os containers:
+> ```bash
+> docker compose exec backend npx prisma db seed
+> ```
 
 **Acessar:**
 - Frontend: http://localhost:5173
@@ -187,8 +193,8 @@ Documentação completa dos endpoints em [docs/api.md](docs/api.md).
 | `GET/POST/PUT/DELETE /api/users` | Gestão de usuários |
 | `GET/POST/PUT/DELETE /api/leads` | Gestão de leads |
 | `GET/POST/PUT/DELETE /api/leads/:id/negotiation` | Negociações |
-| `GET /api/dashboard/operacional` | Dashboard operacional |
-| `GET /api/dashboard/analitico` | Dashboard analítico |
+| `GET /api/dashboard`             | Dashboard operacional |
+| `GET /api/dashboard/analytics`   | Dashboard analítico   |
 | `GET /api/logs` | Logs do sistema |
 | `GET /api/lead-sources` | Origens de leads |
 
@@ -240,7 +246,7 @@ Retrospectivas: [docs/retrospectivas/](docs/retrospectivas/)
 ---
 
 ![Status](https://img.shields.io/badge/status-Sprint%202%20concluída-green)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
+[![React](https://img.shields.io/badge/React-19.2.4-61DAFB?logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql)](https://www.postgresql.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com)

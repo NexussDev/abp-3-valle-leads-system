@@ -5,12 +5,12 @@ interface SidebarProps {
   isExpanded: boolean;
 }
 
-// 1. Definimos quais perfis podem visualizar cada item de menu
+// 1. Valores de role alinhados com os que o backend retorna (ex: 'ADMIN', não 'Admin')
 const NAV_ITEMS = [
   {
     path: '/dashboard',
     label: 'Dashboard',
-    allowedRoles: ['Atendente', 'Gerente', 'Gerente Geral', 'Admin'], // Todos visualizam
+    allowedRoles: ['ATENDENTE', 'LIDER_EQUIPE', 'GERENTE', 'GERENTE_GERAL', 'ADMIN'],
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -23,7 +23,7 @@ const NAV_ITEMS = [
   {
     path: '/leads',
     label: 'Pipeline',
-    allowedRoles: ['Atendente', 'Gerente', 'Gerente Geral', 'Admin'], // Todos visualizam
+    allowedRoles: ['ATENDENTE', 'LIDER_EQUIPE', 'GERENTE', 'GERENTE_GERAL', 'ADMIN'],
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -36,11 +36,24 @@ const NAV_ITEMS = [
   {
     path: '/perfil',
     label: 'Perfil',
-    allowedRoles: ['Atendente', 'Gerente', 'Gerente Geral', 'Admin'], // Todos visualizam
+    allowedRoles: ['ATENDENTE', 'LIDER_EQUIPE', 'GERENTE', 'GERENTE_GERAL', 'ADMIN'],
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+    ),
+  },
+  {
+    path: '/usuarios',
+    label: 'Usuários',
+    allowedRoles: ['ADMIN'], // Apenas Admin
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
   },
@@ -51,9 +64,8 @@ export const Sidebar = ({ isExpanded }: SidebarProps) => {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
 
-  // 2. Buscamos o perfil do usuário logado. 
-  // Padrão adotado "Atendente" caso o localStorage esteja vazio temporariamente.
-  const userRole = localStorage.getItem('role') || 'Atendente';
+  // 2. Chave corrigida para '@LeadsCar:role' — mesma usada pelo Login ao salvar
+  const userRole = localStorage.getItem('@LeadsCar:role') || 'ATENDENTE';
 
   // 3. Filtramos a lista de navegação antes de renderizar na tela
   const visibleItems = NAV_ITEMS.filter(item => item.allowedRoles.includes(userRole));

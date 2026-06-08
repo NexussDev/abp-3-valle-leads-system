@@ -5,8 +5,12 @@ import {
 } from 'recharts';
 
 import { fetchLeads, ApiLead } from '../../services/leadsApi';
-import { getStoredLeads } from '../Leads/data/mockLeadStorage';
-import { toLead } from '../Leads/data/leadsAdapter';
+import {
+  fetchDashboardOperacional,
+  fetchDashboardAnalytico,
+  DashboardOperacional,
+  DashboardAnalytico,
+} from '../../services/dashboardApi';
 
 type Role = 'ADMIN' | 'GERENTE' | 'LIDER_EQUIPE' | 'ATENDENTE';
 
@@ -57,18 +61,6 @@ function countBy<K extends string>(
     map[k] = (map[k] ?? 0) + 1;
   }
   return Object.entries(map).map(([name, value]) => ({ name: name as K, value }));
-}
-
-function isToday(iso: string | null): boolean {
-  if (!iso) return false;
-  const d = new Date(iso);
-  const now = new Date();
-  return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-}
-
-function conversion(leads: ApiLead[]): number {
-  if (!leads.length) return 0;
-  return Math.round((leads.filter(l => l.status === 'fechado').length / leads.length) * 100);
 }
 
 // ─── SHARED UI ────────────────────────────────────────────────────────────────
@@ -159,7 +151,7 @@ function ConversionBanner({ value, label }: { value: string | number; label: str
         <h2 style={sectionTitleStyle}>Taxa de Conversão</h2>
         <p style={sectionSubtitleStyle}>{label}</p>
       </div>
-      <strong style={conversionValueStyle}>{value}%</strong>
+      <strong style={conversionValueStyle}>{value}</strong>
     </section>
   );
 }
@@ -207,6 +199,7 @@ function AtendenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: s
   const emContato    = leads.filter(l => l.status === 'contato').length;
   const emNegociacao = leads.filter(l => l.status === 'negociacao').length;
   const fechados     = leads.filter(l => l.status === 'fechado').length;
+  const conversao    = total > 0 ? Math.round((fechados / total) * 100) : 0;
 
   const origemData = useMemo(() => countBy(leads, l => l.origin ? cap(l.origin) : 'Não informado').map(e => ({
     ...e, color: ORIGIN_COLORS[e.name.toLowerCase()] ?? '#94a3b8',
@@ -229,7 +222,7 @@ function AtendenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: s
         <PieSection title="Origem dos Meus Leads" subtitle="Canais que trouxeram seus leads" data={origemData} />
         <LeadsList leads={latest} title="Últimas Leads" subtitle="Leads mais recentes do seu pipeline" />
       </div>
-      <ConversionBanner value={conversion(leads)} label="Percentual dos seus leads que chegaram à etapa de venda." />
+      <ConversionBanner value={`${conversao}%`} label="Percentual dos seus leads que chegaram à etapa de venda." />
     </>
   );
 }
@@ -292,6 +285,8 @@ function GerenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: str
     const now = new Date();
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
+  const fechados       = leads.filter(l => l.status === 'fechado').length;
+  const conversao      = total > 0 ? Math.round((fechados / total) * 100) : 0;
 
   const equipeData = useMemo(() =>
     countBy(leads, l => l.team?.name ?? 'Sem equipe')
@@ -321,7 +316,7 @@ function GerenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: str
         <StatCard label="Total Loja"       value={total}         color="#c0392b" />
         <StatCard label="Equipes Ativas"   value={equipesAtivas} color="#3b82f6" />
         <StatCard label="Leads do Mês"     value={leadsDoMes}    color="#f97316" />
-        <StatCard label="Conversão"        value={`${conversion(leads)}%`} color="#10b981" />
+        <StatCard label="Conversão"        value={`${conversao}%`} color="#10b981" />
       </div>
       <div style={{ ...mainGridStyle, gridTemplateColumns: '1.3fr 1fr' }}>
         <BarSection title="Comparativo entre Equipes" subtitle="Leads por equipe da loja" data={equipeData} />
@@ -356,45 +351,98 @@ function GerenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: str
   );
 }
 
-// ─── ADMIN ────────────────────────────────────────────────────────────────────
-function AdminDashboard({ leads, userName }: { leads: ApiLead[]; userName: string }) {
-  const total        = leads.length;
-  const hoje         = leads.filter(l => isToday(l.createdAt)).length;
-  const usuariosAtivos = new Set(leads.map(l => l.user?.id).filter(Boolean)).size;
+// ─── ADMIN — consome /api/dashboard e /api/dashboard/analytics ───────────────
+function AdminDashboard({ userName }: { userName: string }) {
+  const [operacional, setOperacional] = useState<DashboardOperacional | null>(null);
+  const [analitico,   setAnalitico]   = useState<DashboardAnalytico   | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState<string | null>(null);
 
-  const origemBarData = useMemo(() =>
-    countBy(leads, l => l.origin ? cap(l.origin) : 'Não informado')
-      .sort((a, b) => b.value - a.value)
-      .map((e, i) => ({ ...e, fill: ORIGIN_COLORS[e.name.toLowerCase()] ?? BAR_PALETTE[i % BAR_PALETTE.length] })),
-    [leads]
-  );
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchDashboardOperacional('month'),
+      fetchDashboardAnalytico('month'),
+    ])
+      .then(([op, an]) => {
+        setOperacional(op);
+        setAnalitico(an);
+      })
+      .catch(() => setError('Não foi possível carregar os dados do dashboard.'))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const origemPieData = useMemo(() =>
-    countBy(leads, l => l.origin ? cap(l.origin) : 'Não informado').map(e => ({
-      ...e, color: ORIGIN_COLORS[e.name.toLowerCase()] ?? '#94a3b8',
-    })),
-    [leads]
-  );
+  if (loading) return <div style={emptyStyle}>Carregando dashboard…</div>;
+  if (error || !operacional || !analitico) {
+    return <div style={{ ...emptyStyle, color: '#c0392b' }}>{error ?? 'Erro inesperado.'}</div>;
+  }
 
-  const latest = useMemo(() =>
-    [...leads].sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()),
-    [leads]
-  );
+  const origemBarData = Object.entries(operacional.byOrigin)
+    .sort(([, a], [, b]) => b - a)
+    .map(([name, value], i) => ({
+      name: cap(name),
+      value,
+      fill: ORIGIN_COLORS[name.toLowerCase()] ?? BAR_PALETTE[i % BAR_PALETTE.length],
+    }));
+
+  const origemPieData = Object.entries(operacional.byOrigin).map(([name, value]) => ({
+    name: cap(name),
+    value,
+    color: ORIGIN_COLORS[name.toLowerCase()] ?? '#94a3b8',
+  }));
+
+  const atendenteData = analitico.byAtendente
+    .sort((a, b) => b.count - a.count)
+    .map((r, i) => ({ name: r.atendente, value: r.count, fill: BAR_PALETTE[i % BAR_PALETTE.length] }));
+
+  const closingData = analitico.closingReasons
+    .sort((a, b) => b.count - a.count)
+    .map((r, i) => ({ name: r.motivo, value: r.count, fill: BAR_PALETTE[i % BAR_PALETTE.length] }));
 
   return (
     <>
-      <Hero badge="Dashboard Operacional" name={userName} subtitle="Visão completa do sistema — todas as lojas e equipes." />
+      <Hero badge="Dashboard Admin" name={userName} subtitle="Visão completa do sistema — todas as lojas e equipes." />
+
+      {/* Métricas operacionais vindas da API */}
       <div style={cardsGridStyle}>
-        <StatCard label="Total Sistema"    value={total}          color="#c0392b" />
-        <StatCard label="Leads Hoje"       value={hoje}           color="#3b82f6" />
-        <StatCard label="Usuários Ativos"  value={usuariosAtivos} color="#8b5cf6" />
-        <StatCard label="Conversão"        value={`${conversion(leads)}%`} color="#10b981" />
+        <StatCard label="Total Sistema"   value={operacional.total}   color="#c0392b" />
+        <StatCard label="Fechados"        value={operacional.fechados} color="#10b981" />
+        <StatCard label="Taxa Conversão"  value={operacional.conversao} color="#8b5cf6" />
+        <StatCard
+          label="Tempo Médio Atend."
+          value={analitico.tempoMedioAtendimentoHoras ? `${analitico.tempoMedioAtendimentoHoras}h` : '—'}
+          color="#f97316"
+        />
       </div>
+
+      {/* Gráficos de origem */}
       <div style={{ ...mainGridStyle, gridTemplateColumns: '1.3fr 1fr' }}>
         <BarSection title="Leads por Canal" subtitle="Distribuição de origem em todo o sistema" data={origemBarData} />
         <PieSection title="Distribuição por Origem" subtitle="Proporção de canais de captação" data={origemPieData} />
       </div>
-      <LeadsList leads={latest} title="Atividade Recente" subtitle="Últimas leads registradas no sistema" />
+
+      {/* Ranking de atendentes (analítico) */}
+      {atendenteData.length > 0 && (
+        <BarSection
+          title="Ranking de Atendentes"
+          subtitle="Leads por vendedor em todo o sistema"
+          data={atendenteData}
+        />
+      )}
+
+      {/* Motivos de fechamento */}
+      {closingData.length > 0 && (
+        <BarSection
+          title="Motivos de Fechamento"
+          subtitle="Por que as negociações foram encerradas"
+          data={closingData}
+        />
+      )}
+
+      <ConversionBanner
+        value={analitico.taxaConversao}
+        label="Percentual de leads convertidos em vendas no período."
+      />
     </>
   );
 }
@@ -407,53 +455,34 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<ApiLead[]>([]);
 
   useEffect(() => {
+    // ADMIN usa exclusivamente os endpoints /api/dashboard e /api/dashboard/analytics.
+    // Os demais perfis continuam usando /api/leads (filtrado pelo backend via RBAC).
+    if (role === 'ADMIN') return;
+
     const load = async () => {
       try {
         const data = await fetchLeads();
-        if (role === 'ADMIN') {
-          const local = getStoredLeads();
-          const fromApi = data.map(toLead);
-          const apiIds = new Set(fromApi.map(l => l.id));
-          const extraIds = local.filter(l => !apiIds.has(l.id));
-          const merged: ApiLead[] = [
-            ...data,
-            ...extraIds.map(l => ({
-              id: l.id,
-              name: l.name,
-              phone: l.phone ?? null,
-              status: l.stage,
-              origin: l.origin ?? '',
-              createdAt: null,
-            })),
-          ];
-          setLeads(merged);
-        } else {
-          setLeads(data);
-        }
+        setLeads(data);
       } catch {
         setLeads([]);
       }
     };
 
     load();
-    window.addEventListener('mock-leads-updated', load);
     window.addEventListener('focus', load);
     document.addEventListener('visibilitychange', load);
     return () => {
-      window.removeEventListener('mock-leads-updated', load);
       window.removeEventListener('focus', load);
       document.removeEventListener('visibilitychange', load);
     };
   }, [role]);
 
-  const props = { leads, userName };
-
   return (
     <div style={pageStyle}>
-      {role === 'ATENDENTE'   && <AtendenteDashboard   {...props} />}
-      {role === 'LIDER_EQUIPE' && <LiderEquipeDashboard {...props} />}
-      {role === 'GERENTE'     && <GerenteDashboard     {...props} />}
-      {(role === 'ADMIN' || role === 'GERENTE_GERAL') && <AdminDashboard {...props} />}
+      {role === 'ATENDENTE'    && <AtendenteDashboard   leads={leads} userName={userName} />}
+      {role === 'LIDER_EQUIPE' && <LiderEquipeDashboard leads={leads} userName={userName} />}
+      {role === 'GERENTE'      && <GerenteDashboard     leads={leads} userName={userName} />}
+      {(role === 'ADMIN' || role === 'GERENTE_GERAL') && <AdminDashboard userName={userName} />}
     </div>
   );
 }

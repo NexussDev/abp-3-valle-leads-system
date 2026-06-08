@@ -64,6 +64,7 @@ class LeadService {
     data: {
       status?: string;
       closingReason?: string;
+      converted?: boolean;
       name?: string;
       phone?: string;
       origin?: string;
@@ -86,6 +87,7 @@ class LeadService {
     const updateData: any = {};
     if (data.status) updateData.status = data.status;
     if (data.closingReason !== undefined) updateData.closingReason = data.closingReason;
+    if (data.converted !== undefined) updateData.converted = data.converted;
     if (data.name) updateData.name = data.name;
     if (data.phone) updateData.phone = data.phone;
     if (data.origin) updateData.origin = data.origin;

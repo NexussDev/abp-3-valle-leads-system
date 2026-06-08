@@ -27,20 +27,32 @@ export function validateStageMove(from: LeadStage, to: LeadStage): MoveValidatio
   if (from === to) return { allowed: true };
 
   const fromIdx = STAGE_ORDER.indexOf(from);
-  const toIdx   = STAGE_ORDER.indexOf(to);
+  const toIdx = STAGE_ORDER.indexOf(to);
 
-  if (toIdx < fromIdx) {
+  if (fromIdx === -1 || toIdx === -1) {
     return {
       allowed: false,
-      reason: `Não é permitido retroceder etapas. O lead está em "${STAGE_LABEL[from]}" e não pode voltar para "${STAGE_LABEL[to]}".`,
+      reason: 'Estágio inválido.',
     };
   }
 
-  if (toIdx - fromIdx > 1) {
+  const diff = toIdx - fromIdx;
+
+  if (diff > 1) {
     const next = STAGE_ORDER[fromIdx + 1];
+
     return {
       allowed: false,
       reason: `Não é permitido pular etapas. De "${STAGE_LABEL[from]}", o próximo passo obrigatório é "${STAGE_LABEL[next]}".`,
+    };
+  }
+
+  if (diff < -1) {
+    const previous = STAGE_ORDER[fromIdx - 1];
+
+    return {
+      allowed: false,
+      reason: `Não é permitido retroceder mais de uma etapa por vez. De "${STAGE_LABEL[from]}", o retorno permitido é para "${STAGE_LABEL[previous]}".`,
     };
   }
 

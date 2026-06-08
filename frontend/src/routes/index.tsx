@@ -6,6 +6,7 @@ import Layout from "../components/layout/Layout";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Catalogo from "../pages/Catalogo/Catalogo";
 import Perfil from "../pages/Perfil/Perfil";
+import Users from "../pages/Users/Users";
 import PrivateRoute from "./PrivateRoute";
 
 export function AppRoutes() {
@@ -23,6 +24,7 @@ export function AppRoutes() {
           <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
           <Route path="/leads" element={<Layout><LeadsPage /></Layout>} />
           <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
+          <Route path="/usuarios" element={<Layout><Users /></Layout>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/catalogo" />} />

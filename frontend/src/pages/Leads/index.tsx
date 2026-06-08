@@ -7,6 +7,7 @@ import { createLead, updateLead } from '../../services/leads';
 import { Lead, KanbanCol } from './types';
 import { STAGE_ORDER, LeadStage } from './utils/leadStageValidator';
 import { getStoredLeads, updateStoredLeadStage } from './data/mockLeadStorage';
+import CloseLeadModal from '../../components/CloseLeadModal/CloseLeadModal';
 
 // ─── COLUNAS ─────────────────────────────────────────────────────────────────
 const INITIAL_COLUMNS: KanbanCol[] = [
@@ -54,7 +55,6 @@ function LeadCard({ lead, onMove, stages }: {
       border: '1px solid #f1f5f9',
       boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
     }}>
-      {/* Linha 1: avatar + nome + tempo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         <Avatar name={lead.name} size={30} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -71,7 +71,6 @@ function LeadCard({ lead, onMove, stages }: {
         </div>
       </div>
 
-      {/* Linha 2: infos compactas */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 10px', marginBottom: 2 }}>
         {lead.phone && (
           <span style={{ fontSize: 11, color: '#64748b' }}>📞 {lead.phone}</span>
@@ -89,13 +88,27 @@ function LeadCard({ lead, onMove, stages }: {
         )}
       </div>
 
-      {/* Ação */}
+      {lead.closingReason && (
+        <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, fontStyle: 'italic' }}>
+          📝 {lead.closingReason}
+        </div>
+      )}
+
+      {lead.stage === 'fechado' && (
+        <div style={{
+          fontSize: 11, fontWeight: 700, marginTop: 4,
+          color: lead.converted ? '#10b981' : '#ef4444',
+        }}>
+          {lead.converted ? '✓ Venda realizada' : '✗ Não convertido'}
+        </div>
+      )}
+
       {nextStage ? (
         <button
           className={styles.advBtn}
           onClick={() => onMove(lead.id, lead.stage, nextStage)}
         >
-          Avançar →
+          {nextStage === 'fechado' ? 'Fechar Lead →' : 'Avançar →'}
         </button>
       ) : (
         <div style={{ textAlign: 'center', fontSize: 11, color: '#10b981', fontWeight: 700, paddingTop: 6 }}>
@@ -105,7 +118,6 @@ function LeadCard({ lead, onMove, stages }: {
     </div>
   );
 }
-
 // ─── KANBAN COLUMN ───────────────────────────────────────────────────────────
 function KanbanColumn({ col, onMove }: {
   col: KanbanCol;
@@ -124,7 +136,6 @@ function KanbanColumn({ col, onMove }: {
       borderTop: `3px solid ${col.headerColor}`,
       overflow: 'hidden',
     }}>
-      {/* Header */}
       <div style={{
         padding: '10px 12px',
         borderBottom: '1px solid #f1f5f9',
@@ -149,7 +160,6 @@ function KanbanColumn({ col, onMove }: {
         </span>
       </div>
 
-      {/* Cards — scrollbar oculta */}
       <div className={styles.colBody}>
         {col.leads.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 12, padding: '20px 0' }}>
@@ -253,6 +263,7 @@ export default function LeadsPage() {
   const { columns, setColumns, moveLead } = useKanbanBoard<KanbanCol>(INITIAL_COLUMNS);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [closingLead, setClosingLead] = useState<{ id: string; name: string; from: LeadStage } | null>(null);
   const [filterStore, setFilterStore] = useState('');
   const [filterTeam,  setFilterTeam]  = useState('');
   const [filterUser,  setFilterUser]  = useState('');
@@ -275,13 +286,17 @@ export default function LeadsPage() {
   }, [setColumns, isAdmin]);
 
   const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
+    if (to === 'fechado') {
+      const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
+      setClosingLead({ id: leadId, name: lead?.name ?? '', from });
+      return;
+    }
     const result = moveLead(leadId, from, to);
     if (!result.success) { alert(result.error); return; }
     updateStoredLeadStage(leadId, to);
     try {
       await updateLead(leadId, { status: to });
     } catch {
-      // Reverte o estado local se o backend rejeitar
       moveLead(leadId, to, from);
       updateStoredLeadStage(leadId, from);
       alert('Erro ao salvar a alteração. Tente novamente.');
@@ -294,7 +309,13 @@ export default function LeadsPage() {
       .catch(() => setColumns(prev => addMockLeadsToColumns(prev, isAdmin)));
   };
 
-  // ── Opções dos filtros derivadas dos dados
+  const handleCloseLeadSuccess = () => {
+    setClosingLead(null);
+    fetchLeads()
+      .then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin)))
+      .catch(() => {});
+  };
+
   const allLeads = columns.flatMap(c => c.leads);
   const storeOptions = uniqueBy(allLeads.filter(l => l.storeId).map(l => ({ id: l.storeId!, name: l.storeName ?? l.storeId! })), o => o.id);
   const teamOptions  = uniqueBy(allLeads.filter(l => l.teamId).map(l => ({ id: l.teamId!,  name: l.teamName  ?? l.teamId!  })), o => o.id);
@@ -316,10 +337,7 @@ export default function LeadsPage() {
   return (
     <div style={{ padding: '12px 16px', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f8fafc' }}>
 
-      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexShrink: 0, gap: 8 }}>
-
-        {/* Título + filtros inline */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', minWidth: 0 }}>
           <div style={{ flexShrink: 0 }}>
             <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>
@@ -331,12 +349,10 @@ export default function LeadsPage() {
             </p>
           </div>
 
-          {/* Separador visual */}
           {(isAdmin || isGerente || isLiderEquipe) && (
             <div style={{ width: 1, height: 28, background: '#e2e8f0', flexShrink: 0 }} />
           )}
 
-          {/* Filtros */}
           {[
             isAdmin && { label: 'Loja',     value: filterStore, set: setFilterStore, opts: storeOptions },
             (isAdmin || isGerente || isLiderEquipe) && { label: 'Equipe',   value: filterTeam, set: setFilterTeam, opts: teamOptions },
@@ -365,7 +381,6 @@ export default function LeadsPage() {
           )}
         </div>
 
-        {/* Botão novo lead — sempre à direita */}
         <button
           onClick={() => setShowModal(true)}
           style={{
@@ -383,7 +398,6 @@ export default function LeadsPage() {
         </button>
       </div>
 
-      {/* ── KANBAN ─────────────────────────────────────────────────────────── */}
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, color: '#cbd5e1', fontSize: 14 }}>
           Carregando leads…
@@ -394,6 +408,15 @@ export default function LeadsPage() {
             <KanbanColumn key={col.id} col={col} onMove={handleMove} />
           ))}
         </div>
+      )}
+
+      {closingLead && (
+        <CloseLeadModal
+          leadId={closingLead.id}
+          leadName={closingLead.name}
+          onClose={() => setClosingLead(null)}
+          onSuccess={handleCloseLeadSuccess}
+        />
       )}
 
       {showModal && (

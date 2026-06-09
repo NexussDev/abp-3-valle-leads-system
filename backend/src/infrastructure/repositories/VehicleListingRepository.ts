@@ -72,11 +72,11 @@ class VehicleListingRepository {
   async transitionStatus(
     id: string,
     expectedStatus: ListingStatus | null,
-    data: Prisma.CarUpdateInput,
+    data: Prisma.CarUncheckedUpdateManyInput,
   ): Promise<Car | null> {
     const result = await prisma.car.updateMany({
       where: { id, listingStatus: expectedStatus },
-      data: data as Prisma.CarUpdateManyMutationInput,
+      data,
     });
     if (result.count === 0) return null;
     return this.findById(id);

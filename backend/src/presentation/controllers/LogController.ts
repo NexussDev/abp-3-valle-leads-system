@@ -5,13 +5,15 @@ import { AppError } from '../../shared/errors/AppError';
 class LogController {
   async index(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId, action, startDate, endDate, limit, offset } =
+      const { userId, action, entity, entityId, startDate, endDate, limit, offset } =
         req.query as Record<string, string | undefined>;
 
       const options: FindLogsOptions = {};
 
-      if (userId) options.userId = userId;
-      if (action) options.action = action;
+      if (userId)   options.userId   = userId;
+      if (action)   options.action   = action;
+      if (entity)   options.entity   = entity;
+      if (entityId) options.entityId = entityId;
 
       if (startDate) options.startDate = parseDate(startDate, 'startDate');
       if (endDate) options.endDate = parseDate(endDate, 'endDate');

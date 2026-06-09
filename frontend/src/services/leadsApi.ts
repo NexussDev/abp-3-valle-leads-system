@@ -74,3 +74,15 @@ export async function fetchLeads(): Promise<ApiLead[]> {
   const { data } = await client.get<ApiLead[]>('/leads');
   return data;
 }
+
+export async function updateLead(
+  id: string,
+  payload: {
+    status?: string;
+    closingReason?: string;
+    converted?: boolean;
+  },
+): Promise<ApiLead> {
+  const { data } = await client.patch<ApiLead>(`/leads/${id}`, payload);
+  return data;
+}

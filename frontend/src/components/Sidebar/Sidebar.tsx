@@ -45,15 +45,52 @@ const NAV_ITEMS = [
     ),
   },
   {
+    path: '/publicar-veiculo',
+    label: 'Publicar Veículo',
+    allowedRoles: ['ATENDENTE', 'LIDER_EQUIPE', 'GERENTE', 'GERENTE_GERAL', 'ADMIN'],
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2" />
+        <circle cx="6.5" cy="16.5" r="2.5" />
+        <circle cx="16.5" cy="16.5" r="2.5" />
+        <path d="M12 3v4M10 5h4" />
+      </svg>
+    ),
+  },
+  {
+    path: '/moderar-vitrine',
+    label: 'Moderar Vitrine',
+    allowedRoles: ['GERENTE', 'GERENTE_GERAL', 'ADMIN'],
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
     path: '/usuarios',
     label: 'Usuários',
-    allowedRoles: ['ADMIN'], // Apenas Admin
+    allowedRoles: ['ADMIN'],
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
+    path: '/logs',
+    label: 'Logs',
+    allowedRoles: ['ADMIN'],
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="9" y1="13" x2="15" y2="13" />
+        <line x1="9" y1="17" x2="15" y2="17" />
       </svg>
     ),
   },

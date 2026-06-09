@@ -27,9 +27,67 @@ export async function carPhotoPexels(marca: string, modelo: string): Promise<str
 // ── FIPE API ──────────────────────────────────────────────────────────────────
 const FIPE = 'https://parallelum.com.br/fipe/api/v2';
 
-interface FipeBrand  { code: string; name: string }
-interface FipeModel  { code: number; name: string }
-interface FipeYear   { code: string; name: string }
+export interface FipeBrand  { code: string; name: string }
+export interface FipeModel  { code: number; name: string }
+export interface FipeYear   { code: string; name: string }
+
+const brandsCache: { value: FipeBrand[] | null } = { value: null };
+const modelsCache = new Map<string, FipeModel[]>();
+const yearsCache  = new Map<string, FipeYear[]>();
+
+export async function fetchFipeBrands(): Promise<FipeBrand[]> {
+  if (brandsCache.value) return brandsCache.value;
+  const res = await fetch(`${FIPE}/cars/brands`);
+  if (!res.ok) throw new Error('Falha ao carregar marcas FIPE');
+  const data = (await res.json()) as FipeBrand[];
+  brandsCache.value = data;
+  return data;
+}
+
+export async function fetchFipeModels(brandCode: string): Promise<FipeModel[]> {
+  const cached = modelsCache.get(brandCode);
+  if (cached) return cached;
+  const res = await fetch(`${FIPE}/cars/brands/${brandCode}/models`);
+  if (!res.ok) throw new Error('Falha ao carregar modelos FIPE');
+  const data = (await res.json()) as FipeModel[];
+  modelsCache.set(brandCode, data);
+  return data;
+}
+
+export async function fetchFipeYears(brandCode: string, modelCode: number | string): Promise<FipeYear[]> {
+  const key = `${brandCode}::${modelCode}`;
+  const cached = yearsCache.get(key);
+  if (cached) return cached;
+  const res = await fetch(`${FIPE}/cars/brands/${brandCode}/models/${modelCode}/years`);
+  if (!res.ok) throw new Error('Falha ao carregar anos FIPE');
+  const data = (await res.json()) as FipeYear[];
+  yearsCache.set(key, data);
+  return data;
+}
+
+export async function fetchFipePrice(
+  brandCode: string,
+  modelCode: number | string,
+  yearCode: string,
+): Promise<{ price: string; modelYear: number } | null> {
+  try {
+    const res = await fetch(
+      `${FIPE}/cars/brands/${brandCode}/models/${modelCode}/years/${yearCode}`,
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return { price: data.price, modelYear: data.modelYear };
+  } catch {
+    return null;
+  }
+}
+
+export function parseFipePrice(formatted: string): number | null {
+  if (!formatted) return null;
+  const clean = formatted.replace(/[^\d,]/g, '').replace(',', '.');
+  const n = Number(clean);
+  return Number.isFinite(n) ? n : null;
+}
 
 export interface FipeResult {
   price: string;

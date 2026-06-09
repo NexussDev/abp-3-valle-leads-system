@@ -23,7 +23,8 @@ const ENTITY_LABEL: Record<string, string> = {
 
 export default function Logs() {
   const role = (localStorage.getItem('@LeadsCar:role') ?? '').toUpperCase();
-  const isAdmin = role === 'ADMIN';
+  const canViewLogs = role === 'ADMIN' || role === 'GERENTE_GERAL' || role === 'GERENTE';
+  const isRestricted = role === 'GERENTE'; // vê só a própria loja
 
   const [logs, setLogs] = useState<SystemLogEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -38,7 +39,7 @@ export default function Logs() {
   const [filterEnd, setFilterEnd] = useState('');
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canViewLogs) return;
     setLoading(true);
     setError(null);
     listLogs({
@@ -56,14 +57,14 @@ export default function Logs() {
       })
       .catch(() => setError('Não foi possível carregar os logs.'))
       .finally(() => setLoading(false));
-  }, [isAdmin, page, filterAction, filterEntity, filterEntityId, filterStart, filterEnd]);
+  }, [canViewLogs, page, filterAction, filterEntity, filterEntityId, filterStart, filterEnd]);
 
-  if (!isAdmin) {
+  if (!canViewLogs) {
     return (
       <div className="logs-page">
         <div className="logs-denied">
           <h1>Acesso negado</h1>
-          <p>Apenas administradores podem visualizar os logs do sistema.</p>
+          <p>Você não tem permissão para visualizar os logs do sistema.</p>
         </div>
       </div>
     );
@@ -83,7 +84,11 @@ export default function Logs() {
       <header className="logs-header">
         <div>
           <h1 className="logs-title">Logs do sistema</h1>
-          <p className="logs-subtitle">Auditoria de todas as ações realizadas pelos usuários.</p>
+          <p className="logs-subtitle">
+            {isRestricted
+              ? 'Auditoria das ações realizadas pelos usuários da sua loja.'
+              : 'Auditoria de todas as ações realizadas pelos usuários.'}
+          </p>
         </div>
       </header>
 

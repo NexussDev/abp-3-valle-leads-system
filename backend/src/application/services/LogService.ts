@@ -10,6 +10,7 @@ export interface FindLogsOptions {
   entityId?: string;
   startDate?: Date;
   endDate?: Date;
+  storeId?: string;
 }
 
 const MAX_LIMIT = 500;
@@ -32,6 +33,7 @@ class LogService {
     if (options.entityId)  filter.entityId  = options.entityId;
     if (options.startDate) filter.startDate = options.startDate;
     if (options.endDate)   filter.endDate   = options.endDate;
+    if (options.storeId) filter.storeId = options.storeId;
 
     if (filter.startDate && filter.endDate && filter.startDate > filter.endDate) {
       throw new AppError('startDate não pode ser maior que endDate', 400);

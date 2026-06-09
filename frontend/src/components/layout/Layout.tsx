@@ -47,6 +47,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     overflow: 'hidden',
     transition: 'margin-left 0.3s ease',
     minWidth: 0,
+    background: 'inherit',
   },
   contentArea: {
     flex: 1,
@@ -56,5 +57,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     flexDirection: 'column',
     minHeight: 0,
     scrollBehavior: 'smooth',
+    background: 'transparent',
   },
 };

@@ -8,6 +8,7 @@ export interface LogFilter {
   entityId?: string;
   startDate?: Date;
   endDate?: Date;
+  storeId?: string;
 }
 
 class LogRepository {
@@ -46,6 +47,10 @@ function buildWhere(filter?: LogFilter): Prisma.SystemLogWhereInput {
       ...(filter.startDate && { gte: filter.startDate }),
       ...(filter.endDate && { lte: filter.endDate }),
     };
+  }
+
+  if (filter.storeId) {
+    where.user = { is: { storeId: filter.storeId } };
   }
 
   return where;

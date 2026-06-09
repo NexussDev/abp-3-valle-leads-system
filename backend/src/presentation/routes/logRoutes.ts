@@ -4,6 +4,6 @@ import { roleMiddleware } from '../../infrastructure/middleware/roleMiddleware';
 
 const router = Router();
 
-router.get('/', roleMiddleware('ADMIN'), logController.index);
+router.get('/', roleMiddleware('ADMIN', 'GERENTE', 'GERENTE_GERAL'), logController.index);
 
 export default router;

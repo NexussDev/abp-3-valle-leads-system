@@ -16,10 +16,21 @@ class LogController {
       if (entityId) options.entityId = entityId;
 
       if (startDate) options.startDate = parseDate(startDate, 'startDate');
-      if (endDate) options.endDate = parseDate(endDate, 'endDate');
+      if (endDate)   options.endDate   = parseDate(endDate, 'endDate');
 
-      if (limit !== undefined) options.limit = parseIntOrThrow(limit, 'limit');
+      if (limit !== undefined)  options.limit  = parseIntOrThrow(limit, 'limit');
       if (offset !== undefined) options.offset = parseIntOrThrow(offset, 'offset');
+
+      // Gerente vê apenas logs da própria loja
+      if (req.user!.role === 'GERENTE') {
+        const storeId = req.user!.storeId;
+        if (!storeId) {
+          res.status(422).json({ status: 'error', message: 'Gerente sem loja configurada.' });
+          return;
+        }
+        options.storeId = storeId;
+      }
+      // ADMIN e GERENTE_GERAL não têm restrição de escopo
 
       const result = await logService.findAll(options);
       res.status(200).json(result);

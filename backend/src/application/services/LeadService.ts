@@ -1,10 +1,14 @@
-import leadRepository, { LeadFilter } from '../../infrastructure/repositories/LeadRepository';
+import leadRepository, { LeadFilter, RecaptureFilter } from '../../infrastructure/repositories/LeadRepository';
 import { AppError } from '../../shared/errors/AppError';
 import { validateStageTransition } from '../../domain/entities/LeadStage';
 import { AuthUser, Role } from '../../shared/types';
 import { Lead } from '@prisma/client';
 
-class LeadService {
+const MIN_RECAPTURE_DAYS = 1;
+const MAX_RECAPTURE_DAYS = 365;
+export const DEFAULT_RECAPTURE_DAYS = 30;
+
+export class LeadService {
   async findAll(user: AuthUser, startDate?: Date, endDate?: Date): Promise<Lead[]> {
     const filter: LeadFilter = {};
     if (startDate) filter.startDate = startDate;
@@ -102,6 +106,55 @@ class LeadService {
   async delete(id: string, user: AuthUser): Promise<Lead> {
     await this.findById(id, user);
     return leadRepository.delete(id);
+  }
+
+  /**
+   * Calcula data de corte para repescagem.
+   * @throws AppError se days estiver fora dos limites [1, 365].
+   */
+  static cutoffDateFromDays(days: number, now: Date = new Date()): Date {
+    if (!Number.isFinite(days) || days < MIN_RECAPTURE_DAYS || days > MAX_RECAPTURE_DAYS) {
+      throw new AppError(
+        `days deve estar entre ${MIN_RECAPTURE_DAYS} e ${MAX_RECAPTURE_DAYS}.`,
+        400,
+      );
+    }
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - days);
+    return cutoff;
+  }
+
+  /**
+   * Lista leads "frios" — sem contato (ou criados, na ausência de contato)
+   * há mais de N dias. Respeita o mesmo scope de RBAC de findAll.
+   */
+  async findForRecapture(user: AuthUser, days: number): Promise<Lead[]> {
+    const cutoffDate = LeadService.cutoffDateFromDays(days);
+    const filter: RecaptureFilter = { cutoffDate };
+
+    if (user.role === Role.ATENDENTE) {
+      filter.userId = user.id;
+    } else if (
+      (user.role === Role.LIDER_EQUIPE || user.role === Role.GERENTE) &&
+      user.teamId
+    ) {
+      filter.teamId = user.teamId;
+    }
+    // GERENTE_GERAL e ADMIN: sem filtro adicional
+
+    return leadRepository.findForRecapture(filter);
+  }
+
+  /**
+   * Registra que o atendente entrou em contato com o lead.
+   * Atualiza lastContactedAt = agora; respeita scope (mesmo de findById).
+   */
+  async markContacted(id: string, user: AuthUser): Promise<Lead> {
+    const existing = await this.findById(id, user);
+    if (existing.status === 'fechado') {
+      throw new AppError('Não é possível registrar contato em lead fechado.', 400);
+    }
+    return leadRepository.update(id, { lastContactedAt: new Date() });
   }
 
   /**

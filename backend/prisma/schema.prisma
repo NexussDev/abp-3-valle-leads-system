@@ -114,7 +114,9 @@ model Lead {
   clientId  String?   @map("client_id") @db.Uuid
   sourceId  String?   @map("source_id") @db.Uuid
   carId     String?   @map("car_id") @db.Uuid
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime? @updatedAt @map("updated_at") @db.Timestamp(6)
+  lastContactedAt DateTime? @map("last_contacted_at") @db.Timestamp(6)
 
   car         Car?         @relation(fields: [carId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   client      Client?      @relation(fields: [clientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -129,6 +131,7 @@ model Lead {
   @@index([status], map: "idx_lead_status")
   @@index([createdAt], map: "idx_lead_created_at")
   @@index([storeId], map: "idx_lead_store_id")
+  @@index([lastContactedAt], map: "idx_lead_last_contacted_at")
   @@map("lead")
 }
 

@@ -12,19 +12,100 @@ function buildLeadWhere(user: AuthUser, range: DateRange) {
   };
   if (user.role === Role.ATENDENTE) {
     where.userId = user.id;
-  } else if (user.role === Role.LIDER_EQUIPE && user.teamId) {
+  } else if (
+    (user.role === Role.LIDER_EQUIPE || user.role === Role.GERENTE) &&
+    user.teamId
+  ) {
     where.teamId = user.teamId;
-  } else if (user.role === Role.GERENTE && user.storeId) {
-    where.storeId = user.storeId;
   }
+  // GERENTE_GERAL e ADMIN: sem filtro adicional
   return where;
 }
+
+/**
+ * Tempo médio entre criação do lead e a primeira mudança de status.
+ * Retorna null se nenhum lead teve mudança registrada.
+ *
+ * Considera apenas leads com pelo menos uma entrada em negotiation.history.
+ * Leads sem atendimento não entram no cálculo (são reportados separadamente
+ * via stat "Leads para repescar").
+ */
+async function computeTempoMedioAtendimento(
+  where: Record<string, unknown>,
+): Promise<{ horas: string | null; amostra: number; semAtendimento: number }> {
+  const leads = await prisma.lead.findMany({
+    where,
+    include: {
+      negotiation: {
+        include: {
+          history: { orderBy: { changedAt: 'asc' }, take: 1 },
+        },
+      },
+    },
+  });
+
+  const diffsMs: number[] = [];
+  let semAtendimento = 0;
+  for (const l of leads as any[]) {
+    const firstChange = l.negotiation?.history?.[0]?.changedAt as Date | undefined;
+    if (firstChange && l.createdAt) {
+      diffsMs.push(firstChange.getTime() - (l.createdAt as Date).getTime());
+    } else {
+      semAtendimento++;
+    }
+  }
+
+  return {
+    horas:
+      diffsMs.length > 0
+        ? (diffsMs.reduce((a, b) => a + b, 0) / diffsMs.length / 3_600_000).toFixed(1)
+        : null,
+    amostra: diffsMs.length,
+    semAtendimento,
+  };
+}
+
+/**
+ * Conta leads "frios" no escopo atual — sem contato (ou criados, na ausência
+ * de contato) há mais de `days` dias e ainda não fechados.
+ */
+async function countLeadsFrios(
+  scope: Record<string, unknown>,
+  days: number,
+): Promise<number> {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const baseScope: Record<string, unknown> = { ...scope };
+  delete baseScope.createdAt; // repescagem ignora range; sempre olha "tempo desde último contato"
+
+  return prisma.lead.count({
+    where: {
+      ...baseScope,
+      status: { not: 'fechado' },
+      OR: [
+        { lastContactedAt: { lt: cutoff } },
+        { AND: [{ lastContactedAt: null }, { createdAt: { lt: cutoff } }] },
+      ],
+    },
+  });
+}
+
+const REPESCAGEM_DAYS = 30;
 
 class DashboardService {
   async getOperacional(user: AuthUser, range: DateRange) {
     const where = buildLeadWhere(user, range);
 
-    const [total, byStageRaw, byOriginRaw, byStoreRaw, negotiations] = await Promise.all([
+    const [
+      total,
+      byStageRaw,
+      byOriginRaw,
+      byStoreRaw,
+      negotiations,
+      tma,
+      leadsFrios,
+    ] = await Promise.all([
       prisma.lead.count({ where }),
       prisma.lead.groupBy({ by: ['status'], where, _count: { _all: true } }),
       prisma.lead.groupBy({ by: ['origin'], where, _count: { _all: true } }),
@@ -33,6 +114,8 @@ class DashboardService {
         where: { lead: where },
         select: { importance: true },
       }),
+      computeTempoMedioAtendimento(where),
+      countLeadsFrios(where, REPESCAGEM_DAYS),
     ]);
 
     const storeIds = byStoreRaw.map(r => r.storeId).filter(Boolean) as string[];
@@ -60,6 +143,10 @@ class DashboardService {
         count: r._count._all,
       })),
       byImportance,
+      tempoMedioAtendimentoHoras: tma.horas,
+      leadsSemAtendimento: tma.semAtendimento,
+      leadsParaRepescar: leadsFrios,
+      repescagemDias: REPESCAGEM_DAYS,
     };
   }
 
@@ -112,14 +199,24 @@ class DashboardService {
       return acc;
     }, {} as Record<string, number>);
 
-    const timesMs = leadsWithHistory
-      .filter((l: any) => l.createdAt && l.negotiation?.history?.[0]?.changedAt)
-      .map((l: any) => (l.negotiation.history[0].changedAt as Date).getTime() - (l.createdAt as Date).getTime());
-
-    const tempoMedioAtendimentoHoras =
-      timesMs.length > 0
-        ? (timesMs.reduce((a: number, b: number) => a + b, 0) / timesMs.length / 3_600_000).toFixed(1)
+    const tma = (() => {
+      const diffsMs = (leadsWithHistory as any[])
+        .filter(l => l.createdAt && l.negotiation?.history?.[0]?.changedAt)
+        .map(
+          l =>
+            (l.negotiation.history[0].changedAt as Date).getTime() -
+            (l.createdAt as Date).getTime(),
+        );
+      return diffsMs.length > 0
+        ? (diffsMs.reduce((a, b) => a + b, 0) / diffsMs.length / 3_600_000).toFixed(1)
         : null;
+    })();
+
+    const semAtendimento = (leadsWithHistory as any[]).filter(
+      l => !l.negotiation?.history?.[0]?.changedAt,
+    ).length;
+
+    const leadsParaRepescar = await countLeadsFrios(where, REPESCAGEM_DAYS);
 
     return {
       total,
@@ -140,7 +237,10 @@ class DashboardService {
         motivo: r.closingReason ?? 'Sem motivo',
         count: r._count._all,
       })),
-      tempoMedioAtendimentoHoras,
+      tempoMedioAtendimentoHoras: tma,
+      leadsSemAtendimento: semAtendimento,
+      leadsParaRepescar,
+      repescagemDias: REPESCAGEM_DAYS,
     };
   }
 }

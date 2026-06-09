@@ -17,6 +17,14 @@ export interface LeadFilter {
   endDate?: Date;
 }
 
+export interface RecaptureFilter {
+  userId?: string;
+  teamId?: string;
+  storeId?: string;
+  /** Leads sem contato há pelo menos N dias serão retornados. */
+  cutoffDate: Date;
+}
+
 class LeadRepository {
   async findAll(filter: LeadFilter = {}): Promise<Lead[]> {
     const where: Prisma.LeadWhereInput = {};
@@ -47,6 +55,29 @@ class LeadRepository {
     return prisma.lead.findMany({
       where: { teamId },
       include: LEAD_INCLUDE,
+    });
+  }
+
+  /**
+   * Lista leads "frios" para repescagem.
+   * Critério: status != 'fechado' E COALESCE(lastContactedAt, createdAt) < cutoffDate.
+   */
+  async findForRecapture(filter: RecaptureFilter): Promise<Lead[]> {
+    const where: Prisma.LeadWhereInput = {
+      status: { not: 'fechado' },
+      OR: [
+        { lastContactedAt: { lt: filter.cutoffDate } },
+        { AND: [{ lastContactedAt: null }, { createdAt: { lt: filter.cutoffDate } }] },
+      ],
+    };
+    if (filter.userId)  where.userId  = filter.userId;
+    if (filter.teamId)  where.teamId  = filter.teamId;
+    if (filter.storeId) where.storeId = filter.storeId;
+
+    return prisma.lead.findMany({
+      where,
+      include: LEAD_INCLUDE,
+      orderBy: [{ lastContactedAt: 'asc' }, { createdAt: 'asc' }],
     });
   }
 

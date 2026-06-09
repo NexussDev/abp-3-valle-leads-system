@@ -79,16 +79,15 @@ function formatKmInput(value: string): string {
 }
 
 function formatPriceInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 9);
+  const digits = value.replace(/\D/g, '').slice(0, 7);
   if (!digits) return '';
-  const num = Number(digits) / 100;
-  return BRL.format(num).replace('R$', 'R$ ').trim();
+  return BRL.format(Number(digits)).replace('R$', 'R$ ').trim();
 }
 
 function parsePriceToNumber(value: string): number | null {
   const digits = value.replace(/\D/g, '');
   if (!digits) return null;
-  return Number(digits) / 100;
+  return Number(digits);
 }
 
 function parseKmToNumber(value: string): number | null {

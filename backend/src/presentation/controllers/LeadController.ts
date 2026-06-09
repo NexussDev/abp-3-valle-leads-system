@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import leadService from '../../application/services/LeadService';
+import leadService, {
+  DEFAULT_RECAPTURE_DAYS,
+} from '../../application/services/LeadService';
 import logService from '../../application/services/LogService';
 import userRepository from '../../infrastructure/repositories/UserRepository';
+import { AppError } from '../../shared/errors/AppError';
 
 const DEFAULT_DAYS = 30;
 
@@ -86,6 +89,30 @@ class LeadController {
       await leadService.delete(req.params['id'] as string, req.user!);
       await logService.log(req.user!.id, 'DELETE', 'Lead', req.params['id'] as string);
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async recapture(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const raw = (req.query['days'] as string | undefined) ?? '';
+      const days = raw === '' ? DEFAULT_RECAPTURE_DAYS : Number.parseInt(raw, 10);
+      if (Number.isNaN(days)) {
+        throw new AppError('days inválido (esperado inteiro).', 400);
+      }
+      const leads = await leadService.findForRecapture(req.user!, days);
+      res.status(200).json({ days, count: leads.length, leads });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async contact(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const lead = await leadService.markContacted(req.params['id'] as string, req.user!);
+      await logService.log(req.user!.id, 'CONTACT', 'Lead', lead.id);
+      res.status(200).json(lead);
     } catch (error) {
       next(error);
     }

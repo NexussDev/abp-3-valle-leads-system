@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, CSSProperties } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -11,6 +12,12 @@ import {
   DashboardOperacional,
   DashboardAnalytico,
 } from '../../services/dashboardApi';
+
+interface ExtraMetrics {
+  tempoMedioAtendimentoHoras: string | null;
+  leadsParaRepescar: number;
+  repescagemDias: number;
+}
 
 type Role = 'ADMIN' | 'GERENTE' | 'LIDER_EQUIPE' | 'ATENDENTE';
 
@@ -77,12 +84,32 @@ function Hero({ badge, name, subtitle }: { badge: string; name: string; subtitle
   );
 }
 
-function StatCard({ label, value, color }: { label: string; value: number | string; color: string }) {
+function StatCard({ label, value, color, onClick, hint }: {
+  label: string; value: number | string; color: string;
+  onClick?: () => void; hint?: string;
+}) {
+  const interactive = !!onClick;
   return (
-    <div style={statCardStyle}>
+    <div
+      style={{
+        ...statCardStyle,
+        cursor: interactive ? 'pointer' : 'default',
+        transition: interactive ? 'transform .12s, box-shadow .12s' : undefined,
+      }}
+      onClick={onClick}
+      onMouseEnter={e => {
+        if (interactive) (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={e => {
+        if (interactive) (e.currentTarget as HTMLDivElement).style.transform = 'none';
+      }}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+    >
       <div style={{ ...topLineStyle, backgroundColor: color }} />
       <span style={statLabelStyle}>{label}</span>
       <strong style={statValueStyle}>{value}</strong>
+      {hint && <span style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{hint}</span>}
     </div>
   );
 }
@@ -193,8 +220,31 @@ function LeadsList({ leads, title, subtitle }: {
   );
 }
 
+// ─── Performance & Repescagem (mostrado em todos os roles) ───────────────────
+function PerformancePanel({ extra }: { extra: ExtraMetrics | null }) {
+  const navigate = useNavigate();
+  if (!extra) return null;
+  return (
+    <div style={cardsGridStyle}>
+      <StatCard
+        label="Tempo médio de atendimento"
+        value={extra.tempoMedioAtendimentoHoras ? `${extra.tempoMedioAtendimentoHoras}h` : '—'}
+        color="#f97316"
+        hint="Da criação até a primeira atualização do lead"
+      />
+      <StatCard
+        label="Para repescar"
+        value={extra.leadsParaRepescar}
+        color="#ef4444"
+        hint={`Sem contato há mais de ${extra.repescagemDias} dias · clique para ver`}
+        onClick={() => navigate('/repescagem')}
+      />
+    </div>
+  );
+}
+
 // ─── ATENDENTE ────────────────────────────────────────────────────────────────
-function AtendenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: string }) {
+function AtendenteDashboard({ leads, userName, extra }: { leads: ApiLead[]; userName: string; extra: ExtraMetrics | null }) {
   const total        = leads.length;
   const emContato    = leads.filter(l => l.status === 'contato').length;
   const emNegociacao = leads.filter(l => l.status === 'negociacao').length;
@@ -218,6 +268,7 @@ function AtendenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: s
         <StatCard label="Em Negociação"  value={emNegociacao} color="#f97316" />
         <StatCard label="Fechados"       value={fechados}     color="#10b981" />
       </div>
+      <PerformancePanel extra={extra} />
       <div style={{ ...mainGridStyle, gridTemplateColumns: '1fr 1fr' }}>
         <PieSection title="Origem dos Meus Leads" subtitle="Canais que trouxeram seus leads" data={origemData} />
         <LeadsList leads={latest} title="Últimas Leads" subtitle="Leads mais recentes do seu pipeline" />
@@ -228,7 +279,7 @@ function AtendenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: s
 }
 
 // ─── LIDER DE EQUIPE ──────────────────────────────────────────────────────────
-function LiderEquipeDashboard({ leads, userName }: { leads: ApiLead[]; userName: string }) {
+function LiderEquipeDashboard({ leads, userName, extra }: { leads: ApiLead[]; userName: string; extra: ExtraMetrics | null }) {
   const total        = leads.length;
   const novos        = leads.filter(l => l.status === 'novo_lead').length;
   const emNegociacao = leads.filter(l => l.status === 'negociacao').length;
@@ -266,6 +317,7 @@ function LiderEquipeDashboard({ leads, userName }: { leads: ApiLead[]; userName:
         <StatCard label="Em Negociação"    value={emNegociacao} color="#f97316" />
         <StatCard label="Fechados"         value={fechados}     color="#10b981" />
       </div>
+      <PerformancePanel extra={extra} />
       <div style={{ ...mainGridStyle, gridTemplateColumns: '1.3fr 1fr' }}>
         <BarSection title="Ranking de Atendentes" subtitle="Leads por membro da equipe" data={rankingData} />
         <PieSection title="Funil da Equipe" subtitle="Distribuição por etapa" data={funilData} />
@@ -276,7 +328,7 @@ function LiderEquipeDashboard({ leads, userName }: { leads: ApiLead[]; userName:
 }
 
 // ─── GERENTE ─────────────────────────────────────────────────────────────────
-function GerenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: string }) {
+function GerenteDashboard({ leads, userName, extra }: { leads: ApiLead[]; userName: string; extra: ExtraMetrics | null }) {
   const total          = leads.length;
   const equipesAtivas  = new Set(leads.map(l => l.team?.id).filter(Boolean)).size;
   const leadsDoMes     = leads.filter(l => {
@@ -318,6 +370,7 @@ function GerenteDashboard({ leads, userName }: { leads: ApiLead[]; userName: str
         <StatCard label="Leads do Mês"     value={leadsDoMes}    color="#f97316" />
         <StatCard label="Conversão"        value={`${conversao}%`} color="#10b981" />
       </div>
+      <PerformancePanel extra={extra} />
       <div style={{ ...mainGridStyle, gridTemplateColumns: '1.3fr 1fr' }}>
         <BarSection title="Comparativo entre Equipes" subtitle="Leads por equipe da loja" data={equipeData} />
         <PieSection title="Funil Consolidado" subtitle="Distribuição por etapa na loja" data={funilData} />
@@ -412,8 +465,16 @@ function AdminDashboard({ userName }: { userName: string }) {
           label="Tempo Médio Atend."
           value={analitico.tempoMedioAtendimentoHoras ? `${analitico.tempoMedioAtendimentoHoras}h` : '—'}
           color="#f97316"
+          hint="Da criação até a primeira atualização"
         />
       </div>
+      <PerformancePanel
+        extra={{
+          tempoMedioAtendimentoHoras: operacional.tempoMedioAtendimentoHoras,
+          leadsParaRepescar: operacional.leadsParaRepescar,
+          repescagemDias: operacional.repescagemDias,
+        }}
+      />
 
       {/* Gráficos de origem */}
       <div style={{ ...mainGridStyle, gridTemplateColumns: '1.3fr 1fr' }}>
@@ -453,16 +514,27 @@ export default function Dashboard() {
   const userName = localStorage.getItem('@LeadsCar:userName') || 'Colaborador';
 
   const [leads, setLeads] = useState<ApiLead[]>([]);
+  const [extra, setExtra] = useState<ExtraMetrics | null>(null);
 
   useEffect(() => {
     // ADMIN usa exclusivamente os endpoints /api/dashboard e /api/dashboard/analytics.
     // Os demais perfis continuam usando /api/leads (filtrado pelo backend via RBAC).
-    if (role === 'ADMIN') return;
+    if (role === 'ADMIN' || role === 'GERENTE_GERAL') return;
 
     const load = async () => {
       try {
-        const data = await fetchLeads();
+        const [data, op] = await Promise.all([
+          fetchLeads(),
+          fetchDashboardOperacional('month').catch(() => null),
+        ]);
         setLeads(data);
+        if (op) {
+          setExtra({
+            tempoMedioAtendimentoHoras: op.tempoMedioAtendimentoHoras,
+            leadsParaRepescar: op.leadsParaRepescar,
+            repescagemDias: op.repescagemDias,
+          });
+        }
       } catch {
         setLeads([]);
       }
@@ -479,9 +551,9 @@ export default function Dashboard() {
 
   return (
     <div style={pageStyle}>
-      {role === 'ATENDENTE'    && <AtendenteDashboard   leads={leads} userName={userName} />}
-      {role === 'LIDER_EQUIPE' && <LiderEquipeDashboard leads={leads} userName={userName} />}
-      {role === 'GERENTE'      && <GerenteDashboard     leads={leads} userName={userName} />}
+      {role === 'ATENDENTE'    && <AtendenteDashboard   leads={leads} userName={userName} extra={extra} />}
+      {role === 'LIDER_EQUIPE' && <LiderEquipeDashboard leads={leads} userName={userName} extra={extra} />}
+      {role === 'GERENTE'      && <GerenteDashboard     leads={leads} userName={userName} extra={extra} />}
       {(role === 'ADMIN' || role === 'GERENTE_GERAL') && <AdminDashboard userName={userName} />}
     </div>
   );

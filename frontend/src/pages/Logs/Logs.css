@@ -2,7 +2,8 @@
   padding: 32px 40px 48px;
   color: #f1f5f9;
   background: #0b1220;
-  min-height: 100%;
+  flex: 1 1 auto;  /* ← substitui min-height: 100% */
+  box-sizing: border-box;
 }
 .logs-page__inner {
   max-width: 1400px;

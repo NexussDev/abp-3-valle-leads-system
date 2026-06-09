@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/catalogo.css";
 import { carPhotoPexels } from "../../services/carApi";
+import { getPublicCatalog } from "../../services/publicCatalog";
+import type { PublicVehicle, Badge as BadgeKind } from "../../types/VehicleListing";
 
 // ── tipos ──────────────────────────────────────────────────
 type Categoria = "all" | "suv" | "sedan" | "hatch" | "pickup";
-type BadgeType = "novo" | "destaque" | "oferta" | null;
+type BadgeType = BadgeKind | null;
 
 interface Veiculo {
-  id: number;
+  id: string;
   marca: string;
   nome: string;
   ano: number;
@@ -16,23 +18,46 @@ interface Veiculo {
   km: string;
   combustivel: string;
   cambio: string;
-  categoria: Omit<Categoria, "all">;
+  categoria: Exclude<Categoria, "all">;
   badge: BadgeType;
   accentColor: string;
+  photoUrl: string | null;
 }
 
-// ── dados mockados ──────────────────────────────────────────
-const veiculos: Veiculo[] = [
-  { id: 1, marca: "Toyota",     nome: "RAV4 Hybrid",        ano: 2024, preco: "R$ 210.000", km: "18.000 km", combustivel: "Híbrido",     cambio: "Automático", categoria: "suv",    badge: "novo",     accentColor: "#c0392b" },
-  { id: 2, marca: "BMW",        nome: "Série 3 320i",        ano: 2023, preco: "R$ 295.000", km: "32.000 km", combustivel: "Gasolina",    cambio: "Automático", categoria: "sedan",  badge: "destaque", accentColor: "#7c3aed" },
-  { id: 3, marca: "Jeep",       nome: "Compass Limited",     ano: 2024, preco: "R$ 188.000", km: "8.000 km",  combustivel: "Flex",        cambio: "Automático", categoria: "suv",    badge: null,       accentColor: "#c0392b" },
-  { id: 4, marca: "Volkswagen", nome: "Polo GTS",            ano: 2023, preco: "R$ 118.000", km: "22.000 km", combustivel: "Flex Turbo",  cambio: "Automático", categoria: "hatch",  badge: "oferta",   accentColor: "#c0392b" },
-  { id: 5, marca: "Ford",       nome: "Ranger Storm",        ano: 2024, preco: "R$ 265.000", km: "5.000 km",  combustivel: "Diesel",      cambio: "Automático", categoria: "pickup", badge: "novo",     accentColor: "#e07b39" },
-  { id: 6, marca: "Honda",      nome: "Civic Touring",       ano: 2023, preco: "R$ 175.000", km: "28.000 km", combustivel: "Gasolina",    cambio: "CVT",        categoria: "sedan",  badge: null,       accentColor: "#7c3aed" },
-  { id: 7, marca: "Hyundai",    nome: "Tucson HTRAC",        ano: 2024, preco: "R$ 225.000", km: "12.000 km", combustivel: "Gasolina",    cambio: "Automático", categoria: "suv",    badge: "destaque", accentColor: "#c0392b" },
-  { id: 8, marca: "Fiat",       nome: "Pulse Abarth",        ano: 2024, preco: "R$ 142.000", km: "15.000 km", combustivel: "Flex Turbo",  cambio: "Automático", categoria: "hatch",  badge: null,       accentColor: "#e07b39" },
-  { id: 9, marca: "Chevrolet",  nome: "Tracker Premier",     ano: 2024, preco: "R$ 158.000", km: "4.500 km",  combustivel: "Flex Turbo",  cambio: "Automático", categoria: "suv",    badge: "novo",     accentColor: "#c0392b" },
-];
+const CATEGORY_ACCENT: Record<Exclude<Categoria, "all">, string> = {
+  suv: "#c0392b",
+  sedan: "#7c3aed",
+  hatch: "#e07b39",
+  pickup: "#0ea5e9",
+};
+
+const BRL = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 0,
+});
+
+const KM_FMT = new Intl.NumberFormat("pt-BR");
+
+function toVeiculo(v: PublicVehicle): Veiculo {
+  const cat = (v.category ?? "sedan") as Exclude<Categoria, "all">;
+  return {
+    id: v.id,
+    marca: v.brand ?? "—",
+    nome: v.model ?? "—",
+    ano: v.year ?? 0,
+    preco: v.price ? BRL.format(Number(v.price)) : "Sob consulta",
+    km: v.km !== null ? `${KM_FMT.format(v.km)} km` : "—",
+    combustivel: v.fuel ?? "—",
+    cambio: v.transmission ?? "—",
+    categoria: (["suv", "sedan", "hatch", "pickup"] as const).includes(cat as never)
+      ? cat
+      : "sedan",
+    badge: (v.badge ?? null) as BadgeType,
+    accentColor: CATEGORY_ACCENT[cat] ?? "#c0392b",
+    photoUrl: v.photoUrl,
+  };
+}
 
 // ── svg do carro inline ─────────────────────────────────────
 function CarSVG({ color }: { color: string }) {
@@ -77,13 +102,17 @@ function VeiculoCard({
 }) {
   const navigate = useNavigate();
   const [salvo, setSalvo] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(v.photoUrl);
 
   useEffect(() => {
+    if (v.photoUrl) {
+      setPhotoUrl(v.photoUrl);
+      return;
+    }
     carPhotoPexels(v.marca, v.nome).then(url => {
       if (url) setPhotoUrl(url);
     });
-  }, [v.marca, v.nome]);
+  }, [v.marca, v.nome, v.photoUrl]);
 
   function handleInteresse() {
     onInteresse(`${v.marca} ${v.nome}`);
@@ -195,6 +224,29 @@ export default function Catalogo() {
   const [categoria, setCategoria] = useState<Categoria>("all");
   const [toastMsg,  setToastMsg]  = useState("");
   const [toastVis,  setToastVis]  = useState(false);
+  const [veiculos,  setVeiculos]  = useState<Veiculo[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [erro,      setErro]      = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErro(null);
+    getPublicCatalog()
+      .then(data => {
+        if (cancelled) return;
+        setVeiculos(data.map(toVeiculo));
+      })
+      .catch(() => {
+        if (!cancelled) setErro("Não foi possível carregar os veículos.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // filtra
   const filtrados = veiculos.filter(v => {
@@ -300,12 +352,36 @@ export default function Catalogo() {
         <span className="cat-section-count">{filtrados.length} veículos</span>
       </div>
 
-      {filtrados.length === 0 ? (
+      {loading ? (
+        <div className="cat-grid">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="cat-card cat-card--skeleton" style={{ animationDelay: `${i * 0.06}s` }}>
+              <div className="cat-card__img cat-skeleton" />
+              <div className="cat-card__body">
+                <div className="cat-skeleton cat-skeleton--line" style={{ width: "40%" }} />
+                <div className="cat-skeleton cat-skeleton--line" style={{ width: "70%", height: 22 }} />
+                <div className="cat-skeleton cat-skeleton--line" style={{ width: "90%" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : erro ? (
+        <div className="cat-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p>{erro}</p>
+        </div>
+      ) : filtrados.length === 0 ? (
         <div className="cat-empty">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <p>Nenhum veículo encontrado para "<strong>{busca}</strong>"</p>
+          <p>
+            {busca
+              ? <>Nenhum veículo encontrado para "<strong>{busca}</strong>"</>
+              : <>Nenhum veículo disponível no momento.</>}
+          </p>
         </div>
       ) : (
         <div className="cat-grid">

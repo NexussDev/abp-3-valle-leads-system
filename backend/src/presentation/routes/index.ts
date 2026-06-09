@@ -8,6 +8,7 @@ import dashboardRoutes from './dashboardRoutes';
 import logRoutes from './logRoutes';
 import clientRoutes from './clientRoutes';
 import teamRoutes from './teamRoutes';
+import vehicleListingRoutes from './vehicleListingRoutes';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/logs', logRoutes);
 router.use('/clients', clientRoutes);
 router.use('/teams', teamRoutes);
+router.use('/vehicle-listings', vehicleListingRoutes);
 
 export default router;

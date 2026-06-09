@@ -8,6 +8,10 @@ export interface DashboardOperacional {
   byOrigin: Record<string, number>;
   byStore: { store: string; count: number }[];
   byImportance: Record<string, number>;
+  tempoMedioAtendimentoHoras: string | null;
+  leadsSemAtendimento: number;
+  leadsParaRepescar: number;
+  repescagemDias: number;
 }
 
 export interface DashboardAnalytico {
@@ -20,6 +24,9 @@ export interface DashboardAnalytico {
   byImportance: Record<string, number>;
   closingReasons: { motivo: string; count: number }[];
   tempoMedioAtendimentoHoras: string | null;
+  leadsSemAtendimento: number;
+  leadsParaRepescar: number;
+  repescagemDias: number;
 }
 
 export type DashboardPeriod = 'week' | 'month' | 'year';

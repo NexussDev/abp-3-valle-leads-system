@@ -12,6 +12,7 @@ model Team {
   name  String @db.VarChar(100)
   leads Lead[]
   users User[]
+  publishedCars Car[] @relation("CarPublishedTeam")
 
   @@map("team")
 }
@@ -29,6 +30,8 @@ model User {
   systemLogs SystemLog[]
   team  Team?  @relation(fields: [teamId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   store Store? @relation(fields: [storeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  publishedCars Car[] @relation("CarPublishedBy")
+  approvedCars  Car[] @relation("CarApprovedBy")
 
   @@map("user")
 }
@@ -69,8 +72,31 @@ model Car {
   price Decimal? @db.Decimal(12, 2)
   color String?  @db.VarChar(30)
   plate String?  @db.VarChar(10)
-  leads Lead[]
 
+  km           Int?
+  fuel         String? @db.VarChar(20)
+  transmission String? @db.VarChar(20)
+  category     String? @db.VarChar(20)
+  description  String?
+  photoUrl     String? @map("photo_url") @db.VarChar(500)
+  badge        String? @db.VarChar(20)
+
+  listingStatus   String?   @map("listing_status") @db.VarChar(20)
+  publishedById   String?   @map("published_by_id") @db.Uuid
+  publishedTeamId String?   @map("published_team_id") @db.Uuid
+  publishedAt     DateTime? @map("published_at") @db.Timestamp(6)
+  approvedById    String?   @map("approved_by_id") @db.Uuid
+  approvedAt      DateTime? @map("approved_at") @db.Timestamp(6)
+  rejectionReason String?   @map("rejection_reason") @db.VarChar(255)
+
+  leads         Lead[]
+  publishedBy   User? @relation("CarPublishedBy", fields: [publishedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approvedBy    User? @relation("CarApprovedBy",  fields: [approvedById],  references: [id], onDelete: NoAction, onUpdate: NoAction)
+  publishedTeam Team? @relation("CarPublishedTeam", fields: [publishedTeamId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([listingStatus],   map: "idx_car_listing_status")
+  @@index([publishedTeamId], map: "idx_car_published_team_id")
+  @@index([publishedById],   map: "idx_car_published_by_id")
   @@map("car")
 }
 
@@ -88,7 +114,9 @@ model Lead {
   clientId  String?   @map("client_id") @db.Uuid
   sourceId  String?   @map("source_id") @db.Uuid
   carId     String?   @map("car_id") @db.Uuid
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime? @updatedAt @map("updated_at") @db.Timestamp(6)
+  lastContactedAt DateTime? @map("last_contacted_at") @db.Timestamp(6)
 
   car         Car?         @relation(fields: [carId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   client      Client?      @relation(fields: [clientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -103,6 +131,7 @@ model Lead {
   @@index([status], map: "idx_lead_status")
   @@index([createdAt], map: "idx_lead_created_at")
   @@index([storeId], map: "idx_lead_store_id")
+  @@index([lastContactedAt], map: "idx_lead_last_contacted_at")
   @@map("lead")
 }
 

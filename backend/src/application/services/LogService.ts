@@ -6,6 +6,8 @@ export interface FindLogsOptions {
   offset?: number;
   userId?: string;
   action?: string;
+  entity?: string;
+  entityId?: string;
   startDate?: Date;
   endDate?: Date;
 }
@@ -24,10 +26,12 @@ class LogService {
 
   async findAll(options: FindLogsOptions = {}) {
     const filter: LogFilter = {};
-    if (options.userId) filter.userId = options.userId;
-    if (options.action) filter.action = options.action;
+    if (options.userId)    filter.userId    = options.userId;
+    if (options.action)    filter.action    = options.action;
+    if (options.entity)    filter.entity    = options.entity;
+    if (options.entityId)  filter.entityId  = options.entityId;
     if (options.startDate) filter.startDate = options.startDate;
-    if (options.endDate) filter.endDate = options.endDate;
+    if (options.endDate)   filter.endDate   = options.endDate;
 
     if (filter.startDate && filter.endDate && filter.startDate > filter.endDate) {
       throw new AppError('startDate não pode ser maior que endDate', 400);

@@ -4,6 +4,8 @@ import { Prisma } from '@prisma/client';
 export interface LogFilter {
   userId?: string;
   action?: string;
+  entity?: string;
+  entityId?: string;
   startDate?: Date;
   endDate?: Date;
 }
@@ -34,8 +36,10 @@ function buildWhere(filter?: LogFilter): Prisma.SystemLogWhereInput {
   const where: Prisma.SystemLogWhereInput = {};
   if (!filter) return where;
 
-  if (filter.userId) where.userId = filter.userId;
-  if (filter.action) where.action = filter.action;
+  if (filter.userId)   where.userId   = filter.userId;
+  if (filter.action)   where.action   = filter.action;
+  if (filter.entity)   where.entity   = filter.entity;
+  if (filter.entityId) where.entityId = filter.entityId;
 
   if (filter.startDate || filter.endDate) {
     where.createdAt = {

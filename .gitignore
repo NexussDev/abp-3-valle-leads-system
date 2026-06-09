@@ -26,3 +26,5 @@ docs/superpowers/
 *.docx
 # Source maps
 *.js.map
+.playwright-mcp/
+qa-*.png

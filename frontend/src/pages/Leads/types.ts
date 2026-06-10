@@ -36,6 +36,11 @@ export interface Lead {
   teamName?: string;
   userId?: string;
   userName?: string;
+  temperatura?: 'frio' | 'morno' | 'quente';
+  collaboratorName?: string;
+  state?: string;
+  negotiationStatus?: 'aberta' | 'fechada';
+  platforms?: string[];
 }
 
 export interface KanbanCol {

@@ -506,6 +506,11 @@ export default function LeadsPage() {
   }, [setColumns, isAdmin]);
 
 const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
+   if (to === 'fechado') {
+      const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
+      setClosingLead({ id: leadId, name: lead?.name ?? '', from });
+      return;
+    }
   const result = moveLead(leadId, from, to);
 
   if (!result.success) {
@@ -697,7 +702,7 @@ const btnSecondaryStyle: CSSProperties = {
   flex: 1, padding: '10px 0', borderRadius: 8,
   border: '1px solid #e2e8f0', background: '#fff',
   color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer',};
-  
+
 const menuItemStyle: CSSProperties = {
   width: '100%',
   border: 'none',

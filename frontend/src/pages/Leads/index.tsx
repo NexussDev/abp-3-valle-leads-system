@@ -70,7 +70,78 @@ function LeadCard({
       border: '1px solid #f1f5f9',
       boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+      <button
+        type="button"
+        aria-label="Abrir ações do lead"
+        onClick={(e) => {
+          e.stopPropagation();
+          setMenuOpen(!menuOpen);
+        }}
+        style={{
+          position: 'absolute',
+          top: 12,
+          right: 14,
+          width: 22,
+          height: 18,
+          border: 'none',
+          outline: 'none',
+          background: 'transparent',
+          cursor: 'pointer',
+          padding: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2,
+          zIndex: 20,
+        }}
+      >
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#94a3b8' }} />
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#94a3b8' }} />
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#94a3b8' }} />
+      </button>
+
+      {menuOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 34,
+            right: 10,
+            zIndex: 50,
+            width: 190,
+            background: '#fff',
+            borderRadius: 16,
+            padding: 10,
+            border: '1px solid #eef2f7',
+            boxShadow: '0 16px 35px rgba(15, 23, 42, 0.14)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setMenuOpen(false);
+              onEdit(lead);
+            }}
+            style={menuItemStyle}
+          >
+            Editar lead
+          </button>
+
+          {previousStage && (
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onMove(lead.id, lead.stage, previousStage);
+              }}
+              style={menuItemStyle}
+            >
+              Retornar estágio
+            </button>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, paddingRight: 28 }}>
         <Avatar name={lead.name} size={30} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
@@ -119,7 +190,9 @@ function LeadCard({
 
       {lead.stage === 'fechado' && (
         <div style={{
-          fontSize: 11, fontWeight: 700, marginTop: 4,
+          fontSize: 11,
+          fontWeight: 700,
+          marginTop: 4,
           color: lead.converted ? '#10b981' : '#ef4444',
         }}>
           {lead.converted ? '✓ Venda realizada' : '✗ Não convertido'}
@@ -141,8 +214,12 @@ function LeadCard({
     </div>
   );
 }
-// ─── KANBAN COLUMN ───────────────────────────────────────────────────────────
-function KanbanColumn({ col, onMove, onEdit }: {
+
+function KanbanColumn({
+  col,
+  onMove,
+  onEdit,
+}: {
   col: KanbanCol;
   onMove: (id: string, from: LeadStage, to: LeadStage) => void;
   onEdit: (lead: Lead) => void;
@@ -486,34 +563,19 @@ export default function LeadsPage() {
   }, [setColumns, isAdmin]);
 
   const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
-    if (to === 'fechado') {
-      const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
-      setClosingLead({ id: leadId, name: lead?.name ?? '', from });
-      return;
-    }
-    const result = moveLead(leadId, from, to);
-    if (!result.success) { alert(result.error); return; }
+  try {
+    await updateLead(leadId, { status: to });
     updateStoredLeadStage(leadId, to);
-    try {
-      await updateLead(leadId, { status: to });
-    } catch {
-      moveLead(leadId, to, from);
-      updateStoredLeadStage(leadId, from);
-      alert('Erro ao salvar a alteração. Tente novamente.');
-    }
-  };
-
-  const handleNovoLead = () => {
-    fetchLeads()
-      .then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin)))
-      .catch(() => setColumns(prev => addMockLeadsToColumns(prev, isAdmin)));
-  };
+    reloadLeads();
+  } catch (error) {
+    console.error('Erro ao atualizar lead:', error);
+    alert('Erro ao salvar a alteração. Tente novamente.');
+  }
+};
 
   const handleCloseLeadSuccess = () => {
     setClosingLead(null);
-    fetchLeads()
-      .then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin)))
-      .catch(() => {});
+    reloadLeads();
   };
 
   const allLeads = columns.flatMap(c => c.leads);
@@ -548,9 +610,23 @@ export default function LeadsPage() {
   const totalLeads = filteredColumns.reduce((sum, c) => sum + c.leads.length, 0);
 
   return (
-    <div style={{ padding: '12px 16px', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f8fafc' }}>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexShrink: 0, gap: 8 }}>
+    <div style={{
+      padding: '12px 16px',
+      height: '100%',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      background: '#f8fafc',
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+        flexShrink: 0,
+        gap: 8,
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', minWidth: 0 }}>
           <div style={{ flexShrink: 0 }}>
             <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>
@@ -739,7 +815,27 @@ const btnPrimaryStyle: CSSProperties = {
 };
 
 const btnSecondaryStyle: CSSProperties = {
-  flex: 1, padding: '10px 0', borderRadius: 8,
-  border: '1px solid #e2e8f0', background: '#fff',
-  color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+  flex: 1,
+  padding: '10px 0',
+  borderRadius: 8,
+  border: '1px solid #e2e8f0',
+  background: '#fff',
+  color: '#475569',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+};
+
+const menuItemStyle: CSSProperties = {
+  width: '100%',
+  border: 'none',
+  outline: 'none',
+  background: 'transparent',
+  textAlign: 'left',
+  padding: '11px 12px',
+  borderRadius: 10,
+  fontSize: 14,
+  color: '#475569',
+  cursor: 'pointer',
+  fontWeight: 500,
 };

@@ -1,9 +1,9 @@
 import { useEffect, useState, CSSProperties } from 'react';
 import styles from './Leads.module.css';
 import { useKanbanBoard } from './hooks/useKanbanBoard';
-import { fetchLeads } from '../../services/leadsApi';
+import { fetchLeads, updateLead } from '../../services/leadsApi';
 import { apiLeadsToColumns } from './data/leadsAdapter';
-import { createLead, updateLead } from '../../services/leads';
+import { createLead } from '../../services/leads';
 import { Lead, KanbanCol } from './types';
 import { STAGE_ORDER, LeadStage } from './utils/leadStageValidator';
 import { getStoredLeads, updateStoredLeadStage } from './data/mockLeadStorage';
@@ -496,10 +496,17 @@ export default function LeadsPage() {
     updateStoredLeadStage(leadId, to);
     try {
       await updateLead(leadId, { status: to });
-    } catch {
+    } catch (err: any) {
       moveLead(leadId, to, from);
       updateStoredLeadStage(leadId, from);
-      alert('Erro ao salvar a alteração. Tente novamente.');
+      const status = err?.response?.status;
+      if (status === 403) {
+        alert('Você não tem permissão para mover este lead.');
+      } else if (status === 404) {
+        alert('Lead não encontrado. Recarregue a página.');
+      } else {
+        alert('Erro ao salvar a alteração. Tente novamente.');
+      }
     }
   };
 

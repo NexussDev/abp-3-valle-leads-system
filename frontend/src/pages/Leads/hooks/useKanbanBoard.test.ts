@@ -21,18 +21,18 @@ const seed = (): TestColumn[] => [
     leads: [{ id: "L1", stage: "novo_lead", name: "Ana" }],
   },
   {
-    id: "contato_realizado",
-    title: "Contato Realizado",
+    id: "contato",
+    title: "Contato",
     leads: [],
   },
   {
-    id: "em_negociacao",
-    title: "Em Negociação",
-    leads: [{ id: "L2", stage: "em_negociacao", name: "Bruno" }],
+    id: "negociacao",
+    title: "Negociação",
+    leads: [{ id: "L2", stage: "negociacao", name: "Bruno" }],
   },
   {
-    id: "vendido",
-    title: "Vendido",
+    id: "fechado",
+    title: "Fechado",
     leads: [],
   },
 ];
@@ -49,48 +49,48 @@ describe("useKanbanBoard", () => {
 
     let outcome: ReturnType<typeof result.current.moveLead> | undefined;
     act(() => {
-      outcome = result.current.moveLead("L1", "novo_lead", "contato_realizado");
+      outcome = result.current.moveLead("L1", "novo_lead", "contato");
     });
 
     expect(outcome).toEqual({ success: true });
     expect(
       result.current.columns.find(c => c.id === "novo_lead")?.leads,
     ).toHaveLength(0);
-    const dest = result.current.columns.find(c => c.id === "contato_realizado");
+    const dest = result.current.columns.find(c => c.id === "contato");
     expect(dest?.leads).toHaveLength(1);
     expect(dest?.leads[0]).toMatchObject({
       id: "L1",
-      stage: "contato_realizado",
+      stage: "contato",
       name: "Ana",
     });
   });
 
-  it("permite fechar o lead quando ele está em em_negociacao", () => {
+  it("permite fechar o lead quando ele está em negociacao", () => {
     const { result } = renderHook(() => useKanbanBoard(seed()));
 
     let outcome: ReturnType<typeof result.current.moveLead> | undefined;
     act(() => {
-      outcome = result.current.moveLead("L2", "em_negociacao", "vendido");
+      outcome = result.current.moveLead("L2", "negociacao", "fechado");
     });
 
     expect(outcome).toEqual({ success: true });
     expect(
-      result.current.columns.find(c => c.id === "vendido")?.leads,
+      result.current.columns.find(c => c.id === "fechado")?.leads,
     ).toHaveLength(1);
   });
 
-  it("bloqueia a transição direta para vendido e não altera o estado", () => {
+  it("bloqueia a transição direta para fechado e não altera o estado", () => {
     const { result } = renderHook(() => useKanbanBoard(seed()));
     const before = result.current.columns;
 
     let outcome: ReturnType<typeof result.current.moveLead> | undefined;
     act(() => {
-      outcome = result.current.moveLead("L1", "novo_lead", "vendido");
+      outcome = result.current.moveLead("L1", "novo_lead", "fechado");
     });
 
     expect(outcome?.success).toBe(false);
     if (outcome && !outcome.success) {
-      expect(outcome.error).toMatch(/Em Negociação/);
+      expect(outcome.error).toMatch(/Negociação/);
     }
     expect(result.current.columns).toBe(before);
   });
@@ -100,9 +100,9 @@ describe("useKanbanBoard", () => {
 
     const next: TestColumn[] = [
       {
-        id: "vendido",
-        title: "Vendido",
-        leads: [{ id: "X", stage: "vendido", name: "Carla" }],
+        id: "fechado",
+        title: "Fechado",
+        leads: [{ id: "X", stage: "fechado", name: "Carla" }],
       },
     ];
 

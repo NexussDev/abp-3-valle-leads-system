@@ -90,7 +90,7 @@ describe("useKanbanBoard", () => {
 
     expect(outcome?.success).toBe(false);
     if (outcome && !outcome.success) {
-      expect(outcome.error).toMatch(/Negociação/);
+      expect(outcome.error).toMatch(/pular etapas/);
     }
     expect(result.current.columns).toBe(before);
   });

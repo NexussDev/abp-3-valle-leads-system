@@ -1,88 +1,74 @@
-import axios from 'axios';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import MockAdapter from "axios-mock-adapter";
+import { client, fetchLeads } from "./leadsApi";
 
-const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined) ??
-  'http://localhost:3000/api';
+describe("fetchLeads", () => {
+  let mock: MockAdapter;
 
-const TOKEN_KEYS = ['token', '@LeadsCar:token'];
+  beforeEach(() => {
+    mock = new MockAdapter(client);
+    localStorage.clear();
+  });
 
-function getStoredToken(): string | null {
-  for (const key of TOKEN_KEYS) {
-    const token = localStorage.getItem(key);
-    if (token) return token;
-  }
+  afterEach(() => {
+    mock.restore();
+    localStorage.clear();
+  });
 
-  return null;
-}
+  it("retorna os leads quando a API responde 200", async () => {
+    const payload = [
+      {
+        id: "abc",
+        name: "Alice",
+        phone: null,
+        status: "novo_lead",
+        origin: "site",
+        createdAt: null,
+        client: null,
+      },
+    ];
+    mock.onGet("/leads").reply(200, payload);
 
-function clearSessionAndRedirect() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('@LeadsCar:token');
-  localStorage.removeItem('@LeadsCar:user');
-  localStorage.removeItem('@LeadsCar:role');
+    await expect(fetchLeads()).resolves.toEqual(payload);
+  });
 
-  if (window.location.pathname !== '/login') {
-    window.location.href = '/login';
-  }
-}
+  it("rejeita quando a API retorna 500 (caller cai no fallback)", async () => {
+    mock.onGet("/leads").reply(500);
+    await expect(fetchLeads()).rejects.toBeDefined();
+  });
 
-export const client = axios.create({
-  baseURL: API_URL,
-  timeout: 5000,
+  it("rejeita quando a API retorna 401 sem auth", async () => {
+    mock.onGet("/leads").reply(401);
+    await expect(fetchLeads()).rejects.toBeDefined();
+  });
+
+  it("rejeita em erro de rede (caller cai no fallback)", async () => {
+    mock.onGet("/leads").networkError();
+    await expect(fetchLeads()).rejects.toBeDefined();
+  });
+
+  it("inclui Authorization Bearer quando há token em localStorage", async () => {
+    localStorage.setItem("token", "jwt-test-123");
+    let capturedAuth: string | undefined;
+    mock.onGet("/leads").reply(config => {
+      capturedAuth = config.headers?.Authorization as string | undefined;
+      return [200, []];
+    });
+
+    await fetchLeads();
+
+    expect(capturedAuth).toBe("Bearer jwt-test-123");
+  });
+
+  it("não inclui Authorization quando não há token", async () => {
+    let capturedAuth: string | undefined;
+    mock.onGet("/leads").reply(config => {
+      capturedAuth = config.headers?.Authorization as string | undefined;
+      return [200, []];
+    });
+
+    await fetchLeads();
+
+    expect(capturedAuth).toBeUndefined();
+  });
 });
-
-client.interceptors.request.use(config => {
-  const token = getStoredToken();
-
-  if (token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
-
-client.interceptors.response.use(
-  response => response,
-  error => {
-    const status = error.response?.status;
-    const requestUrl = error.config?.url ?? '';
-    const isLoginRequest = requestUrl.includes('/auth/login');
-
-    if (status === 401 && !isLoginRequest) {
-      clearSessionAndRedirect();
-    }
-
-    return Promise.reject(error);
-  },
-);
-
-export interface ApiLead {
-  id: string;
-  name: string | null;
-  phone: string | null;
-  status: string | null;
-  origin?: string;
-  createdAt: string | null;
-  client?: { id: string; name: string } | null;
-  user?:  { id: string; name: string; email: string; role: string } | null;
-  team?:  { id: string; name: string } | null;
-  store?: { id: string; name: string } | null;
-}
-
-export async function fetchLeads(): Promise<ApiLead[]> {
-  const { data } = await client.get<ApiLead[]>('/leads');
-  return data;
-}
-
-export async function updateLead(
-  id: string,
-  payload: {
-    status?: string;
-    closingReason?: string;
-    converted?: boolean;
-  },
-): Promise<ApiLead> {
-  const { data } = await client.patch<ApiLead>(`/leads/${id}`, payload);
-  return data;
-}

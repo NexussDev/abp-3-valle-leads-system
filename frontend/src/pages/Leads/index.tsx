@@ -17,6 +17,15 @@ const INITIAL_COLUMNS: KanbanCol[] = [
   { id: 'fechado', title: 'Fechado', totalValue: 0, headerColor: '#10b981', leads: [] },
 ];
 
+// Dicionário auxiliar para exibir o nome legível do estágio de destino no modal
+const STAGE_NAMES: Record<string, string> = {
+  novo_lead: 'Novo Lead',
+  contato: 'Contato',
+  proposta: 'Proposta',
+  negociacao: 'Negociação',
+  fechado: 'Fechado'
+};
+
 const ORIGIN_OPTIONS = ['WhatsApp', 'Instagram', 'Facebook', 'Site', 'Indicação', 'Outro'];
 
 function Avatar({ name, size = 30 }: { name: string; size?: number }) {
@@ -141,7 +150,7 @@ function LeadCard({
     </div>
   );
 }
-// ─── KANBAN COLUMN ───────────────────────────────────────────────────────────
+
 function KanbanColumn({ col, onMove, onEdit }: {
   col: KanbanCol;
   onMove: (id: string, from: LeadStage, to: LeadStage) => void;
@@ -456,6 +465,9 @@ export default function LeadsPage() {
   const [filterTeam, setFilterTeam] = useState('');
   const [filterUser, setFilterUser] = useState('');
 
+  // NOVOS ESTADOS ADICIONADOS PARA O MODAL DE CONFIRMAÇÃO DO AVANÇO
+  const [pendingMove, setPendingMove] = useState<{ leadId: string; from: LeadStage; to: LeadStage } | null>(null);
+
   const reloadLeads = () => {
     fetchLeads()
       .then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin)))
@@ -485,12 +497,25 @@ export default function LeadsPage() {
     };
   }, [setColumns, isAdmin]);
 
+  // FUNÇÃO INTERCEPTADA PARA ABRIR O MODAL ANTES DE MOVER DE ESTÁGIO
   const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
     if (to === 'fechado') {
       const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
       setClosingLead({ id: leadId, name: lead?.name ?? '', from });
       return;
     }
+    
+    // Em vez de atualizar direto, guarda os dados e abre o modal de confirmação
+    setPendingMove({ leadId, from, to });
+  };
+
+  // EXECUTA A ATUALIZAÇÃO DO KANBAN APÓS A CONFIRMAÇÃO DO USUÁRIO
+  const executeMoveLead = async () => {
+    if (!pendingMove) return;
+
+    const { leadId, from, to } = pendingMove;
+    setPendingMove(null); // Fecha o modal imediatamente
+
     const result = moveLead(leadId, from, to);
     if (!result.success) { alert(result.error); return; }
     updateStoredLeadStage(leadId, to);
@@ -673,6 +698,28 @@ export default function LeadsPage() {
           onClose={() => setEditingLead(null)}
           onSave={reloadLeads}
         />
+      )}
+
+      {/* ADICIONADO: MODAL DE CONFIRMAÇÃO DE AVANÇO DE ESTÁGIO NO KANBAN */}
+      {pendingMove && (
+        <div style={overlayStyle} onClick={() => setPendingMove(null)}>
+          <div style={modalStyle} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1e293b' }}>Confirmar Avanço</h2>
+              <button onClick={() => setPendingMove(null)} style={closeBtnStyle}>✕</button>
+            </div>
+            
+            <p style={{ fontSize: 13, color: '#475569', margin: '0 0 20px', lineHeight: '1.5' }}>
+              Tem certeza que deseja mover este lead para o estágio{' '}
+              <strong style={{ color: '#3b82f6' }}>{STAGE_NAMES[pendingMove.to] || pendingMove.to}</strong>?
+            </p>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setPendingMove(null)} style={btnSecondaryStyle}>Cancelar</button>
+              <button onClick={executeMoveLead} style={btnPrimaryStyle}>Confirmar</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

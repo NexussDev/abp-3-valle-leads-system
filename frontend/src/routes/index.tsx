@@ -36,8 +36,7 @@ export function AppRoutes() {
           <Route path="/moderar-vitrine"    element={<Layout><ModerarVitrine /></Layout>} />
           <Route path="/repescagem"         element={<Layout><Repescagem /></Layout>} />
           <Route path="/logs"               element={<Layout><Logs /></Layout>} />
-          <Route path="/equipes" element={<Layout><Teams /></Layout>} />
-        </Route>
+          <Route path="/equipes" element={<Layout><Teams /></Layout>} />        </Route>
 
         <Route path="*" element={<Navigate to="/catalogo" />} />
       </Routes>

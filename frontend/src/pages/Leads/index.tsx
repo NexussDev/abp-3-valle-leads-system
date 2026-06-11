@@ -1,9 +1,9 @@
 import { useEffect, useState, CSSProperties } from 'react';
 import styles from './Leads.module.css';
 import { useKanbanBoard } from './hooks/useKanbanBoard';
-import { fetchLeads } from '../../services/leadsApi';
+import { fetchLeads, updateLead } from '../../services/leadsApi';
 import { apiLeadsToColumns } from './data/leadsAdapter';
-import { createLead, updateLead } from '../../services/leads';
+import { createLead } from '../../services/leads';
 import { Lead, KanbanCol } from './types';
 import { STAGE_ORDER, LeadStage } from './utils/leadStageValidator';
 import { getStoredLeads, updateStoredLeadStage } from './data/mockLeadStorage';
@@ -506,30 +506,35 @@ export default function LeadsPage() {
   }, [setColumns, isAdmin]);
 
 const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
-   if (to === 'fechado') {
-      const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
-      setClosingLead({ id: leadId, name: lead?.name ?? '', from });
-      return;
-    }
-  const result = moveLead(leadId, from, to);
+  if (to === 'fechado') {
+    const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
+    setClosingLead({ id: leadId, name: lead?.name ?? '', from });
+    return;
+  }
 
+  const result = moveLead(leadId, from, to);
   if (!result.success) {
     alert(result.error);
     return;
   }
 
-  // desfaz imediatamente o movimento local
   moveLead(leadId, to, from);
 
   try {
     await updateLead(leadId, { status: to });
-
-    // depois que salvou no backend, aplica o movimento definitivo
     moveLead(leadId, from, to);
     updateStoredLeadStage(leadId, to);
-  } catch (error) {
-    console.error('Erro ao atualizar lead:', error);
-    alert('Erro ao salvar a alteração. Tente novamente.');
+  } catch (err: any) {
+    moveLead(leadId, to, from);
+    updateStoredLeadStage(leadId, from);
+    const status = err?.response?.status;
+    if (status === 403) {
+      alert('Você não tem permissão para mover este lead.');
+    } else if (status === 404) {
+      alert('Lead não encontrado. Recarregue a página.');
+    } else {
+      alert('Erro ao salvar a alteração. Tente novamente.');
+    }
   }
 };
 

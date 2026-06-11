@@ -18,6 +18,14 @@ const INITIAL_COLUMNS: KanbanCol[] = [
   { id: 'fechado',    title: 'Fechado',    totalValue: 0, headerColor: '#10b981', leads: [] },
 ];
 
+const STAGE_NAMES: Record<string, string> = {
+  novo_lead: 'Novo Lead',
+  contato: 'Contato',
+  proposta: 'Proposta',
+  negociacao: 'Negociação',
+  fechado: 'Fechado'
+};
+
 const ORIGIN_OPTIONS = ['WhatsApp', 'Instagram', 'Facebook', 'Site', 'Indicação', 'Outro'];
 
 // ─── AVATAR ──────────────────────────────────────────────────────────────────
@@ -66,68 +74,69 @@ function LeadCard({
       boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
     }}>
       <button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    setMenuOpen(!menuOpen);
-  }}
-  style={{
-    position: 'absolute',
-    top: 8,
-    right: 10,
-    border: 'none',
-    background: 'transparent',
-    color: '#94a3b8',
-    fontSize: 18,
-    fontWeight: 700,
-    cursor: 'pointer',
-    padding: 0,
-    lineHeight: 1,
-  }}
->
-  ⋮
-</button>
-
-{menuOpen && (
-  <div
-    style={{
-      position: 'absolute',
-      top: 34,
-      right: 10,
-      zIndex: 50,
-      width: 190,
-      background: '#fff',
-      borderRadius: 16,
-      padding: 10,
-      border: '1px solid #eef2f7',
-      boxShadow: '0 16px 35px rgba(15, 23, 42, 0.14)',
-    }}
-  >
-    <button
-      type="button"
-      onClick={() => {
-        setMenuOpen(false);
-        onEdit(lead);
-      }}
-      style={menuItemStyle}
-    >
-      Editar lead
-    </button>
-
-    {previousStage && (
-      <button
         type="button"
-        onClick={() => {
-          setMenuOpen(false);
-          onMove(lead.id, lead.stage, previousStage);
+        onClick={(e) => {
+          e.stopPropagation();
+          setMenuOpen(!menuOpen);
         }}
-        style={menuItemStyle}
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: 10,
+          border: 'none',
+          background: 'transparent',
+          color: '#94a3b8',
+          fontSize: 18,
+          fontWeight: 700,
+          cursor: 'pointer',
+          padding: 0,
+          lineHeight: 1,
+        }}
       >
-        Retornar estágio
+        ⋮
       </button>
-    )}
-  </div>
-)}
+
+      {menuOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 34,
+            right: 10,
+            zIndex: 50,
+            width: 190,
+            background: '#fff',
+            borderRadius: 16,
+            padding: 10,
+            border: '1px solid #eef2f7',
+            boxShadow: '0 16px 35px rgba(15, 23, 42, 0.14)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setMenuOpen(false);
+              onEdit(lead);
+            }}
+            style={menuItemStyle}
+          >
+            Editar lead
+          </button>
+
+          {previousStage && (
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onMove(lead.id, lead.stage, previousStage);
+              }}
+              style={menuItemStyle}
+            >
+              Retornar estágio
+            </button>
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         <Avatar name={lead.name} size={30} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -191,6 +200,7 @@ function LeadCard({
     </div>
   );
 }
+
 // ─── KANBAN COLUMN ───────────────────────────────────────────────────────────
 function KanbanColumn({
   col,
@@ -245,7 +255,7 @@ function KanbanColumn({
           </div>
         ) : (
           col.leads.map(lead => (
-              <LeadCard
+            <LeadCard
               key={lead.id}
               lead={lead}
               onMove={onMove}
@@ -321,7 +331,7 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: (lead
   );
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
+// ─── MODAL EDITAR LEAD ────────────────────────────────────────────────────────
 function EditLeadModal({
   lead,
   onClose,
@@ -447,6 +457,7 @@ function EditLeadModal({
   );
 }
 
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 function addMockLeadsToColumns(columns: KanbanCol[], include: boolean): KanbanCol[] {
   if (!include) return columns;
   const storedLeads = getStoredLeads();
@@ -477,8 +488,13 @@ export default function LeadsPage() {
   const [filterStore, setFilterStore] = useState('');
   const [filterTeam,  setFilterTeam]  = useState('');
   const [filterUser,  setFilterUser]  = useState('');
+  const [pendingMove, setPendingMove] = useState<{
+    leadId: string;
+    from: LeadStage;
+    to: LeadStage;
+  } | null>(null);
 
-   const reloadLeads = () => {
+  const reloadLeads = () => {
     fetchLeads()
       .then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin)))
       .catch(() => setColumns(addMockLeadsToColumns(INITIAL_COLUMNS, isAdmin)));
@@ -505,38 +521,56 @@ export default function LeadsPage() {
     };
   }, [setColumns, isAdmin]);
 
-const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
-  if (to === 'fechado') {
-    const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
-    setClosingLead({ id: leadId, name: lead?.name ?? '', from });
-    return;
-  }
-
-  const result = moveLead(leadId, from, to);
-  if (!result.success) {
-    alert(result.error);
-    return;
-  }
-
-  moveLead(leadId, to, from);
-
-  try {
-    await updateLead(leadId, { status: to });
-    moveLead(leadId, from, to);
-    updateStoredLeadStage(leadId, to);
-  } catch (err: any) {
-    moveLead(leadId, to, from);
-    updateStoredLeadStage(leadId, from);
-    const status = err?.response?.status;
-    if (status === 403) {
-      alert('Você não tem permissão para mover este lead.');
-    } else if (status === 404) {
-      alert('Lead não encontrado. Recarregue a página.');
-    } else {
-      alert('Erro ao salvar a alteração. Tente novamente.');
+  const handleMove = async (
+    leadId: string,
+    from: LeadStage,
+    to: LeadStage
+  ) => {
+    if (to === 'fechado') {
+      const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
+      setClosingLead({ id: leadId, name: lead?.name ?? '', from });
+      return;
     }
-  }
-};
+
+    // Abre modal de confirmação
+    setPendingMove({ leadId, from, to });
+  };
+
+  const executeMoveLead = async () => {
+    if (!pendingMove) return;
+
+    const { leadId, from, to } = pendingMove;
+    setPendingMove(null);
+
+    const result = moveLead(leadId, from, to);
+
+    if (!result.success) {
+      alert(result.error);
+      return;
+    }
+
+    // Reverte otimisticamente enquanto aguarda a API
+    moveLead(leadId, to, from);
+
+    try {
+      await updateLead(leadId, { status: to });
+      moveLead(leadId, from, to);
+      updateStoredLeadStage(leadId, to);
+    } catch (err: any) {
+      moveLead(leadId, to, from);
+      updateStoredLeadStage(leadId, from);
+
+      const status = err?.response?.status;
+
+      if (status === 403) {
+        alert('Você não tem permissão para mover este lead.');
+      } else if (status === 404) {
+        alert('Lead não encontrado. Recarregue a página.');
+      } else {
+        alert('Erro ao salvar a alteração. Tente novamente.');
+      }
+    }
+  };
 
   const handleNovoLead = () => {
     fetchLeads()
@@ -659,7 +693,7 @@ const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
         />
       )}
 
-       {showModal && (
+      {showModal && (
         <NovoLeadModal onClose={() => setShowModal(false)} onSave={reloadLeads} />
       )}
 
@@ -669,6 +703,27 @@ const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
           onClose={() => setEditingLead(null)}
           onSave={reloadLeads}
         />
+      )}
+
+      {pendingMove && (
+        <div style={overlayStyle} onClick={() => setPendingMove(null)}>
+          <div style={modalStyle} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1e293b' }}>Confirmar Avanço</h2>
+              <button onClick={() => setPendingMove(null)} style={closeBtnStyle}>✕</button>
+            </div>
+
+            <p style={{ fontSize: 13, color: '#475569', margin: '0 0 20px', lineHeight: '1.5' }}>
+              Tem certeza que deseja mover este lead para o estágio{' '}
+              <strong style={{ color: '#3b82f6' }}>{STAGE_NAMES[pendingMove.to] || pendingMove.to}</strong>?
+            </p>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setPendingMove(null)} style={btnSecondaryStyle}>Cancelar</button>
+              <button onClick={executeMoveLead} style={btnPrimaryStyle}>Confirmar</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -706,8 +761,8 @@ const btnPrimaryStyle: CSSProperties = {
 const btnSecondaryStyle: CSSProperties = {
   flex: 1, padding: '10px 0', borderRadius: 8,
   border: '1px solid #e2e8f0', background: '#fff',
-  color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer',};
-
+  color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+};
 const menuItemStyle: CSSProperties = {
   width: '100%',
   border: 'none',
@@ -719,4 +774,5 @@ const menuItemStyle: CSSProperties = {
   fontSize: 14,
   color: '#475569',
   cursor: 'pointer',
-  fontWeight: 500,};
+  fontWeight: 500,
+};

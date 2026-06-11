@@ -27,6 +27,8 @@ export function authMiddleware(
   try {
     const decoded = jwt.verify(token, secret);
 
+    console.log('DECODED TOKEN:', decoded);
+
     if (typeof decoded === 'string' || !decoded.sub || !decoded.role) {
       return res.status(401).json({ status: 'error', message: 'Token inválido' });
     }

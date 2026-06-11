@@ -22,11 +22,11 @@ const menuItemStyle: CSSProperties = { display: 'block', width: '100%', padding:
 
 // ─── COLUNAS ─────────────────────────────────────────────────────────────────
 const INITIAL_COLUMNS: KanbanCol[] = [
-  { id: 'novo_lead',  title: 'Novo Lead',  totalValue: 0, headerColor: '#3b82f6', leads: [] },
-  { id: 'contato',    title: 'Contato',    totalValue: 0, headerColor: '#8b5cf6', leads: [] },
-  { id: 'proposta',   title: 'Proposta',   totalValue: 0, headerColor: '#f59e0b', leads: [] },
+  { id: 'novo_lead', title: 'Novo Lead', totalValue: 0, headerColor: '#3b82f6', leads: [] },
+  { id: 'contato', title: 'Contato', totalValue: 0, headerColor: '#8b5cf6', leads: [] },
+  { id: 'proposta', title: 'Proposta', totalValue: 0, headerColor: '#f59e0b', leads: [] },
   { id: 'negociacao', title: 'Negociação', totalValue: 0, headerColor: '#f97316', leads: [] },
-  { id: 'fechado',    title: 'Fechado',    totalValue: 0, headerColor: '#10b981', leads: [] },
+  { id: 'fechado', title: 'Fechado', totalValue: 0, headerColor: '#10b981', leads: [] },
 ];
 
 const STAGE_NAMES: Record<string, string> = {
@@ -53,7 +53,7 @@ const TEMPERATURE_COLORS: Record<string, string> = {
 
 // ─── AVATAR ──────────────────────────────────────────────────────────────────
 function Avatar({ name, size = 30 }: { name: string; size?: number }) {
-  const palette = ['#3b82f6','#8b5cf6','#ec4899','#f97316','#10b981','#f59e0b','#06b6d4'];
+  const palette = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#10b981', '#f59e0b', '#06b6d4'];
   const color = palette[name.charCodeAt(0) % palette.length];
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   return (
@@ -83,7 +83,7 @@ function LeadCard({
   onViewHistory: (lead: Lead) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  
+
   const currentIdx = stages.indexOf(lead.stage);
   const nextStage = currentIdx < stages.length - 1 ? stages[currentIdx + 1] : null;
   const previousStage = currentIdx > 0 ? stages[currentIdx - 1] : null;
@@ -135,7 +135,7 @@ function LeadCard({
           >
             Editar lead
           </button>
-          
+
           <button
             type="button"
             onClick={() => { setMenuOpen(false); onViewHistory(lead); }}
@@ -232,12 +232,12 @@ function KanbanColumn({
           <div style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 12, padding: '20px 0' }}>Nenhum lead</div>
         ) : (
           col.leads.map(lead => (
-            <LeadCard 
-              key={lead.id} 
-              lead={lead} 
-              onMove={onMove} 
-              stages={STAGE_ORDER} 
-              onEdit={onEdit} 
+            <LeadCard
+              key={lead.id}
+              lead={lead}
+              onMove={onMove}
+              stages={STAGE_ORDER}
+              onEdit={onEdit}
               onViewHistory={onViewHistory}
             />
           ))
@@ -245,6 +245,18 @@ function KanbanColumn({
       </div>
     </div>
   );
+}
+
+// ─── FUNÇÃO DE MÁSCARA (ADICIONADA AQUI) ──────────────────────────────────────
+function maskPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+
+  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10)
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
 // ─── MODAL NOVO LEAD ─────────────────────────────────────────────────────────
@@ -301,7 +313,22 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
             </div>
             <div>
               <label style={labelStyle}>WhatsApp (Lead)</label>
-              <input style={inputStyle} placeholder="(11) 99999-9999" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+              <input
+                style={inputStyle}
+                placeholder="(11) 99999-9999"
+                type="tel"
+                maxLength={15} // Evita que o campo cresça além da máscara
+                value={form.phone}
+                onChange={e => {
+                  // Se a função maskPhone não estiver no arquivo, lembre-se de criá-la ou importá-la
+                  const maskedValue = maskPhone(e.target.value);
+
+                  // Força o navegador a limpar o que foi digitado de errado (letras/excessos)
+                  e.target.value = maskedValue;
+
+                  setForm(f => ({ ...f, phone: maskedValue }));
+                }}
+              />
             </div>
           </div>
 
@@ -487,9 +514,9 @@ function uniqueBy<T>(items: T[], key: (i: T) => string): T[] {
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 export default function LeadsPage() {
-  const USER_ROLE     = localStorage.getItem('@LeadsCar:role') ?? '';
-  const isAdmin       = USER_ROLE === 'ADMIN';
-  const isGerente     = USER_ROLE === 'GERENTE';
+  const USER_ROLE = localStorage.getItem('@LeadsCar:role') ?? '';
+  const isAdmin = USER_ROLE === 'ADMIN';
+  const isGerente = USER_ROLE === 'GERENTE';
   const isLiderEquipe = USER_ROLE === 'LIDER_EQUIPE';
 
   const { columns, setColumns, moveLead } = useKanbanBoard<KanbanCol>(INITIAL_COLUMNS);
@@ -497,13 +524,13 @@ export default function LeadsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [closingLead, setClosingLead] = useState<{ id: string; name: string; from: LeadStage } | null>(null);
-  
+
   // Estado que armazena o lead selecionado para exibir a linha do tempo
   const [historyLead, setHistoryLead] = useState<Lead | null>(null);
 
   const [filterStore, setFilterStore] = useState('');
-  const [filterTeam,  setFilterTeam]  = useState('');
-  const [filterUser,  setFilterUser]  = useState('');
+  const [filterTeam, setFilterTeam] = useState('');
+  const [filterUser, setFilterUser] = useState('');
 
   const [pendingMove, setPendingMove] = useState<{ leadId: string; from: LeadStage; to: LeadStage } | null>(null);
 
@@ -571,21 +598,21 @@ export default function LeadsPage() {
 
   const handleCloseLeadSuccess = () => {
     setClosingLead(null);
-    fetchLeads().then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin))).catch(() => {});
+    fetchLeads().then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin))).catch(() => { });
   };
 
   const allLeads = columns.flatMap(c => c.leads);
   const storeOptions = uniqueBy(allLeads.filter(l => l.storeId).map(l => ({ id: l.storeId!, name: l.storeName ?? l.storeId! })), o => o.id);
-  const teamOptions  = uniqueBy(allLeads.filter(l => l.teamId).map(l => ({ id: l.teamId!,  name: l.teamName  ?? l.teamId!  })), o => o.id);
-  const userOptions  = uniqueBy(allLeads.filter(l => l.userId).map(l => ({ id: l.userId!,  name: l.userName  ?? l.userId!  })), o => o.id);
+  const teamOptions = uniqueBy(allLeads.filter(l => l.teamId).map(l => ({ id: l.teamId!, name: l.teamName ?? l.teamId! })), o => o.id);
+  const userOptions = uniqueBy(allLeads.filter(l => l.userId).map(l => ({ id: l.userId!, name: l.userName ?? l.userId! })), o => o.id);
   const hasFilter = filterStore || filterTeam || filterUser;
 
   const filteredColumns = columns.map(col => ({
     ...col,
     leads: col.leads.filter(l => {
       if (filterStore && l.storeId !== filterStore) return false;
-      if (filterTeam  && l.teamId  !== filterTeam)  return false;
-      if (filterUser  && l.userId  !== filterUser)  return false;
+      if (filterTeam && l.teamId !== filterTeam) return false;
+      if (filterUser && l.userId !== filterUser) return false;
       return true;
     }),
   }));
@@ -607,8 +634,8 @@ export default function LeadsPage() {
           {(isAdmin || isGerente || isLiderEquipe) && <div style={{ width: 1, height: 28, background: '#e2e8f0', flexShrink: 0 }} />}
 
           {[
-            isAdmin && { label: 'Loja',     value: filterStore, set: setFilterStore, opts: storeOptions },
-            (isAdmin || isGerente || isLiderEquipe) && { label: 'Equipe',   value: filterTeam, set: setFilterTeam, opts: teamOptions },
+            isAdmin && { label: 'Loja', value: filterStore, set: setFilterStore, opts: storeOptions },
+            (isAdmin || isGerente || isLiderEquipe) && { label: 'Equipe', value: filterTeam, set: setFilterTeam, opts: teamOptions },
             (isAdmin || isGerente || isLiderEquipe) && { label: 'Vendedor', value: filterUser, set: setFilterUser, opts: userOptions },
           ].filter(Boolean).map((f: any) => (
             <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -638,11 +665,11 @@ export default function LeadsPage() {
       ) : (
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', flex: 1, minHeight: 0, paddingBottom: 4 }}>
           {filteredColumns.map(col => (
-            <KanbanColumn 
-              key={col.id} 
-              col={col} 
-              onMove={handleMove} 
-              onEdit={setEditingLead} 
+            <KanbanColumn
+              key={col.id}
+              col={col}
+              onMove={handleMove}
+              onEdit={setEditingLead}
               onViewHistory={setHistoryLead}
             />
           ))}
@@ -664,7 +691,7 @@ export default function LeadsPage() {
 
             {/* Injetando a Timeline com suporte seguro a fallback se a propriedade se chamar history ou historyLogs */}
             <LeadHistoryTimeline history={historyLead.history || (historyLead as any).historyLogs} />
-            
+
           </div>
         </div>
       )}

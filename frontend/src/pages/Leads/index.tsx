@@ -18,6 +18,7 @@ const INITIAL_COLUMNS: KanbanCol[] = [
   { id: 'fechado',    title: 'Fechado',    totalValue: 0, headerColor: '#10b981', leads: [] },
 ];
 
+// Dicionário auxiliar para exibir o nome legível do estágio de destino no modal de avanço
 const STAGE_NAMES: Record<string, string> = {
   novo_lead: 'Novo Lead',
   contato: 'Contato',
@@ -27,6 +28,19 @@ const STAGE_NAMES: Record<string, string> = {
 };
 
 const ORIGIN_OPTIONS = ['WhatsApp', 'Instagram', 'Facebook', 'Site', 'Indicação', 'Outro'];
+const PLATFORM_OPTIONS = ['Webmotors', 'OLX', 'Mercado Livre', 'Instagram', 'Facebook Marketplace', 'Chaves na Mão'];
+const IMPORTANCE_OPTIONS = [
+  { value: 'frio', label: '❄️ Frio' },
+  { value: 'morno', label: '🔥 Morno' },
+  { value: 'quente', label: '❤️ Quente' }
+];
+
+// Mapeamento visual único de cores por temperatura para os cards
+const TEMPERATURE_COLORS: Record<string, string> = {
+  frio: '#3b82f6',
+  morno: '#eab308',
+  quente: '#ef4444',
+};
 
 // ─── AVATAR ──────────────────────────────────────────────────────────────────
 function Avatar({ name, size = 30 }: { name: string; size?: number }) {
@@ -63,16 +77,29 @@ function LeadCard({
   const nextStage = currentIdx < stages.length - 1 ? stages[currentIdx + 1] : null;
   const previousStage = currentIdx > 0 ? stages[currentIdx - 1] : null;
 
+  const indicatorColor = TEMPERATURE_COLORS[lead.temperatura || 'morno'];
+
   return (
     <div style={{
       position: 'relative',
       background: '#fff',
       borderRadius: 10,
-      padding: '10px 12px',
+      padding: '10px 12px 10px 16px',
       marginBottom: 8,
       border: '1px solid #f1f5f9',
       boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
     }}>
+      {/* Linha vertical indicadora de temperatura/importância */}
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        top: 10,
+        bottom: 10,
+        width: 4,
+        borderRadius: '0 4px 4px 0',
+        backgroundColor: indicatorColor,
+      }} />
+
       <button
         type="button"
         onClick={(e) => {
@@ -146,9 +173,12 @@ function LeadCard({
           }}>
             {lead.name}
           </div>
-          <div style={{ display: 'flex', gap: 6, fontSize: 11, color: '#94a3b8', marginTop: 1 }}>
+          <div style={{ display: 'flex', gap: 6, fontSize: 11, color: '#94a3b8', marginTop: 1, alignItems: 'center' }}>
             {lead.leadNumber && <span>{lead.leadNumber}</span>}
             {lead.timeAgo && <span>{lead.timeAgo}</span>}
+            <span style={{ color: indicatorColor, fontWeight: 700, fontSize: 10, textTransform: 'uppercase' }}>
+              · {lead.temperatura || 'morno'}
+            </span>
           </div>
         </div>
       </div>
@@ -270,21 +300,66 @@ function KanbanColumn({
 }
 
 // ─── MODAL NOVO LEAD ─────────────────────────────────────────────────────────
-function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: (lead: any) => void }) {
-  const [form, setForm] = useState({ name: '', phone: '', origin: 'WhatsApp' });
+function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () => void }) {
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    origin: 'WhatsApp',
+    collaboratorName: '',
+    state: '',
+    city: '',
+    car: '',
+    price: '',
+    importance: 'morno',
+    status: 'aberta',
+    platforms: [] as string[],
+  });
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
 
+  const handlePlatformChange = (platform: string) => {
+    setForm(f => {
+      const isSelected = f.platforms.includes(platform);
+      const updated = isSelected
+        ? f.platforms.filter(p => p !== platform)
+        : [...f.platforms, platform];
+      return { ...f, platforms: updated };
+    });
+  };
+
   const handleSubmit = async () => {
-    if (!form.name.trim()) { setErro('Nome é obrigatório.'); return; }
+    if (!form.name.trim()) {
+      setErro('Nome do lead é obrigatório.');
+      return;
+    }
+    if (!form.collaboratorName.trim()) {
+      setErro('Nome do colaborador é obrigatório.');
+      return;
+    }
+    if (!form.car.trim()) {
+      setErro('O veículo a ser vendido é obrigatório.');
+      return;
+    }
     setLoading(true);
     setErro('');
     try {
-      const novo = await createLead({ name: form.name, phone: form.phone, origin: form.origin });
-      onSave(novo);
+      await createLead({
+        name: form.name,
+        phone: form.phone,
+        origin: form.origin,
+        collaboratorName: form.collaboratorName,
+        state: form.state,
+        city: form.city,
+        car: form.car,
+        price: form.price,
+        importance: form.importance,
+        negotiationStatus: form.status,
+        platforms: form.platforms,
+      } as any);
+      onSave();
       onClose();
     } catch {
-      setErro('Erro ao criar lead. Verifique os dados e tente novamente.');
+      setErro('Erro ao criar negociação/lead. Verifique os dados e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -292,29 +367,164 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: (lead
 
   return (
     <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1e293b' }}>Novo Lead</h2>
-          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#94a3b8' }}>✕</button>
+      <div style={{ ...modalStyle, maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1e293b' }}>Nova Negociação de Lead</h2>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={labelStyle}>Nome *</label>
-            <input style={inputStyle} placeholder="Nome do lead" value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+          <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Dados do Cliente</span>
           </div>
-          <div>
-            <label style={labelStyle}>Telefone</label>
-            <input style={inputStyle} placeholder="(11) 99999-9999" value={form.phone}
-              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Nome do Lead *</label>
+              <input
+                style={inputStyle}
+                placeholder="Nome do cliente"
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>WhatsApp (Lead)</label>
+              <input
+                style={inputStyle}
+                placeholder="(11) 99999-9999"
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              />
+            </div>
           </div>
+
           <div>
             <label style={labelStyle}>Origem</label>
             <select style={inputStyle} value={form.origin}
               onChange={e => setForm(f => ({ ...f, origin: e.target.value }))}>
               {ORIGIN_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
+          </div>
+
+          <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 8, marginTop: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Detalhes da Venda</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Nome do Colaborador *</label>
+              <input
+                style={inputStyle}
+                placeholder="Seu nome"
+                value={form.collaboratorName}
+                onChange={e => setForm(f => ({ ...f, collaboratorName: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Veículo *</label>
+              <input
+                style={inputStyle}
+                placeholder="Ex: Corolla 2023"
+                value={form.car}
+                onChange={e => setForm(f => ({ ...f, car: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Estado</label>
+              <input
+                style={inputStyle}
+                placeholder="Ex: SP"
+                value={form.state}
+                onChange={e => setForm(f => ({ ...f, state: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Cidade</label>
+              <input
+                style={inputStyle}
+                placeholder="Ex: São Paulo"
+                value={form.city}
+                onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Preço (R$)</label>
+              <input
+                style={inputStyle}
+                type="number"
+                placeholder="0.00"
+                value={form.price}
+                onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Status Inicial</label>
+              <select
+                style={inputStyle}
+                value={form.status}
+                onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+              >
+                <option value="aberta">Aberta</option>
+                <option value="fechada">Fechada</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Importância</label>
+            <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+              {IMPORTANCE_OPTIONS.map(opt => {
+                const isSelected = form.importance === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, importance: opt.value }))}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      borderRadius: '6px',
+                      border: isSelected ? `1px solid ${TEMPERATURE_COLORS[opt.value]}` : '1px solid #e2e8f0',
+                      background: isSelected ? `${TEMPERATURE_COLORS[opt.value]}10` : '#fff',
+                      color: isSelected ? TEMPERATURE_COLORS[opt.value] : '#475569',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Lançar nas Plataformas</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 4 }}>
+              {PLATFORM_OPTIONS.map(platform => {
+                const isChecked = form.platforms.includes(platform);
+                return (
+                  <label key={platform} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', color: '#1e293b', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handlePlatformChange(platform)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    {platform}
+                  </label>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -323,7 +533,7 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: (lead
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
           <button onClick={onClose} style={btnSecondaryStyle}>Cancelar</button>
           <button onClick={handleSubmit} disabled={loading} style={btnPrimaryStyle}>
-            {loading ? 'Salvando...' : 'Criar Lead'}
+            {loading ? 'Salvando...' : 'Criar Negociação'}
           </button>
         </div>
       </div>
@@ -488,11 +698,9 @@ export default function LeadsPage() {
   const [filterStore, setFilterStore] = useState('');
   const [filterTeam,  setFilterTeam]  = useState('');
   const [filterUser,  setFilterUser]  = useState('');
-  const [pendingMove, setPendingMove] = useState<{
-    leadId: string;
-    from: LeadStage;
-    to: LeadStage;
-  } | null>(null);
+
+  // Estado para o controle do modal de confirmação do Kanban
+  const [pendingMove, setPendingMove] = useState<{ leadId: string; from: LeadStage; to: LeadStage } | null>(null);
 
   const reloadLeads = () => {
     fetchLeads()
@@ -532,7 +740,7 @@ export default function LeadsPage() {
       return;
     }
 
-    // Abre modal de confirmação
+    // Dispara a confirmação antes de mover
     setPendingMove({ leadId, from, to });
   };
 
@@ -570,12 +778,6 @@ export default function LeadsPage() {
         alert('Erro ao salvar a alteração. Tente novamente.');
       }
     }
-  };
-
-  const handleNovoLead = () => {
-    fetchLeads()
-      .then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin)))
-      .catch(() => setColumns(prev => addMockLeadsToColumns(prev, isAdmin)));
   };
 
   const handleCloseLeadSuccess = () => {
@@ -705,6 +907,7 @@ export default function LeadsPage() {
         />
       )}
 
+      {/* MODAL DE CONFIRMAÇÃO DE AVANÇO DE ESTÁGIO NO KANBAN */}
       {pendingMove && (
         <div style={overlayStyle} onClick={() => setPendingMove(null)}>
           <div style={modalStyle} onClick={e => e.stopPropagation()}>

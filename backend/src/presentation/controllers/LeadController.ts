@@ -61,6 +61,7 @@ class LeadController {
         name:    req.body.name,
         phone:   req.body.phone,
         origin:  req.body.origin,
+        importance: req.body.importance,
         userId:  authUser.id,   // ← sessão, não body
         teamId:  user.teamId,   // ← banco, não body
         storeId: user.storeId,  // ← banco, não body

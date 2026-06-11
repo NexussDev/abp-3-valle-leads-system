@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 const API_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL as string | undefined) ??
+  (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL as string | undefined : undefined) ??
   'http://localhost:3000/api';
 
 export const client = axios.create({
@@ -49,12 +49,14 @@ export interface ApiLead {
   phone: string | null;
   status: string | null;
   origin?: string;
+  importance?: string;
+  temperatura?: string;  // linha nova
   closingReason?: string | null;
   converted?: boolean | null;
   createdAt: string | null;
   client?: { id: string; name: string } | null;
-  user?:  { id: string; name: string; email: string; role: string } | null;
-  team?:  { id: string; name: string } | null;
+  user?: { id: string; name: string; email: string; role: string } | null;
+  team?: { id: string; name: string } | null;
   store?: { id: string; name: string } | null;
 }
 
@@ -70,13 +72,13 @@ export interface FetchLeadsParams {
 
 export async function fetchLeads(params: FetchLeadsParams = {}): Promise<ApiLead[]> {
   const query: Record<string, string> = {};
-  if (params.status)    query.status    = params.status;
-  if (params.userId)    query.userId    = params.userId;
-  if (params.teamId)    query.teamId    = params.teamId;
+  if (params.status) query.status = params.status;
+  if (params.userId) query.userId = params.userId;
+  if (params.teamId) query.teamId = params.teamId;
   if (params.startDate) query.startDate = params.startDate;
-  if (params.endDate)   query.endDate   = params.endDate;
-  if (params.page)      query.page      = String(params.page);
-  if (params.limit)     query.limit     = String(params.limit);
+  if (params.endDate) query.endDate = params.endDate;
+  if (params.page) query.page = String(params.page);
+  if (params.limit) query.limit = String(params.limit);
 
   const { data } = await client.get<ApiLead[]>('/leads', { params: query });
   return data;
@@ -89,6 +91,8 @@ export interface UpdateLeadPayload {
   name?: string;
   phone?: string;
   origin?: string;
+  importance?: string;   // linha nova
+  temperatura?: string;  // linha nova
 }
 
 export async function updateLead(id: string, payload: UpdateLeadPayload): Promise<ApiLead> {

@@ -53,6 +53,9 @@ export function toLead(api: ApiLead): Lead {
     phone:        api.phone ?? undefined,
     closingReason: api.closingReason ?? undefined,  // linha nova
     converted:     api.converted ?? undefined,       // linha nova
+    temperatura: (['frio', 'morno', 'quente'].includes((api as any).negotiation?.importance ?? '')
+  ? (api as any).negotiation?.importance
+  : undefined) as 'frio' | 'morno' | 'quente' | undefined,
   };
 }
 

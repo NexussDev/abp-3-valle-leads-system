@@ -22,8 +22,8 @@ export default function LeadCard({ item, statusColor }: Props) {
       <div className={styles.top}>
         <img src={item.avatar} className={styles.avatar} />
         <div>
-          <div className={styles.name}>{item.name}</div>
           <div className={styles.car}>{item.car}</div>
+          <div className={styles.name}>{item.name}</div>
         </div>
       </div>
 

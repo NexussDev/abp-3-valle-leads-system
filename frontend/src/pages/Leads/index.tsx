@@ -506,42 +506,37 @@ export default function LeadsPage() {
   }, [setColumns, isAdmin]);
 
 const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
-   if (to === 'fechado') {
-      const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
-      setClosingLead({ id: leadId, name: lead?.name ?? '', from });
-      return;
-    }
-  const result = moveLead(leadId, from, to);
+  if (to === 'fechado') {
+    const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
+    setClosingLead({ id: leadId, name: lead?.name ?? '', from });
+    return;
+  }
 
+  const result = moveLead(leadId, from, to);
   if (!result.success) {
     alert(result.error);
     return;
   }
 
-  // desfaz imediatamente o movimento local
   moveLead(leadId, to, from);
 
   try {
     await updateLead(leadId, { status: to });
-
-    // depois que salvou no backend, aplica o movimento definitivo
     moveLead(leadId, from, to);
     updateStoredLeadStage(leadId, to);
-    try {
-      await updateLead(leadId, { status: to });
-    } catch (err: any) {
-      moveLead(leadId, to, from);
-      updateStoredLeadStage(leadId, from);
-      const status = err?.response?.status;
-      if (status === 403) {
-        alert('Você não tem permissão para mover este lead.');
-      } else if (status === 404) {
-        alert('Lead não encontrado. Recarregue a página.');
-      } else {
-        alert('Erro ao salvar a alteração. Tente novamente.');
-      }
+  } catch (err: any) {
+    moveLead(leadId, to, from);
+    updateStoredLeadStage(leadId, from);
+    const status = err?.response?.status;
+    if (status === 403) {
+      alert('Você não tem permissão para mover este lead.');
+    } else if (status === 404) {
+      alert('Lead não encontrado. Recarregue a página.');
+    } else {
+      alert('Erro ao salvar a alteração. Tente novamente.');
     }
-  };
+  }
+};
 
   const handleNovoLead = () => {
     fetchLeads()

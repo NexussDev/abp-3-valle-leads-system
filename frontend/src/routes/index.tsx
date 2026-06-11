@@ -13,6 +13,7 @@ import ModerarVitrine from "../pages/ModerarVitrine/ModerarVitrine";
 import Logs from "../pages/Logs/Logs";
 import Repescagem from "../pages/Repescagem/Repescagem";
 import PrivateRoute from "./PrivateRoute";
+import Teams from "../pages/Teams/Teams";
 
 export function AppRoutes() {
   return (
@@ -35,7 +36,7 @@ export function AppRoutes() {
           <Route path="/moderar-vitrine"    element={<Layout><ModerarVitrine /></Layout>} />
           <Route path="/repescagem"         element={<Layout><Repescagem /></Layout>} />
           <Route path="/logs"               element={<Layout><Logs /></Layout>} />
-        </Route>
+          <Route path="/equipes" element={<Layout><Teams /></Layout>} />        </Route>
 
         <Route path="*" element={<Navigate to="/catalogo" />} />
       </Routes>

@@ -46,10 +46,11 @@ class UserService {
     return userWithoutPassword;
   }
 
-  async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+  async update(id: string, data: Prisma.UserUpdateInput & { teamId?: string | null }): Promise<User> {
   await this.findById(id);
 
-  const updateData: Prisma.UserUpdateInput = { ...data };
+  const { teamId, ...rest } = data as any;
+  const updateData: Prisma.UserUpdateInput = { ...rest };
 
   if (typeof updateData.password === 'string') {
     if (updateData.password.length < 6) {
@@ -59,9 +60,14 @@ class UserService {
     updateData.password = await bcrypt.hash(updateData.password, 10);
   }
 
+  if (teamId !== undefined) {
+    updateData.team = teamId
+      ? { connect: { id: teamId } }
+      : { disconnect: true };
+  }
+
   return userRepository.update(id, updateData);
 }
-
   async updateMe(
     userId: string,
     data: {

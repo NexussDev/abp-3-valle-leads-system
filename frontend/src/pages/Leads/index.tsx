@@ -11,16 +11,17 @@ import CloseLeadModal from '../../components/CloseLeadModal/CloseLeadModal';
 import LeadHistoryTimeline from '../../components/LeadHistory/LeadHistoryTimeline';
 
 // ─── ESTILOS AUXILIARES ──────────────────────────────────────────────────────
-const overlayStyle: CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' };
-const modalStyle: CSSProperties = { background: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' };
-const closeBtnStyle: CSSProperties = { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94a3b8', lineHeight: 1 };
-const labelStyle: CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 };
-const inputStyle: CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, boxSizing: 'border-box', outline: 'none' };
-const btnPrimaryStyle: CSSProperties = { flex: 1, padding: '10px 16px', borderRadius: 8, background: '#3b82f6', color: '#fff', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'background 0.2s' };
-const btnSecondaryStyle: CSSProperties = { flex: 1, padding: '10px 16px', borderRadius: 8, background: '#f1f5f9', color: '#475569', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'background 0.2s' };
-const menuItemStyle: CSSProperties = { display: 'block', width: '100%', padding: '8px 12px', textAlign: 'left', background: 'none', border: 'none', fontSize: 13, color: '#334155', cursor: 'pointer', borderRadius: 6 };
+const overlayStyle: CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' };
+const modalStyle: CSSProperties = { background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px -12px rgba(0,0,0,0.2)' };
+const labelStyle: CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 5 };
+const inputStyle: CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, color: '#1e293b', outline: 'none', boxSizing: 'border-box', background: '#f8fafc' };
+const closeBtnStyle: CSSProperties = { border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#94a3b8' };
+const btnPrimaryStyle: CSSProperties = { flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: '#3b82f6', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' };
+const btnSecondaryStyle: CSSProperties = { flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer' };
+const menuItemStyle: CSSProperties = { width: '100%', border: 'none', outline: 'none', background: 'transparent', textAlign: 'left', padding: '11px 12px', borderRadius: 10, fontSize: 14, color: '#475569', cursor: 'pointer', fontWeight: 500 };
+const cardMenuBtnStyle: CSSProperties = { position: 'absolute', top: 8, right: 10, width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, cursor: 'pointer', padding: 0, zIndex: 20 };
+const dotStyle: CSSProperties = { width: 4, height: 4, borderRadius: '50%', backgroundColor: '#94a3b8' };
 
-// ─── COLUNAS ─────────────────────────────────────────────────────────────────
 const INITIAL_COLUMNS: KanbanCol[] = [
   { id: 'novo_lead', title: 'Novo Lead', totalValue: 0, headerColor: '#3b82f6', leads: [] },
   { id: 'contato', title: 'Contato', totalValue: 0, headerColor: '#8b5cf6', leads: [] },
@@ -51,24 +52,28 @@ const TEMPERATURE_COLORS: Record<string, string> = {
   quente: '#ef4444',
 };
 
-// ─── AVATAR ──────────────────────────────────────────────────────────────────
+// ─── FUNÇÃO DE MÁSCARA ───────────────────────────────────────────────────────
+function maskPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+// ─── COMPONENTES ─────────────────────────────────────────────────────────────
 function Avatar({ name, size = 30 }: { name: string; size?: number }) {
   const palette = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#10b981', '#f59e0b', '#06b6d4'];
   const color = palette[name.charCodeAt(0) % palette.length];
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
   return (
-    <div style={{
-      width: size, height: size, borderRadius: '50%',
-      backgroundColor: color, color: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.36, fontWeight: 700, flexShrink: 0,
-    }}>
+    <div style={{ width: size, height: size, borderRadius: '50%', backgroundColor: color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.36, fontWeight: 700, flexShrink: 0 }}>
       {initials}
     </div>
   );
 }
 
-// ─── LEAD CARD ───────────────────────────────────────────────────────────────
 function LeadCard({
   lead,
   onMove,
@@ -91,87 +96,37 @@ function LeadCard({
   const indicatorColor = TEMPERATURE_COLORS[lead.temperatura || 'morno'];
 
   return (
-    <div style={{
-      position: 'relative',
-      background: '#fff',
-      borderRadius: 10,
-      padding: '10px 12px 10px 16px',
-      marginBottom: 8,
-      border: '1px solid #f1f5f9',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-    }}>
-      <div style={{
-        position: 'absolute', left: 0, top: 10, bottom: 10, width: 4,
-        borderRadius: '0 4px 4px 0', backgroundColor: indicatorColor,
-      }} />
+    <div style={{ position: 'relative', background: '#fff', borderRadius: 10, padding: '10px 12px 10px 16px', marginBottom: 8, border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+      <div style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 4, borderRadius: '0 4px 4px 0', backgroundColor: indicatorColor }} />
 
-      <button
+     <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setMenuOpen(!menuOpen);
-        }}
-        style={{
-          position: 'absolute', top: 8, right: 10, border: 'none',
-          background: 'transparent', color: '#94a3b8', fontSize: 18,
-          fontWeight: 700, cursor: 'pointer', padding: 0, lineHeight: 1,
-        }}
+        onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+        style={{ position: 'absolute', top: 8, right: 10, width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, cursor: 'pointer', padding: 0, zIndex: 20 }}
       >
-        ⋮
+        <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#94a3b8' }} />
+        <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#94a3b8' }} />
+        <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#94a3b8' }} />
       </button>
 
       {menuOpen && (
-        <div style={{
-          position: 'absolute', top: 34, right: 10, zIndex: 50,
-          width: 190, background: '#fff', borderRadius: 12, padding: 8,
-          border: '1px solid #eef2f7', boxShadow: '0 16px 35px rgba(15, 23, 42, 0.14)',
-        }}>
-          <button
-            type="button"
-            onClick={() => { setMenuOpen(false); onEdit(lead); }}
-            style={menuItemStyle}
-            onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
-            onMouseOut={e => e.currentTarget.style.background = 'none'}
-          >
-            Editar lead
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setMenuOpen(false); onViewHistory(lead); }}
-            style={menuItemStyle}
-            onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
-            onMouseOut={e => e.currentTarget.style.background = 'none'}
-          >
-            Ver histórico
-          </button>
-
+        <div style={{ position: 'absolute', top: 34, right: 10, zIndex: 50, width: 190, background: '#fff', borderRadius: 12, padding: 8, border: '1px solid #eef2f7', boxShadow: '0 16px 35px rgba(15, 23, 42, 0.14)' }}>
+          <button type="button" onClick={() => { setMenuOpen(false); onEdit(lead); }} style={menuItemStyle} onMouseOver={e => e.currentTarget.style.background = '#f8fafc'} onMouseOut={e => e.currentTarget.style.background = 'none'}>Editar lead</button>
+          <button type="button" onClick={() => { setMenuOpen(false); onViewHistory(lead); }} style={menuItemStyle} onMouseOver={e => e.currentTarget.style.background = '#f8fafc'} onMouseOut={e => e.currentTarget.style.background = 'none'}>Ver histórico</button>
           {previousStage && (
-            <button
-              type="button"
-              onClick={() => { setMenuOpen(false); onMove(lead.id, lead.stage, previousStage); }}
-              style={menuItemStyle}
-              onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
-              onMouseOut={e => e.currentTarget.style.background = 'none'}
-            >
-              Retornar estágio
-            </button>
+            <button type="button" onClick={() => { setMenuOpen(false); onMove(lead.id, lead.stage, previousStage); }} style={menuItemStyle} onMouseOver={e => e.currentTarget.style.background = '#f8fafc'} onMouseOut={e => e.currentTarget.style.background = 'none'}>Retornar estágio</button>
           )}
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, paddingRight: 28 }}>
         <Avatar name={lead.name} size={30} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {lead.name}
-          </div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.name}</div>
           <div style={{ display: 'flex', gap: 6, fontSize: 11, color: '#94a3b8', marginTop: 1, alignItems: 'center' }}>
             {lead.leadNumber && <span>{lead.leadNumber}</span>}
             {lead.timeAgo && <span>{lead.timeAgo}</span>}
-            <span style={{ color: indicatorColor, fontWeight: 700, fontSize: 10, textTransform: 'uppercase' }}>
-              · {lead.temperatura || 'morno'}
-            </span>
+            <span style={{ color: indicatorColor, fontWeight: 700, fontSize: 10, textTransform: 'uppercase' }}>· {lead.temperatura || 'morno'}</span>
           </div>
         </div>
       </div>
@@ -179,27 +134,17 @@ function LeadCard({
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 10px', marginBottom: 2 }}>
         {lead.phone && <span style={{ fontSize: 11, color: '#64748b' }}>📞 {lead.phone}</span>}
         {lead.car && <span style={{ fontSize: 11, color: '#64748b' }}>🚗 {lead.car}</span>}
-        {lead.origin && (
-          <span style={{ fontSize: 10, fontWeight: 600, color: '#64748b', background: '#f1f5f9', borderRadius: 4, padding: '2px 6px' }}>
-            {lead.origin}
-          </span>
-        )}
+        {lead.origin && <span style={{ fontSize: 10, fontWeight: 600, color: '#64748b', background: '#f1f5f9', borderRadius: 4, padding: '2px 6px' }}>{lead.origin}</span>}
       </div>
 
       {lead.closingReason && <div style={{ fontSize: 11, color: '#64748b', marginTop: 4, fontStyle: 'italic' }}>📝 {lead.closingReason}</div>}
 
       {lead.stage === 'fechado' && (
-        <div style={{ fontSize: 11, fontWeight: 700, marginTop: 4, color: lead.converted ? '#10b981' : '#ef4444' }}>
-          {lead.converted ? '✓ Venda realizada' : '✗ Não convertido'}
-        </div>
+        <div style={{ fontSize: 11, fontWeight: 700, marginTop: 4, color: lead.converted ? '#10b981' : '#ef4444' }}>{lead.converted ? '✓ Venda realizada' : '✗ Não convertido'}</div>
       )}
 
       {nextStage ? (
-        <button
-          className={styles.advBtn}
-          onClick={() => onMove(lead.id, lead.stage, nextStage)}
-          style={{ width: '100%', padding: '6px', marginTop: 10, borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 11, fontWeight: 700, color: '#64748b', cursor: 'pointer' }}
-        >
+        <button className={styles.advBtn} onClick={() => onMove(lead.id, lead.stage, nextStage)} style={{ width: '100%', padding: '6px', marginTop: 10, borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 11, fontWeight: 700, color: '#64748b', cursor: 'pointer' }}>
           {nextStage === 'fechado' ? 'Fechar Lead →' : 'Avançar →'}
         </button>
       ) : (
@@ -209,18 +154,7 @@ function LeadCard({
   );
 }
 
-// ─── KANBAN COLUMN ───────────────────────────────────────────────────────────
-function KanbanColumn({
-  col,
-  onMove,
-  onEdit,
-  onViewHistory,
-}: {
-  col: KanbanCol;
-  onMove: (id: string, from: LeadStage, to: LeadStage) => void;
-  onEdit: (lead: Lead) => void;
-  onViewHistory: (lead: Lead) => void;
-}) {
+function KanbanColumn({ col, onMove, onEdit, onViewHistory }: { col: KanbanCol; onMove: (id: string, from: LeadStage, to: LeadStage) => void; onEdit: (lead: Lead) => void; onViewHistory: (lead: Lead) => void; }) {
   return (
     <div style={{ flex: '1 1 0', minWidth: 260, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%', borderTop: `3px solid ${col.headerColor}`, overflow: 'hidden' }}>
       <div style={{ padding: '12px 14px', borderBottom: '1px solid #f1f5f9', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -231,40 +165,16 @@ function KanbanColumn({
         {col.leads.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 12, padding: '20px 0' }}>Nenhum lead</div>
         ) : (
-          col.leads.map(lead => (
-            <LeadCard
-              key={lead.id}
-              lead={lead}
-              onMove={onMove}
-              stages={STAGE_ORDER}
-              onEdit={onEdit}
-              onViewHistory={onViewHistory}
-            />
-          ))
+          col.leads.map(lead => <LeadCard key={lead.id} lead={lead} onMove={onMove} stages={STAGE_ORDER} onEdit={onEdit} onViewHistory={onViewHistory} />)
         )}
       </div>
     </div>
   );
 }
 
-// ─── FUNÇÃO DE MÁSCARA (ADICIONADA AQUI) ──────────────────────────────────────
-function maskPhone(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-
-  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
-  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 10)
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-}
-
 // ─── MODAL NOVO LEAD ─────────────────────────────────────────────────────────
 function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () => void }) {
-  const [form, setForm] = useState({
-    name: '', phone: '', origin: 'WhatsApp', collaboratorName: '', state: '', city: '', car: '', price: '', importance: 'morno', status: 'aberta', platforms: [] as string[],
-  });
-
+  const [form, setForm] = useState({ name: '', phone: '', origin: 'WhatsApp', collaboratorName: '', state: '', city: '', car: '', price: '', importance: 'morno', status: 'aberta', platforms: [] as string[] });
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
 
@@ -279,12 +189,10 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
     if (!form.name.trim()) { setErro('Nome do lead é obrigatório.'); return; }
     if (!form.collaboratorName.trim()) { setErro('Nome do colaborador é obrigatório.'); return; }
     if (!form.car.trim()) { setErro('O veículo a ser vendido é obrigatório.'); return; }
-    setLoading(true);
-    setErro('');
+    setLoading(true); setErro('');
+
     try {
-      await createLead({
-        name: form.name, phone: form.phone, origin: form.origin, collaboratorName: form.collaboratorName, state: form.state, city: form.city, car: form.car, price: form.price, importance: form.importance, negotiationStatus: form.status, platforms: form.platforms,
-      } as any);
+      await createLead({ name: form.name, phone: form.phone, origin: form.origin, collaboratorName: form.collaboratorName, state: form.state, city: form.city, car: form.car, price: form.price, importance: form.importance, negotiationStatus: form.status, platforms: form.platforms } as any);
       onSave(); onClose();
     } catch {
       setErro('Erro ao criar negociação/lead. Verifique os dados e tente novamente.');
@@ -302,10 +210,7 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Dados do Cliente</span>
-          </div>
-
+          <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}><span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Dados do Cliente</span></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={labelStyle}>Nome do Lead *</label>
@@ -313,25 +218,9 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
             </div>
             <div>
               <label style={labelStyle}>WhatsApp (Lead)</label>
-              <input
-                style={inputStyle}
-                placeholder="(11) 99999-9999"
-                type="tel"
-                maxLength={15} // Evita que o campo cresça além da máscara
-                value={form.phone}
-                onChange={e => {
-                  // Se a função maskPhone não estiver no arquivo, lembre-se de criá-la ou importá-la
-                  const maskedValue = maskPhone(e.target.value);
-
-                  // Força o navegador a limpar o que foi digitado de errado (letras/excessos)
-                  e.target.value = maskedValue;
-
-                  setForm(f => ({ ...f, phone: maskedValue }));
-                }}
-              />
+              <input style={inputStyle} placeholder="(11) 99999-9999" type="tel" maxLength={15} value={form.phone} onChange={e => { const maskedValue = maskPhone(e.target.value); e.target.value = maskedValue; setForm(f => ({ ...f, phone: maskedValue })); }} />
             </div>
           </div>
-
           <div>
             <label style={labelStyle}>Origem</label>
             <select style={inputStyle} value={form.origin} onChange={e => setForm(f => ({ ...f, origin: e.target.value }))}>
@@ -339,10 +228,7 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
             </select>
           </div>
 
-          <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 8, marginTop: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Detalhes da Venda</span>
-          </div>
-
+          <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 8, marginTop: 6 }}><span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Detalhes da Venda</span></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={labelStyle}>Nome do Colaborador *</label>
@@ -353,7 +239,6 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
               <input style={inputStyle} placeholder="Ex: Corolla 2023" value={form.car} onChange={e => setForm(f => ({ ...f, car: e.target.value }))} />
             </div>
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={labelStyle}>Estado</label>
@@ -364,7 +249,6 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
               <input style={inputStyle} placeholder="Ex: São Paulo" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
             </div>
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={labelStyle}>Preço (R$)</label>
@@ -378,31 +262,19 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
               </select>
             </div>
           </div>
-
           <div>
             <label style={labelStyle}>Importância</label>
             <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
               {IMPORTANCE_OPTIONS.map(opt => {
                 const isSelected = form.importance === opt.value;
                 return (
-                  <button
-                    key={opt.value} type="button"
-                    onClick={() => setForm(f => ({ ...f, importance: opt.value }))}
-                    style={{
-                      flex: 1, padding: '8px', borderRadius: '6px',
-                      border: isSelected ? `1px solid ${TEMPERATURE_COLORS[opt.value]}` : '1px solid #e2e8f0',
-                      background: isSelected ? `${TEMPERATURE_COLORS[opt.value]}10` : '#fff',
-                      color: isSelected ? TEMPERATURE_COLORS[opt.value] : '#475569',
-                      fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s ease'
-                    }}
-                  >
+                  <button key={opt.value} type="button" onClick={() => setForm(f => ({ ...f, importance: opt.value }))} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: isSelected ? `1px solid ${TEMPERATURE_COLORS[opt.value]}` : '1px solid #e2e8f0', background: isSelected ? `${TEMPERATURE_COLORS[opt.value]}10` : '#fff', color: isSelected ? TEMPERATURE_COLORS[opt.value] : '#475569', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s ease' }}>
                     {opt.label}
                   </button>
                 );
               })}
             </div>
           </div>
-
           <div>
             <label style={labelStyle}>Lançar nas Plataformas</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 4 }}>
@@ -410,8 +282,7 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
                 const isChecked = form.platforms.includes(platform);
                 return (
                   <label key={platform} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', color: '#1e293b', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={isChecked} onChange={() => handlePlatformChange(platform)} style={{ cursor: 'pointer' }} />
-                    {platform}
+                    <input type="checkbox" checked={isChecked} onChange={() => handlePlatformChange(platform)} style={{ cursor: 'pointer' }} /> {platform}
                   </label>
                 );
               })}
@@ -420,7 +291,6 @@ function NovoLeadModal({ onClose, onSave }: { onClose: () => void; onSave: () =>
         </div>
 
         {erro && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10 }}>{erro}</p>}
-
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
           <button onClick={onClose} style={btnSecondaryStyle}>Cancelar</button>
           <button onClick={handleSubmit} disabled={loading} style={btnPrimaryStyle}>{loading ? 'Salvando...' : 'Criar Negociação'}</button>
@@ -464,7 +334,7 @@ function EditLeadModal({ lead, onClose, onSave }: { lead: Lead; onClose: () => v
           </div>
           <div>
             <label style={labelStyle}>WhatsApp</label>
-            <input style={inputStyle} placeholder="(00) 00000-0000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+            <input style={inputStyle} placeholder="(00) 00000-0000" type="tel" maxLength={15} value={form.phone} onChange={e => { const maskedValue = maskPhone(e.target.value); e.target.value = maskedValue; setForm(f => ({ ...f, phone: maskedValue })); }} />
           </div>
           <div>
             <label style={labelStyle}>Veículo de interesse</label>
@@ -485,7 +355,6 @@ function EditLeadModal({ lead, onClose, onSave }: { lead: Lead; onClose: () => v
         </div>
 
         {erro && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10 }}>{erro}</p>}
-
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
           <button onClick={onClose} style={btnSecondaryStyle}>Cancelar</button>
           <button onClick={handleSubmit} disabled={loading} style={btnPrimaryStyle}>{loading ? 'Salvando...' : 'Salvar alterações'}</button>
@@ -506,13 +375,16 @@ function addMockLeadsToColumns(columns: KanbanCol[], include: boolean): KanbanCo
   });
 }
 
-// Utilitário para evitar duplicidade nos seletores de filtros
 function uniqueBy<T>(items: T[], key: (i: T) => string): T[] {
   const seen = new Set<string>();
-  return items.filter(i => { const k = key(i); if (seen.has(k)) return false; seen.add(k); return true; });
+  return items.filter(i => {
+    const k = key(i);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
 }
 
-// ─── PAGE ─────────────────────────────────────────────────────────────────────
 export default function LeadsPage() {
   const USER_ROLE = localStorage.getItem('@LeadsCar:role') ?? '';
   const isAdmin = USER_ROLE === 'ADMIN';
@@ -520,12 +392,11 @@ export default function LeadsPage() {
   const isLiderEquipe = USER_ROLE === 'LIDER_EQUIPE';
 
   const { columns, setColumns, moveLead } = useKanbanBoard<KanbanCol>(INITIAL_COLUMNS);
+
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [closingLead, setClosingLead] = useState<{ id: string; name: string; from: LeadStage } | null>(null);
-
-  // Estado que armazena o lead selecionado para exibir a linha do tempo
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [historyLead, setHistoryLead] = useState<Lead | null>(null);
 
   const [filterStore, setFilterStore] = useState('');
@@ -551,9 +422,11 @@ export default function LeadsPage() {
         .then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin)))
         .catch(() => setColumns(addMockLeadsToColumns(INITIAL_COLUMNS, isAdmin)));
     };
+
     window.addEventListener('mock-leads-updated', sync);
     window.addEventListener('focus', sync);
     document.addEventListener('visibilitychange', sync);
+
     return () => {
       window.removeEventListener('mock-leads-updated', sync);
       window.removeEventListener('focus', sync);
@@ -562,154 +435,90 @@ export default function LeadsPage() {
   }, [setColumns, isAdmin]);
 
   const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
-    if (to === 'fechado') {
-      const lead = columns.flatMap(c => c.leads).find(l => l.id === leadId);
-      setClosingLead({ id: leadId, name: lead?.name ?? '', from });
-      return;
-    }
-    setPendingMove({ leadId, from, to });
-  };
-
-  const executeMoveLead = async () => {
-    if (!pendingMove) return;
-    const { leadId, from, to } = pendingMove;
-    setPendingMove(null);
-
-    const result = moveLead(leadId, from, to);
-    if (!result.success) {
-      alert(result.error); return;
-    }
-
-    moveLead(leadId, to, from); // Otimista
-
     try {
       await updateLead(leadId, { status: to });
-      moveLead(leadId, from, to);
       updateStoredLeadStage(leadId, to);
-    } catch (err: any) {
-      moveLead(leadId, to, from);
-      updateStoredLeadStage(leadId, from);
-      const status = err?.response?.status;
-      if (status === 403) alert('Você não tem permissão para mover este lead.');
-      else if (status === 404) alert('Lead não encontrado. Recarregue a página.');
-      else alert('Erro ao salvar a alteração. Tente novamente.');
+      reloadLeads();
+    } catch (error) {
+      console.error('Erro ao atualizar lead:', error);
+      alert('Erro ao salvar a alteração. Tente novamente.');
     }
   };
 
   const handleCloseLeadSuccess = () => {
     setClosingLead(null);
-    fetchLeads().then(data => setColumns(addMockLeadsToColumns(apiLeadsToColumns(data, INITIAL_COLUMNS), isAdmin))).catch(() => { });
+    reloadLeads();
   };
 
   const allLeads = columns.flatMap(c => c.leads);
-  const storeOptions = uniqueBy(allLeads.filter(l => l.storeId).map(l => ({ id: l.storeId!, name: l.storeName ?? l.storeId! })), o => o.id);
-  const teamOptions = uniqueBy(allLeads.filter(l => l.teamId).map(l => ({ id: l.teamId!, name: l.teamName ?? l.teamId! })), o => o.id);
-  const userOptions = uniqueBy(allLeads.filter(l => l.userId).map(l => ({ id: l.userId!, name: l.userName ?? l.userId! })), o => o.id);
-  const hasFilter = filterStore || filterTeam || filterUser;
 
-  const filteredColumns = columns.map(col => ({
-    ...col,
-    leads: col.leads.filter(l => {
-      if (filterStore && l.storeId !== filterStore) return false;
-      if (filterTeam && l.teamId !== filterTeam) return false;
-      if (filterUser && l.userId !== filterUser) return false;
-      return true;
-    }),
-  }));
+  const storeOptions = uniqueBy(
+    allLeads.filter(l => l.storeId).map(l => ({ id: l.storeId!, name: l.storeName ?? l.storeId! })),
+    o => o.id
+  );
 
-  const totalLeads = filteredColumns.reduce((sum, c) => sum + c.leads.length, 0);
+  const teamOptions = uniqueBy(
+    allLeads.filter(l => l.teamId).map(l => ({ id: l.teamId!, name: l.teamName ?? l.teamId! })),
+    o => o.id
+  );
 
-  return (
-    <div style={{ padding: '12px 16px', height: '100vh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#f8fafc' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexShrink: 0, gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', minWidth: 0 }}>
-          <div style={{ flexShrink: 0 }}>
-            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>Pipeline de Leads</h1>
-            <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: 11 }}>
-              {totalLeads} lead{totalLeads !== 1 ? 's' : ''} no funil
-              {hasFilter && <span style={{ color: '#3b82f6', marginLeft: 4 }}>· filtrado</span>}
-            </p>
-          </div>
+  const userOptions = uniqueBy(
+    allLeads.filter(l => l.userId).map(l => ({ id: l.userId!, name: l.userName ?? l.userId! })),
+    o => o.id
+  );
 
-          {(isAdmin || isGerente || isLiderEquipe) && <div style={{ width: 1, height: 28, background: '#e2e8f0', flexShrink: 0 }} />}
-
-          {[
-            isAdmin && { label: 'Loja', value: filterStore, set: setFilterStore, opts: storeOptions },
-            (isAdmin || isGerente || isLiderEquipe) && { label: 'Equipe', value: filterTeam, set: setFilterTeam, opts: teamOptions },
-            (isAdmin || isGerente || isLiderEquipe) && { label: 'Vendedor', value: filterUser, set: setFilterUser, opts: userOptions },
-          ].filter(Boolean).map((f: any) => (
-            <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em' }}>{f.label}</span>
-              <select value={f.value} onChange={e => f.set(e.target.value)} className={`${styles.filterSelect} ${f.value ? styles.filterSelectActive : ''}`}>
-                <option value="">Todos</option>
-                {f.opts.map((o: any) => <option key={o.id} value={o.id}>{o.name}</option>)}
-              </select>
-            </div>
-          ))}
-
-          {hasFilter && <button className={styles.clearBtn} onClick={() => { setFilterStore(''); setFilterTeam(''); setFilterUser(''); }}>✕</button>}
-        </div>
-
-        <button
-          onClick={() => setShowModal(true)}
-          style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: '#3b82f6', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(59,130,246,0.35)' }}
-          onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
-          onMouseLeave={e => e.currentTarget.style.background = '#3b82f6'}
+return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '100vh', padding: 24, background: '#f8fafc', boxSizing: 'border-box' }}>
+      
+      {/* ─── CABEÇALHO E BOTÃO DE NOVO LEAD ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1e293b' }}>Pipeline de Leads</h1>
+        <button 
+          onClick={() => setShowModal(true)} 
+          style={{ ...btnPrimaryStyle, flex: 'none', padding: '10px 20px' }}
         >
-          + Novo Lead
+          + Adicionar Lead
         </button>
       </div>
 
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, color: '#cbd5e1', fontSize: 14 }}>Carregando leads…</div>
-      ) : (
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', flex: 1, minHeight: 0, paddingBottom: 4 }}>
-          {filteredColumns.map(col => (
-            <KanbanColumn
-              key={col.id}
-              col={col}
-              onMove={handleMove}
-              onEdit={setEditingLead}
-              onViewHistory={setHistoryLead}
-            />
-          ))}
-        </div>
-      )}
+      {/* ─── COLUNAS DO KANBAN ─── */}
+      <div style={{ display: 'flex', gap: 16, flex: 1, overflowX: 'auto', paddingBottom: 10 }}>
+        {columns.map(col => (
+          <KanbanColumn
+            key={col.id}
+            col={col}
+            onMove={handleMove}
+            onEdit={setEditingLead}
+            onViewHistory={setHistoryLead}
+          />
+        ))}
+      </div>
 
-      {closingLead && <CloseLeadModal leadId={closingLead.id} leadName={closingLead.name} onClose={() => setClosingLead(null)} onSuccess={handleCloseLeadSuccess} />}
+      {/* ─── MODAIS DA PÁGINA ─── */}
       {showModal && <NovoLeadModal onClose={() => setShowModal(false)} onSave={reloadLeads} />}
+      
       {editingLead && <EditLeadModal lead={editingLead} onClose={() => setEditingLead(null)} onSave={reloadLeads} />}
-
-      {/* MODAL DE HISTÓRICO ATUALIZADO PASSANDO A PROP DE ARRAY CORRETA */}
+      
+      {closingLead && (
+        <CloseLeadModal 
+          leadId={closingLead.id} 
+          leadName={closingLead.name} 
+          onClose={() => setClosingLead(null)} 
+          onSuccess={handleCloseLeadSuccess} 
+        />
+      )}
+      
       {historyLead && (
         <div style={overlayStyle} onClick={() => setHistoryLead(null)}>
-          <div style={{ ...modalStyle, maxWidth: 500, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Linha do Tempo</span>
+          <div style={{ ...modalStyle, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1e293b' }}>
+                Histórico: <span style={{ color: '#3b82f6' }}>{historyLead.name}</span>
+              </h2>
               <button onClick={() => setHistoryLead(null)} style={closeBtnStyle}>✕</button>
             </div>
-
-            {/* Injetando a Timeline com suporte seguro a fallback se a propriedade se chamar history ou historyLogs */}
-            <LeadHistoryTimeline history={historyLead.history || (historyLead as any).historyLogs} />
-
-          </div>
-        </div>
-      )}
-
-      {pendingMove && (
-        <div style={overlayStyle} onClick={() => setPendingMove(null)}>
-          <div style={modalStyle} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1e293b' }}>Confirmar Avanço</h2>
-              <button onClick={() => setPendingMove(null)} style={closeBtnStyle}>✕</button>
-            </div>
-            <p style={{ fontSize: 14, color: '#475569', marginBottom: 24, lineHeight: 1.5 }}>
-              Você tem certeza que deseja mover este lead para o estágio <strong>{STAGE_NAMES[pendingMove.to] || pendingMove.to}</strong>?
-            </p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setPendingMove(null)} style={btnSecondaryStyle}>Cancelar</button>
-              <button onClick={executeMoveLead} style={btnPrimaryStyle}>Confirmar</button>
-            </div>
+            
+            <LeadHistoryTimeline history={(historyLead as any).history || []} />
           </div>
         </div>
       )}

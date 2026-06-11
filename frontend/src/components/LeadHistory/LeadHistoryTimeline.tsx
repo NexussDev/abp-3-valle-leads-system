@@ -1,4 +1,5 @@
 import React, { CSSProperties } from 'react';
+import { Lead } from '../../pages/Leads/types';
 
 export interface HistoryLog { // Garanta que tem a palavra 'export'
   id: string;

@@ -93,11 +93,27 @@ export default function ClientLogin() {
         veiculo: formData.veiculo,
         origem: formData.origem || 'Site',
       });
-      setFormData({ nome: '', whatsapp: '', estado: '', cidade: '', veiculo: veiculoParam, origem: '' });
+      setFormData({
+        nome: '',
+        whatsapp: '',
+        estado: '',
+        cidade: '',
+        veiculo: veiculoParam,
+        origem: '',
+      });
+      
       setCidadeFiltro('');
       setLoading(false);
+      
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      
+      setTimeout(() => {
+        setSuccess(false);
+      
+        if (isDemonstrarInteresse) {
+          navigate('/catalogo');
+        }
+      }, 3000);
     } catch {
       setLoading(false);
       alert('Erro ao cadastrar. Tente novamente.');

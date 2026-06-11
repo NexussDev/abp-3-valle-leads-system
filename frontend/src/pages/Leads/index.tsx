@@ -8,6 +8,7 @@ import { Lead, KanbanCol } from './types';
 import { STAGE_ORDER, LeadStage } from './utils/leadStageValidator';
 import { getStoredLeads, updateStoredLeadStage } from './data/mockLeadStorage';
 import CloseLeadModal from '../../components/CloseLeadModal/CloseLeadModal';
+import LeadHistoryTimeline from '../../components/LeadHistory/LeadHistoryTimeline';
 
 // ─── ESTILOS AUXILIARES ──────────────────────────────────────────────────────
 const overlayStyle: CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' };
@@ -73,11 +74,13 @@ function LeadCard({
   onMove,
   stages,
   onEdit,
+  onViewHistory,
 }: {
   lead: Lead;
   onMove: (id: string, from: LeadStage, to: LeadStage) => void;
   stages: readonly LeadStage[];
   onEdit: (lead: Lead) => void;
+  onViewHistory: (lead: Lead) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   
@@ -132,6 +135,17 @@ function LeadCard({
           >
             Editar lead
           </button>
+          
+          <button
+            type="button"
+            onClick={() => { setMenuOpen(false); onViewHistory(lead); }}
+            style={menuItemStyle}
+            onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+            onMouseOut={e => e.currentTarget.style.background = 'none'}
+          >
+            Ver histórico
+          </button>
+
           {previousStage && (
             <button
               type="button"
@@ -200,10 +214,12 @@ function KanbanColumn({
   col,
   onMove,
   onEdit,
+  onViewHistory,
 }: {
   col: KanbanCol;
   onMove: (id: string, from: LeadStage, to: LeadStage) => void;
   onEdit: (lead: Lead) => void;
+  onViewHistory: (lead: Lead) => void;
 }) {
   return (
     <div style={{ flex: '1 1 0', minWidth: 260, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%', borderTop: `3px solid ${col.headerColor}`, overflow: 'hidden' }}>
@@ -215,7 +231,16 @@ function KanbanColumn({
         {col.leads.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 12, padding: '20px 0' }}>Nenhum lead</div>
         ) : (
-          col.leads.map(lead => <LeadCard key={lead.id} lead={lead} onMove={onMove} stages={STAGE_ORDER} onEdit={onEdit} />)
+          col.leads.map(lead => (
+            <LeadCard 
+              key={lead.id} 
+              lead={lead} 
+              onMove={onMove} 
+              stages={STAGE_ORDER} 
+              onEdit={onEdit} 
+              onViewHistory={onViewHistory}
+            />
+          ))
         )}
       </div>
     </div>
@@ -450,11 +475,11 @@ function addMockLeadsToColumns(columns: KanbanCol[], include: boolean): KanbanCo
   return columns.map(col => {
     const existingIds = new Set(col.leads.map(l => l.id));
     const fromStorage = storedLeads.filter(l => l.stage === col.id && !existingIds.has(l.id));
-    // Correção: Type assertion para lidar com campos de mock que diferem da interface oficial.
     return { ...col, leads: [...(fromStorage as unknown as Lead[]), ...col.leads] };
   });
 }
 
+// Utilitário para evitar duplicidade nos seletores de filtros
 function uniqueBy<T>(items: T[], key: (i: T) => string): T[] {
   const seen = new Set<string>();
   return items.filter(i => { const k = key(i); if (seen.has(k)) return false; seen.add(k); return true; });
@@ -472,11 +497,14 @@ export default function LeadsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [closingLead, setClosingLead] = useState<{ id: string; name: string; from: LeadStage } | null>(null);
+  
+  // Estado que armazena o lead selecionado para exibir a linha do tempo
+  const [historyLead, setHistoryLead] = useState<Lead | null>(null);
+
   const [filterStore, setFilterStore] = useState('');
   const [filterTeam,  setFilterTeam]  = useState('');
   const [filterUser,  setFilterUser]  = useState('');
 
-  // Mantive apenas um useState do pendingMove para não dar erro de redeclaração
   const [pendingMove, setPendingMove] = useState<{ leadId: string; from: LeadStage; to: LeadStage } | null>(null);
 
   const reloadLeads = () => {
@@ -609,13 +637,37 @@ export default function LeadsPage() {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, color: '#cbd5e1', fontSize: 14 }}>Carregando leads…</div>
       ) : (
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', flex: 1, minHeight: 0, paddingBottom: 4 }}>
-          {filteredColumns.map(col => <KanbanColumn key={col.id} col={col} onMove={handleMove} onEdit={setEditingLead} />)}
+          {filteredColumns.map(col => (
+            <KanbanColumn 
+              key={col.id} 
+              col={col} 
+              onMove={handleMove} 
+              onEdit={setEditingLead} 
+              onViewHistory={setHistoryLead}
+            />
+          ))}
         </div>
       )}
 
       {closingLead && <CloseLeadModal leadId={closingLead.id} leadName={closingLead.name} onClose={() => setClosingLead(null)} onSuccess={handleCloseLeadSuccess} />}
       {showModal && <NovoLeadModal onClose={() => setShowModal(false)} onSave={reloadLeads} />}
       {editingLead && <EditLeadModal lead={editingLead} onClose={() => setEditingLead(null)} onSave={reloadLeads} />}
+
+      {/* MODAL DE HISTÓRICO ATUALIZADO PASSANDO A PROP DE ARRAY CORRETA */}
+      {historyLead && (
+        <div style={overlayStyle} onClick={() => setHistoryLead(null)}>
+          <div style={{ ...modalStyle, maxWidth: 500, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Linha do Tempo</span>
+              <button onClick={() => setHistoryLead(null)} style={closeBtnStyle}>✕</button>
+            </div>
+
+            {/* Injetando a Timeline com suporte seguro a fallback se a propriedade se chamar history ou historyLogs */}
+            <LeadHistoryTimeline history={historyLead.history || (historyLead as any).historyLogs} />
+            
+          </div>
+        </div>
+      )}
 
       {pendingMove && (
         <div style={overlayStyle} onClick={() => setPendingMove(null)}>

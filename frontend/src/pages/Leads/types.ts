@@ -1,4 +1,5 @@
 import { LeadStage } from './utils/leadStageValidator';
+import { HistoryLog } from '../../components/LeadHistory/LeadHistoryTimeline';
 
 export type LeadStatus =
   | 'Novo Lead'
@@ -41,6 +42,7 @@ export interface Lead {
   state?: string;
   negotiationStatus?: 'aberta' | 'fechada';
   platforms?: string[];
+  history?: HistoryLog[];
 }
 
 export interface KanbanCol {

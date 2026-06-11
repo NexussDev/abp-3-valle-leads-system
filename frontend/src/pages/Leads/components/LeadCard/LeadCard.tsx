@@ -7,13 +7,12 @@ interface Props {
 }
 
 export default function LeadCard({ item, statusColor }: Props) {
-  // Lógica para definir a classe de cor de fundo sem alterar a estrutura
   let importanciaClass = "";
 
   if (item.temperatura === "quente") {
-    importanciaClass = styles.leadEstourando; // Aplica o fundo vermelho
+    importanciaClass = styles.leadEstourando;
   } else if (item.temperatura === "frio") {
-    importanciaClass = styles.leadRecente;    // Aplica o fundo bege
+    importanciaClass = styles.leadRecente;
   }
 
   return (
@@ -24,7 +23,6 @@ export default function LeadCard({ item, statusColor }: Props) {
           <div className={styles.name}>{item.name}</div>
           <div className={styles.car}>{item.car}</div>
 
-          {/* Selo de Temperatura dinâmico usando o CSS da image_908c02.png */}
           {item.temperatura && (
             <div className={`${styles.temperatureBadge} ${styles[item.temperatura]}`}>
               {item.temperatura === "quente" ? "❤️ Quente" : item.temperatura === "frio" ? "❄️ Frio" : "🔥 Morno"}
@@ -33,10 +31,10 @@ export default function LeadCard({ item, statusColor }: Props) {
         </div>
       </div>
 
-    <div className={styles.middle}>
-  <span className={styles.price}>R$ {item.price}</span>
-  <span className={styles.time}>{item.time}</span> 
-</div>
+      <div className={styles.middle}>
+        <span className={styles.price}>R$ {item.price}</span>
+        <span className={styles.time}>{item.time}</span>
+      </div>
 
       <div className={styles.footer}>
         <span
@@ -46,8 +44,7 @@ export default function LeadCard({ item, statusColor }: Props) {
           {item.status}
         </span>
 
-        {/* VOLTOU PARA item.image PARA BATER COM SEU Lead.ts */}
-        <img src={item.image} className={styles.carImage} alt={item.car} /> 
+        <img src={item.image} className={styles.carImage} alt={item.car} />
       </div>
     </div>
   );

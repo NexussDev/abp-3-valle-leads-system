@@ -34,7 +34,7 @@ export function toLead(api: ApiLead): Lead {
   const stage: LeadStage = isStage(api.status) ? api.status : 'novo_lead';
   return {
     id: api.id,
-    name: api.name ?? api.client?.name ?? 'Sem nome',
+    name: api.client?.name ?? api.name ?? 'Sem nome',
     avatar: `https://i.pravatar.cc/40?u=${api.id}`,
     car: '',
     carImage: '',
@@ -53,6 +53,9 @@ export function toLead(api: ApiLead): Lead {
     phone:        api.phone ?? undefined,
     closingReason: api.closingReason ?? undefined,  // linha nova
     converted:     api.converted ?? undefined,       // linha nova
+    temperatura: (['frio', 'morno', 'quente'].includes((api as any).negotiation?.importance ?? '')
+  ? (api as any).negotiation?.importance
+  : undefined) as 'frio' | 'morno' | 'quente' | undefined,
   };
 }
 

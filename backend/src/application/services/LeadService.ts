@@ -42,25 +42,34 @@ export class LeadService {
   }
 
   async create(data: {
-    origin: string;
-    userId: string;
-    teamId: string;
-    storeId: string;
-    name?: string;
-    phone?: string;
-    clientId?: string;
-  }): Promise<Lead> {
-    return leadRepository.create({
-      status: 'novo_lead',
-      origin: data.origin as any,
-      ...(data.name  && { name: data.name }),
-      ...(data.phone && { phone: data.phone }),
-      user:  { connect: { id: data.userId } },
-      team:  { connect: { id: data.teamId } },
-      store: { connect: { id: data.storeId } },
-      ...(data.clientId && { client: { connect: { id: data.clientId } } }),
-    });
-  }
+  origin: string;
+  userId: string;
+  teamId: string;
+  storeId: string;
+  name?: string;
+  phone?: string;
+  clientId?: string;
+  importance?: string;  // linha nova
+}): Promise<Lead> {
+  return leadRepository.create({
+    status: 'novo_lead',
+    origin: data.origin as any,
+    ...(data.name  && { name: data.name }),
+    ...(data.phone && { phone: data.phone }),
+    user:  { connect: { id: data.userId } },
+    team:  { connect: { id: data.teamId } },
+    store: { connect: { id: data.storeId } },
+    ...(data.clientId && { client: { connect: { id: data.clientId } } }),
+    // Cria a Negotiation junto com o lead
+    negotiation: {
+      create: {
+        importance: data.importance ?? 'morno',
+        status: 'aberta',
+        active: true,
+      }
+    },
+  });
+}
 
   async update(
     id: string,

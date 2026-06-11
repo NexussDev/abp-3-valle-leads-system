@@ -4,6 +4,7 @@ import { updateLead } from '../../services/leadsApi';
 interface Props {
     leadId: string;
     leadName: string | null;
+    fromStage?: string;
     onClose: () => void;
     onSuccess: () => void;
 }

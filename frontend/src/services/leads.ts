@@ -24,6 +24,7 @@ export interface CreateLeadInput {
   name: string;
   phone?: string;
   origin: string;
+  importance?: string;
 }
 
 export const getLeads = async (): Promise<LeadFromAPI[]> => {
@@ -48,6 +49,7 @@ export const createLead = async (lead: CreateLeadInput): Promise<LeadFromAPI> =>
     name:   lead.name,
     phone:  lead.phone,
     origin: lead.origin,
+    importance: lead.importance, 
   });
   return data;
 };

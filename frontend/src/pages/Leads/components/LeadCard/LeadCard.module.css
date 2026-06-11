@@ -132,7 +132,6 @@
   box-shadow: none;
 }
 
-
 .car {
   font-size: 14px;
   font-weight: 700;   
@@ -144,4 +143,34 @@
   font-weight: 400;   
   color: #64748b;    
   margin-top: 2px;
+}
+
+.temperatureBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Cores para cada nível */
+.frio {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.morno {
+  background-color: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.quente {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }

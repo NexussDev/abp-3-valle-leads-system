@@ -68,7 +68,6 @@ class UserService {
 
   return userRepository.update(id, updateData);
 }
-
   async updateMe(
     userId: string,
     data: {

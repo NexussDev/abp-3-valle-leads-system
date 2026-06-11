@@ -20,8 +20,8 @@ export default function LeadCard({ item, statusColor }: Props) {
       <div className={styles.top}>
         <img src={item.avatar} className={styles.avatar} alt={item.name} />
         <div>
-          <div className={styles.name}>{item.name}</div>
           <div className={styles.car}>{item.car}</div>
+<div className={styles.name}>{item.name}</div>
 
           {item.temperatura && (
             <div className={`${styles.temperatureBadge} ${styles[item.temperatura]}`}>

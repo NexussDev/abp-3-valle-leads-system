@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/catalogo.css";
 import { carPhotoPexels } from "../../services/carApi";
 import { getPublicCatalog } from "../../services/publicCatalog";
@@ -219,11 +219,26 @@ function Toast({ msg, visible }: { msg: string; visible: boolean }) {
 // ── página principal ────────────────────────────────────────
 export default function Catalogo() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [busca,     setBusca]     = useState("");
   const [categoria, setCategoria] = useState<Categoria>("all");
   const [toastMsg,  setToastMsg]  = useState("");
   const [toastVis,  setToastVis]  = useState(false);
+
+  // Quando o usuário acabou de enviar o formulário em /demonstrar-interesse,
+  // chega aqui com state.interesseEnviado. Mostra o toast e limpa o state
+  // (replace) para que o aviso não reapareça em refresh ou navegação back.
+  useEffect(() => {
+    const st = location.state as { interesseEnviado?: boolean; veiculo?: string } | null;
+    if (!st?.interesseEnviado) return;
+    setToastMsg(st.veiculo ?? 'Em breve um consultor entrará em contato.');
+    setToastVis(true);
+    const t = setTimeout(() => setToastVis(false), 5000);
+    navigate(location.pathname, { replace: true, state: null });
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [veiculos,  setVeiculos]  = useState<Veiculo[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [erro,      setErro]      = useState<string | null>(null);

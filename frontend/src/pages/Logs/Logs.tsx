@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { listLogs, type SystemLogEntry } from '../../services/logs';
 import './Logs.css';
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 10;
 
 const ACTION_LABEL: Record<string, string> = {
   CREATE:  'Criou',

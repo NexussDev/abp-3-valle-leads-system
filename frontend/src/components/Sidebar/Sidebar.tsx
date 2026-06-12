@@ -24,12 +24,12 @@ const NAV_ITEMS = [
     path: '/leads',
     label: 'Pipeline',
     allowedRoles: ['ATENDENTE', 'LIDER_EQUIPE', 'GERENTE', 'GERENTE_GERAL', 'ADMIN'],
+    // Kanban board: 3 colunas com cards — leitura instantânea para "pipeline de leads"
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        <rect x="3"  y="4" width="5" height="16" rx="1.5" />
+        <rect x="10" y="4" width="5" height="10" rx="1.5" />
+        <rect x="17" y="4" width="4" height="6"  rx="1.5" />
       </svg>
     ),
   },
@@ -94,19 +94,23 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
- {
-  path: '/equipes',
-  label: 'Equipes',
-  allowedRoles: ['ADMIN'],
-  icon: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
-      <circle cx="10" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  ),
-},
+  {
+    path: '/equipes',
+    label: 'Equipes',
+    allowedRoles: ['ADMIN'],
+    // Network/hierarchy: 3 nós conectados — distinto do "user + crowd" de Usuários
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="5" r="2.5" />
+        <circle cx="5" cy="19" r="2.5" />
+        <circle cx="19" cy="19" r="2.5" />
+        <path d="M12 7.5v3" />
+        <path d="M10 12l-3.5 4.5" />
+        <path d="M14 12l3.5 4.5" />
+        <path d="M10 12h4" />
+      </svg>
+    ),
+  },
   {
     path: '/logs',
     label: 'Logs',

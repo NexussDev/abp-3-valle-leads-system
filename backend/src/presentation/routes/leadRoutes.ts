@@ -5,6 +5,7 @@ const router = Router();
 
 router.get('/recapture',         leadController.recapture);
 router.patch('/:id/contact',     leadController.contact);
+router.get('/:id/history',       leadController.history);
 
 router.get('/', leadController.index);
 router.get('/:id', leadController.show);

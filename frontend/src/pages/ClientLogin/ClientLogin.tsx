@@ -84,6 +84,12 @@ export default function ClientLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.nome.trim() || !formData.whatsapp.trim()) {
+      alert('Preencha nome e WhatsApp para continuar.');
+      return;
+    }
+
     setLoading(true);
     try {
       await submitPublicLead({
@@ -93,6 +99,7 @@ export default function ClientLogin() {
         veiculo: formData.veiculo,
         origem: formData.origem || 'Site',
       });
+
       setFormData({
         nome: '',
         whatsapp: '',
@@ -101,22 +108,28 @@ export default function ClientLogin() {
         veiculo: veiculoParam,
         origem: '',
       });
-      
       setCidadeFiltro('');
       setLoading(false);
-      
       setSuccess(true);
-      
+
+      // Redireciona para o catálogo com banner amigável quando o usuário
+      // veio do fluxo "Demonstrar interesse" (a partir de um card de veículo).
       setTimeout(() => {
         setSuccess(false);
-      
         if (isDemonstrarInteresse) {
-          navigate('/catalogo');
+          navigate('/catalogo', {
+            state: {
+              interesseEnviado: true,
+              veiculo: veiculoParam || undefined,
+            },
+          });
         }
-      }, 3000);
-    } catch {
+      }, 1800);
+    } catch (err: unknown) {
       setLoading(false);
-      alert('Erro ao cadastrar. Tente novamente.');
+      const apiMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      alert(apiMsg ?? 'Erro ao cadastrar. Tente novamente.');
     }
   };
 

@@ -1,14 +1,17 @@
 import { useEffect, useState, CSSProperties } from 'react';
 import styles from './Leads.module.css';
 import { useKanbanBoard } from './hooks/useKanbanBoard';
-import { fetchLeads, updateLead } from '../../services/leadsApi';
+import { fetchLeads, updateLead, fetchLeadHistory, type LeadHistoryEntry } from '../../services/leadsApi';
 import { apiLeadsToColumns } from './data/leadsAdapter';
 import { createLead } from '../../services/leads';
 import { Lead, KanbanCol } from './types';
 import { STAGE_ORDER, LeadStage } from './utils/leadStageValidator';
+import { matchesTemperature } from './utils/temperatureFilter';
+import { useColumnLimit } from './hooks/useColumnLimit';
 import { getStoredLeads, updateStoredLeadStage } from './data/mockLeadStorage';
 import CloseLeadModal from '../../components/CloseLeadModal/CloseLeadModal';
 import LeadHistoryTimeline from '../../components/LeadHistory/LeadHistoryTimeline';
+import OriginBadge from '../../components/OriginBadge/OriginBadge';
 
 // ─── ESTILOS GERAIS ─────────────────────────────────────────────────────────
 const overlayStyle: CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, animation: 'fadeIn 0.2s ease-in-out' };
@@ -84,13 +87,13 @@ function LeadCard({
   const indicatorColor = TEMPERATURE_COLORS[lead.temperatura || 'morno'];
 
   return (
-    <div style={{ position: 'relative', background: '#ffffff', borderRadius: 12, padding: '14px 16px', marginBottom: 10, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
-      <div style={{ position: 'absolute', left: 0, top: 14, bottom: 14, width: 4, borderRadius: '0 4px 4px 0', backgroundColor: indicatorColor }} />
+    <div style={{ position: 'relative', background: '#ffffff', borderRadius: 10, padding: '10px 12px 10px 14px', marginBottom: 8, border: '1px solid #e2e8f0', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.04)' }}>
+      <div style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 3, borderRadius: '0 3px 3px 0', backgroundColor: indicatorColor }} />
 
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-        style={{ position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, cursor: 'pointer', padding: 0, zIndex: 20 }}
+        style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, cursor: 'pointer', padding: 0, zIndex: 20 }}
       >
         <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#94a3b8' }} />
         <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#94a3b8' }} />
@@ -98,7 +101,7 @@ function LeadCard({
       </button>
 
       {menuOpen && (
-        <div style={{ position: 'absolute', top: 40, right: 10, zIndex: 50, width: 180, background: '#ffffff', borderRadius: 12, padding: 6, border: '1px solid #f1f5f9', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}>
+        <div style={{ position: 'absolute', top: 32, right: 6, zIndex: 50, width: 180, background: '#ffffff', borderRadius: 12, padding: 6, border: '1px solid #f1f5f9', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}>
           <button type="button" onClick={() => { setMenuOpen(false); onEdit(lead); }} style={menuItemStyle} onMouseOver={e => e.currentTarget.style.background = '#f8fafc'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>Editar lead</button>
           <button type="button" onClick={() => { setMenuOpen(false); onViewHistory(lead); }} style={menuItemStyle} onMouseOver={e => e.currentTarget.style.background = '#f8fafc'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>Ver histórico</button>
           {previousStage && (
@@ -107,53 +110,102 @@ function LeadCard({
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, paddingRight: 32 }}>
-        <Avatar name={lead.name} size={36} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8, paddingRight: 26 }}>
+        <Avatar name={lead.name} size={30} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.name}</div>
-          <div style={{ display: 'flex', gap: 6, fontSize: 12, color: '#64748b', marginTop: 2, alignItems: 'center' }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.name}</div>
+          <div style={{ display: 'flex', gap: 5, fontSize: 11, color: '#64748b', marginTop: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             {lead.leadNumber && <span>{lead.leadNumber}</span>}
-            {lead.timeAgo && <span>{lead.timeAgo}</span>}
-            <span style={{ color: indicatorColor, fontWeight: 700, fontSize: 11, textTransform: 'uppercase' }}>· {lead.temperatura || 'morno'}</span>
+            {lead.timeAgo && <span>· {lead.timeAgo}</span>}
+            <span style={{ color: indicatorColor, fontWeight: 700, fontSize: 10, textTransform: 'uppercase' }}>· {lead.temperatura || 'morno'}</span>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginBottom: 4 }}>
-        {lead.phone && <span style={{ fontSize: 12, color: '#475569' }}>📞 {lead.phone}</span>}
-        {lead.car && <span style={{ fontSize: 12, color: '#475569' }}>🚗 {lead.car}</span>}
-        {lead.origin && <span style={{ fontSize: 11, fontWeight: 600, color: '#475569', background: '#f1f5f9', borderRadius: 6, padding: '3px 8px' }}>{lead.origin}</span>}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', alignItems: 'center' }}>
+        {lead.phone && <span style={{ fontSize: 11, color: '#475569' }}>📞 {lead.phone}</span>}
+        {lead.car && <span style={{ fontSize: 11, color: '#475569' }}>🚗 {lead.car}</span>}
+        {lead.origin && <OriginBadge origin={lead.origin} />}
       </div>
 
-      {lead.closingReason && <div style={{ fontSize: 12, color: '#64748b', marginTop: 6, fontStyle: 'italic' }}>📝 {lead.closingReason}</div>}
+      {lead.closingReason && <div style={{ fontSize: 11, color: '#64748b', marginTop: 5, fontStyle: 'italic' }}>📝 {lead.closingReason}</div>}
 
       {lead.stage === 'fechado' && (
-        <div style={{ fontSize: 12, fontWeight: 700, marginTop: 6, color: lead.converted ? '#059669' : '#dc2626' }}>{lead.converted ? '✓ Venda realizada' : '✗ Não convertido'}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, marginTop: 5, color: lead.converted ? '#059669' : '#dc2626' }}>{lead.converted ? '✓ Venda realizada' : '✗ Não convertido'}</div>
       )}
 
       {nextStage ? (
-        <button onClick={() => onMove(lead.id, lead.stage, nextStage)} style={{ width: '100%', padding: '8px', marginTop: 12, borderRadius: 8, border: '1px solid #cbd5e1', background: '#ffffff', fontSize: 12, fontWeight: 700, color: '#475569', cursor: 'pointer', transition: 'background-color 0.15s' }}>
+        <button onClick={() => onMove(lead.id, lead.stage, nextStage)} style={{ width: '100%', padding: '6px', marginTop: 8, borderRadius: 7, border: '1px solid #cbd5e1', background: '#ffffff', fontSize: 11, fontWeight: 700, color: '#475569', cursor: 'pointer', transition: 'background-color 0.15s' }}>
           {nextStage === 'fechado' ? 'Fechar Lead →' : 'Avançar →'}
         </button>
       ) : (
-        <div style={{ textAlign: 'center', fontSize: 12, color: '#059669', fontWeight: 700, paddingTop: 10 }}>✓ Concluído</div>
+        <div style={{ textAlign: 'center', fontSize: 11, color: '#059669', fontWeight: 700, paddingTop: 6 }}>✓ Concluído</div>
       )}
     </div>
   );
 }
 
-function KanbanColumn({ col, onMove, onEdit, onViewHistory }: { col: KanbanCol; onMove: (id: string, from: LeadStage, to: LeadStage) => void; onEdit: (lead: Lead) => void; onViewHistory: (lead: Lead) => void; }) {
+function KanbanColumn({
+  col,
+  limit,
+  expanded,
+  onToggleExpand,
+  onMove,
+  onEdit,
+  onViewHistory,
+}: {
+  col: KanbanCol;
+  limit: number;
+  expanded: boolean;
+  onToggleExpand: () => void;
+  onMove: (id: string, from: LeadStage, to: LeadStage) => void;
+  onEdit: (lead: Lead) => void;
+  onViewHistory: (lead: Lead) => void;
+}) {
+  const total = col.leads.length;
+  const overflowing = total > limit;
+  const visibleLeads = expanded || !overflowing ? col.leads : col.leads.slice(0, limit);
+  const hidden = total - visibleLeads.length;
+
   return (
-    <div style={{ flex: '1 1 0', minWidth: 280, background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%', borderTop: `4px solid ${col.headerColor}`, overflow: 'hidden' }}>
-      <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span style={{ fontWeight: 800, fontSize: 14, color: '#0f172a', letterSpacing: '.02em' }}>{col.title}</span>
-        <span style={{ background: col.headerColor + '15', color: col.headerColor, borderRadius: 20, padding: '4px 10px', fontSize: 12, fontWeight: 800 }}>{col.leads.length}</span>
+    <div style={{ flex: '1 1 0', minWidth: 240, background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%', borderTop: `3px solid ${col.headerColor}`, overflow: 'hidden' }}>
+      <div style={{ padding: '10px 14px', borderBottom: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a', letterSpacing: '.02em' }}>{col.title}</span>
+        <span style={{ background: col.headerColor + '15', color: col.headerColor, borderRadius: 20, padding: '3px 9px', fontSize: 11, fontWeight: 800 }}>{total}</span>
       </div>
-      <div style={{ padding: 12, overflowY: 'auto', flex: 1 }}>
-        {col.leads.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '32px 0' }}>Nenhum lead</div>
+      <div style={{ padding: 9, overflowY: expanded ? 'auto' : 'hidden', flex: 1 }}>
+        {total === 0 ? (
+          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12, padding: '20px 0' }}>Nenhum lead</div>
         ) : (
-          col.leads.map(lead => <LeadCard key={lead.id} lead={lead} onMove={onMove} stages={STAGE_ORDER} onEdit={onEdit} onViewHistory={onViewHistory} />)
+          <>
+            {visibleLeads.map(lead => (
+              <LeadCard key={lead.id} lead={lead} onMove={onMove} stages={STAGE_ORDER} onEdit={onEdit} onViewHistory={onViewHistory} />
+            ))}
+
+            {overflowing && (
+              <button
+                type="button"
+                onClick={onToggleExpand}
+                style={{
+                  width: '100%',
+                  marginTop: 4,
+                  padding: '8px 10px',
+                  border: '1px dashed #cbd5e1',
+                  background: '#ffffff',
+                  borderRadius: 9,
+                  color: col.headerColor,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s',
+                }}
+                onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
+                onMouseOut={e => (e.currentTarget.style.background = '#ffffff')}
+              >
+                {expanded ? 'Ver menos ↑' : `Ver mais (${hidden} restantes) ↓`}
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -383,6 +435,9 @@ export default function LeadsPage() {
   const [closingLead, setClosingLead] = useState<{ id: string; name: string; from: LeadStage } | null>(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [historyLead, setHistoryLead] = useState<Lead | null>(null);
+  const [historyEntries, setHistoryEntries] = useState<LeadHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   // Estados dos Filtros Ativos
   const [timeFilter, setTimeFilter] = useState<'semana' | 'mes' | 'ano' | 'custom'>('mes');
@@ -392,6 +447,16 @@ export default function LeadsPage() {
   const [filterTeam, setFilterTeam] = useState('');
   const [filterUser, setFilterUser] = useState('');
   const [filterTemperature, setFilterTemperature] = useState('');
+
+  const columnLimit = useColumnLimit();
+  const [expandedCols, setExpandedCols] = useState<Set<string>>(new Set());
+  const toggleExpand = (colId: string) =>
+    setExpandedCols(prev => {
+      const next = new Set(prev);
+      if (next.has(colId)) next.delete(colId);
+      else next.add(colId);
+      return next;
+    });
 
   // Carregar dados da API
   const reloadLeads = () => {
@@ -416,6 +481,24 @@ export default function LeadsPage() {
     });
   };
 
+  // Carrega histórico do lead quando o modal abre (lead.history não é mais
+  // populado pelo adapter — backend agora expõe via GET /api/leads/:id/history).
+  useEffect(() => {
+    if (!historyLead) {
+      setHistoryEntries([]);
+      setHistoryError(null);
+      return;
+    }
+    let cancelled = false;
+    setHistoryLoading(true);
+    setHistoryError(null);
+    fetchLeadHistory(historyLead.id)
+      .then(entries => { if (!cancelled) setHistoryEntries(entries); })
+      .catch(() => { if (!cancelled) setHistoryError('Não foi possível carregar o histórico.'); })
+      .finally(() => { if (!cancelled) setHistoryLoading(false); });
+    return () => { cancelled = true; };
+  }, [historyLead]);
+
   useEffect(() => {
     reloadLeads();
     const sync = () => reloadLeads();
@@ -432,6 +515,14 @@ export default function LeadsPage() {
   }, [setRawColumns, isAdmin]);
 
   const handleMove = async (leadId: string, from: LeadStage, to: LeadStage) => {
+    // Fechamento exige motivo (closingReason) — backend rejeita PUT direto.
+    // Desvia para o CloseLeadModal, que coleta o motivo e o flag converted.
+    if (to === 'fechado') {
+      const lead = rawColumns.flatMap(c => c.leads).find(l => l.id === leadId);
+      setClosingLead({ id: leadId, name: lead?.name ?? 'Lead', from });
+      return;
+    }
+
     try {
       await updateLead(leadId, { status: to });
       updateStoredLeadStage(leadId, to);
@@ -459,12 +550,7 @@ export default function LeadsPage() {
       // Só filtra por Atendente se um valor foi selecionado
       if (filterUser && lead.userId !== filterUser) return false;
 
-      // Só filtra por Temperatura acessando o campo correto via negotiation
-      if (filterTemperature) {
-  const leadTemp = ((lead as any).negotiation?.importance || '').toLowerCase();
-  console.log('filterTemperature:', filterTemperature, '| leadTemp:', leadTemp, '| lead:', (lead as any).negotiation);
-  if (leadTemp !== filterTemperature.toLowerCase()) return false;
-}
+      if (!matchesTemperature(lead, filterTemperature)) return false;
 
       // Filtragem de Período Temporal (Ignora se o período for customizado sem datas preenchidas)
       const createdAt = (lead as any).createdAt;
@@ -497,26 +583,26 @@ export default function LeadsPage() {
   const userOptions = uniqueBy(allRawLeads.filter(l => l.userId).map(l => ({ id: l.userId!, name: l.userName ?? l.userId! })), o => o.id);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '100vh', padding: 32, background: '#f1f5f9', boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '18px 20px 14px', background: '#f1f5f9', boxSizing: 'border-box', overflow: 'hidden' }}>
 
       {/* ─── CABEÇALHO ─── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.025em' }}>Pipeline de Leads</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexShrink: 0 }}>
+        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.025em' }}>Pipeline de Leads</h1>
         <button
           onClick={() => setShowModal(true)}
-          style={btnPrimaryStyle}
+          style={{ ...btnPrimaryStyle, padding: '9px 18px', fontSize: 13 }}
         >
           + Adicionar Lead
         </button>
       </div>
 
       {/* ─── BARRA DE FILTROS MODERNA ─── */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginBottom: 32, padding: '20px 28px', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 14, padding: '12px 18px', background: '#ffffff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.04)', alignItems: 'flex-end', flexShrink: 0 }}>
 
         {/* Período */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Período de Análise</span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Período de Análise</span>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             {(['semana', 'mes', 'ano', 'custom'] as const).map(t => {
               const labels: Record<string, string> = { semana: 'Semana', mes: 'Mês', ano: 'Ano', custom: 'Customizado' };
               const isSelected = timeFilter === t;
@@ -525,7 +611,7 @@ export default function LeadsPage() {
                   key={t}
                   onClick={() => setTimeFilter(t)}
                   style={{
-                    padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     background: isSelected ? '#2563eb' : '#f1f5f9',
                     color: isSelected ? '#ffffff' : '#334155',
                     border: 'none', transition: 'all 0.2s ease-in-out'
@@ -557,37 +643,37 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        <div style={{ width: 1, height: 44, background: '#e2e8f0', flexShrink: 0 }} />
+        <div style={{ width: 1, height: 36, background: '#e2e8f0', flexShrink: 0 }} />
 
         {/* Dropdowns de Filtragem */}
-        <div style={{ display: 'flex', flex: 1, gap: 20, minWidth: 460 }}>
+        <div style={{ display: 'flex', flex: 1, gap: 14, minWidth: 460 }}>
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>Loja</span>
-            <select style={{ ...inputStyle, background: '#ffffff', cursor: 'pointer', height: 44 }} value={filterStore} onChange={e => setFilterStore(e.target.value)}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Loja</span>
+            <select style={{ ...inputStyle, background: '#ffffff', cursor: 'pointer', height: 36, padding: '6px 10px', fontSize: 13 }} value={filterStore} onChange={e => setFilterStore(e.target.value)}>
               <option value="">Todas as lojas</option>
               {storeOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
             </select>
           </div>
 
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>Equipe</span>
-            <select style={{ ...inputStyle, background: '#ffffff', cursor: 'pointer', height: 44 }} value={filterTeam} onChange={e => setFilterTeam(e.target.value)} disabled={!isAdmin && !isGerente}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Equipe</span>
+            <select style={{ ...inputStyle, background: '#ffffff', cursor: 'pointer', height: 36, padding: '6px 10px', fontSize: 13 }} value={filterTeam} onChange={e => setFilterTeam(e.target.value)} disabled={!isAdmin && !isGerente}>
               <option value="">Todas as equipes</option>
               {teamOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
             </select>
           </div>
 
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>Atendente</span>
-            <select style={{ ...inputStyle, background: '#ffffff', cursor: 'pointer', height: 44 }} value={filterUser} onChange={e => setFilterUser(e.target.value)} disabled={!isAdmin && !isGerente && !isLiderEquipe}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Atendente</span>
+            <select style={{ ...inputStyle, background: '#ffffff', cursor: 'pointer', height: 36, padding: '6px 10px', fontSize: 13 }} value={filterUser} onChange={e => setFilterUser(e.target.value)} disabled={!isAdmin && !isGerente && !isLiderEquipe}>
               <option value="">Todos os atendentes</option>
               {userOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
             </select>
           </div>
 
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>Temperatura</span>
-            <select style={{ ...inputStyle, background: '#ffffff', cursor: 'pointer', height: 44 }} value={filterTemperature} onChange={e => setFilterTemperature(e.target.value)}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Temperatura</span>
+            <select style={{ ...inputStyle, background: '#ffffff', cursor: 'pointer', height: 36, padding: '6px 10px', fontSize: 13 }} value={filterTemperature} onChange={e => setFilterTemperature(e.target.value)}>
               <option value="">Todas</option>
               {IMPORTANCE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label.replace('❄️ ', '').replace('🔥 ', '').replace('❤️ ', '')}</option>)}
             </select>
@@ -596,11 +682,14 @@ export default function LeadsPage() {
       </div>
 
       {/* ─── COLUNAS DO KANBAN ─── */}
-      <div style={{ display: 'flex', gap: 20, flex: 1, overflowX: 'auto', paddingBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0, overflowX: 'auto', paddingBottom: 4 }}>
         {displayedColumns.map(col => (
           <KanbanColumn
             key={col.id}
             col={col}
+            limit={columnLimit}
+            expanded={expandedCols.has(col.id)}
+            onToggleExpand={() => toggleExpand(col.id)}
             onMove={handleMove}
             onEdit={setEditingLead}
             onViewHistory={setHistoryLead}
@@ -631,7 +720,22 @@ export default function LeadsPage() {
               <button onClick={() => setHistoryLead(null)} style={closeBtnStyle}>✕</button>
             </div>
 
-            <LeadHistoryTimeline history={(historyLead as any).history || []} />
+            {historyLoading ? (
+              <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 13 }}>
+                Carregando histórico…
+              </div>
+            ) : historyError ? (
+              <div style={{ textAlign: 'center', padding: 20, color: '#dc2626', fontSize: 13 }}>
+                {historyError}
+              </div>
+            ) : (
+              <LeadHistoryTimeline
+                history={historyEntries.map(e => ({
+                  ...e,
+                  updatedAt: new Date(e.updatedAt).toLocaleString('pt-BR'),
+                }))}
+              />
+            )}
           </div>
         </div>
       )}

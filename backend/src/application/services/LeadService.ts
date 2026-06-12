@@ -3,6 +3,27 @@ import { AppError } from '../../shared/errors/AppError';
 import { validateStageTransition } from '../../domain/entities/LeadStage';
 import { AuthUser, Role } from '../../shared/types';
 import { Lead } from '@prisma/client';
+import prisma from '../../infrastructure/database/prisma';
+
+export interface LeadHistoryEntry {
+  id: string;
+  field: 'create' | 'stage' | 'status' | 'update';
+  oldValue?: string;
+  newValue: string;
+  updatedAt: string;
+  responsibleName: string;
+}
+
+const ACTION_LABEL: Record<string, string> = {
+  CREATE:  'Criou o lead',
+  UPDATE:  'Atualizou o lead',
+  APPROVE: 'Aprovou',
+  REJECT:  'Rejeitou',
+  SOLD:    'Marcou como vendido',
+  DELETE:  'Excluiu',
+  CONTACT: 'Registrou contato',
+  LOGIN:   'Fez login',
+};
 
 const MIN_RECAPTURE_DAYS = 1;
 const MAX_RECAPTURE_DAYS = 365;
@@ -31,6 +52,77 @@ export class LeadService {
     if (!lead) throw new AppError('Lead não encontrado', 404);
     this.assertCanAccessLead(user, lead);
     return lead;
+  }
+
+  /**
+   * Timeline unificada do lead, combinando duas fontes:
+   *  - SystemLog (CREATE/UPDATE/APPROVE/...) — traz quem fez via relation user
+   *  - NegotiationHistory (transições de stage/status) — não tem usuário no schema,
+   *    rotulamos como "Sistema" ou correlacionamos por timestamp aproximado.
+   *
+   * Ordenação descendente por timestamp.
+   */
+  async findHistory(id: string, user: AuthUser): Promise<LeadHistoryEntry[]> {
+    // Valida acesso primeiro
+    await this.findById(id, user);
+
+    const [systemLogs, negotiationHistory] = await Promise.all([
+      prisma.systemLog.findMany({
+        where: { entity: 'Lead', entityId: id },
+        include: { user: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.negotiationHistory.findMany({
+        where: { negotiation: { leadId: id } },
+        orderBy: { changedAt: 'desc' },
+      }),
+    ]);
+
+    const entries: LeadHistoryEntry[] = [];
+
+    for (const log of systemLogs) {
+      const label = ACTION_LABEL[log.action] ?? log.action;
+      entries.push({
+        id: `log-${log.id}`,
+        field: log.action === 'CREATE' ? 'create' : 'update',
+        newValue: label,
+        updatedAt: log.createdAt.toISOString(),
+        responsibleName: log.user?.name ?? 'Sistema',
+      });
+    }
+
+    for (const h of negotiationHistory) {
+      const when = (h.changedAt ?? new Date()).toISOString();
+      // Tenta achar um SystemLog próximo (~5s) para creditar o usuário.
+      // Como NegotiationHistory não tem userId, fazemos esse "best-effort match".
+      const nearby = systemLogs.find(
+        l => Math.abs(l.createdAt.getTime() - (h.changedAt?.getTime() ?? 0)) < 5_000,
+      );
+      const responsibleName = nearby?.user?.name ?? 'Sistema';
+
+      if (h.newStage && h.newStage !== h.oldStage) {
+        entries.push({
+          id: `stage-${h.id}`,
+          field: 'stage',
+          oldValue: h.oldStage ?? undefined,
+          newValue: h.newStage,
+          updatedAt: when,
+          responsibleName,
+        });
+      }
+      if (h.newStatus && h.newStatus !== h.oldStatus) {
+        entries.push({
+          id: `status-${h.id}`,
+          field: 'status',
+          oldValue: h.oldStatus ?? undefined,
+          newValue: h.newStatus,
+          updatedAt: when,
+          responsibleName,
+        });
+      }
+    }
+
+    return entries.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }
 
   async findByUserId(userId: string): Promise<Lead[]> {

@@ -2,13 +2,13 @@ import { useEffect, useState, CSSProperties } from 'react';
 import {
   fetchTeams,
   createTeam,
-  updateTeam,
   deleteTeam,
   fetchUsers,
   updateUserTeam,
   Team,
   User,
 } from '../../services/teamsApi';
+import EditTeamModal from './EditTeamModal';
 
 export default function Teams() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -42,21 +42,15 @@ export default function Teams() {
     loadData();
   }, []);
 
-  async function handleSaveTeam() {
+  async function handleCreateTeam() {
     if (!teamName.trim()) {
       setErro('Informe o nome da equipe.');
       return;
     }
 
     try {
-      if (editingTeam) {
-        await updateTeam(editingTeam.id, teamName);
-      } else {
-        await createTeam(teamName);
-      }
-
+      await createTeam(teamName.trim());
       setTeamName('');
-      setEditingTeam(null);
       await loadData();
     } catch {
       setErro('Erro ao salvar equipe.');
@@ -113,26 +107,15 @@ export default function Teams() {
           <div style={formRowStyle}>
             <input
               style={inputStyle}
-              placeholder="Nome da equipe"
+              placeholder="Nome da nova equipe"
               value={teamName}
               onChange={e => setTeamName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleCreateTeam(); }}
             />
 
-            <button style={primaryButtonStyle} onClick={handleSaveTeam}>
-              {editingTeam ? 'Salvar' : 'Criar'}
+            <button style={primaryButtonStyle} onClick={handleCreateTeam}>
+              Criar
             </button>
-
-            {editingTeam && (
-              <button
-                style={secondaryButtonStyle}
-                onClick={() => {
-                  setEditingTeam(null);
-                  setTeamName('');
-                }}
-              >
-                Cancelar
-              </button>
-            )}
           </div>
 
           <div style={listStyle}>
@@ -159,7 +142,6 @@ export default function Teams() {
                     onClick={e => {
                       e.stopPropagation();
                       setEditingTeam(team);
-                      setTeamName(team.name);
                     }}
                   >
                     Editar
@@ -216,6 +198,15 @@ export default function Teams() {
           </div>
         </section>
       </div>
+
+      {editingTeam && (
+        <EditTeamModal
+          team={editingTeam}
+          allUsers={users}
+          onClose={() => setEditingTeam(null)}
+          onSaved={loadData}
+        />
+      )}
     </div>
   );
 }
@@ -283,16 +274,6 @@ const primaryButtonStyle: CSSProperties = {
   border: 'none',
   background: '#3b82f6',
   color: '#fff',
-  padding: '10px 14px',
-  borderRadius: 10,
-  fontWeight: 700,
-  cursor: 'pointer',
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  border: '1px solid #cbd5e1',
-  background: '#fff',
-  color: '#475569',
   padding: '10px 14px',
   borderRadius: 10,
   fontWeight: 700,

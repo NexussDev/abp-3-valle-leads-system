@@ -1,252 +1,445 @@
-# ABP 3º DSM – Sistema de Gestão de Leads · 1000 Valle
+# 1000 Valle — Sistema de Gestão de Leads
 
-Sistema desenvolvido para a disciplina de Aprendizagem Baseada em Projetos (ABP), com foco na gestão de leads comerciais e análise de desempenho por equipe.
+[![Status](https://img.shields.io/badge/sprint-3-green)](#sprints)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![Node](https://img.shields.io/badge/Node-20-339933?logo=node.js)](https://nodejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql)](https://www.postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com)
 
----
+Sistema web para gestão completa do ciclo de vida de um lead comercial — captação, qualificação, negociação e fechamento — com controle por equipe, loja e perfil de usuário. Inclui vitrine pública de veículos com fluxo de aprovação.
 
-## Sobre o Projeto
-
-O Sistema de Gestão de Leads gerencia todo o ciclo de um cliente em potencial, desde a captação até a conversão em venda. A aplicação permite controle de leads, acompanhamento de negociações, organização por equipes e lojas, e análise de desempenho por meio de dashboards diferenciados por perfil de acesso.
-
-**Parceiro:** 1000 Valle Automóveis  
-**Período:** 2026-1  
-**Metodologia:** Scrum com sprints de 3 semanas
-
----
-
-## Funcionalidades
-
-- Autenticação com e-mail e senha (JWT com expiração)
-- Controle de acesso baseado em perfis (RBAC): Atendente, Líder de Equipe, Gerente, Admin
-- Gestão de leads com Kanban (5 etapas com validação de transições)
-- Gestão de clientes e associação com leads
-- Controle de negociações vinculadas a leads
-- Dashboards distintos por perfil de acesso
-- Filtros por período, equipe e vendedor
-- Registro de logs de acesso e operações
-- Formulário público de captação de leads
+**Parceiro:** 1000 Valle Multimarcas · **Período:** 2026-1 · **Metodologia:** Scrum (sprints de 3 semanas)
 
 ---
 
-## Tecnologias
+## Sumário
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Frontend | React 19.2.4 + TypeScript + Vite |
-| Backend | Node.js + Express + TypeScript |
-| Banco de dados | PostgreSQL 15 |
-| ORM | Prisma |
-| Autenticação | JWT (jsonwebtoken) |
-| Containerização | Docker + Docker Compose |
-| Gráficos | Recharts |
+- [Quick Start](#quick-start)
+- [Credenciais de teste](#credenciais-de-teste)
+- [Arquitetura](#arquitetura)
+- [Estrutura de pastas](#estrutura-de-pastas)
+- [Funcionalidades](#funcionalidades)
+- [Stack](#stack)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
+- [API REST](#api-rest)
+- [Testes](#testes)
+- [Comandos úteis](#comandos-úteis)
+- [Troubleshooting](#troubleshooting)
+- [Padrões adotados](#padrões-adotados)
+- [Sprints](#sprints)
+- [Time](#time)
+
+---
+
+## Quick Start
+
+Pré-requisito único: **Docker Desktop** instalado e em execução. Não precisa de Node, Postgres ou Prisma no host.
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/NexussDev/abp-3-valle-leads-system.git
+cd abp-3-valle-leads-system
+
+# 2. Copie o template de variáveis (Linux/macOS)
+cp .env.example .env
+
+# 2. Copie o template de variáveis (Windows PowerShell)
+Copy-Item .env.example .env
+
+# 3. Suba a stack
+docker compose up --build -d
+```
+
+Aguarde ~60s na primeira vez (o backend roda migrations + seed automaticamente). Acompanhe os logs com:
+
+```bash
+docker compose logs -f backend frontend
+```
+
+Quando o backend logar `Server running on port 3000` e o frontend logar `VITE ready`, acesse:
+
+| Serviço | URL |
+|---|---|
+| Frontend (app interno) | http://localhost:5173 |
+| Frontend (vitrine pública) | http://localhost:5173/catalogo |
+| Backend API | http://localhost:3000 |
+| PostgreSQL | `localhost:5433` (user/pass do `.env`) |
+
+> **O que o Docker faz para você** — automaticamente, sem nenhum passo extra:
+> 1. Sobe o Postgres 15 com volume persistente.
+> 2. Builda o backend (TypeScript → JS) e roda `prisma migrate deploy` para aplicar todas as migrations.
+> 3. Roda o seed (`prisma db seed`) — idempotente: se já existem usuários, ignora.
+> 4. Inicia o backend Express e o frontend Vite.
+
+Para derrubar tudo sem perder o banco: `docker compose down`. Para resetar inclusive o banco: `docker compose down -v`.
+
+---
+
+## Credenciais de teste
+
+Criadas pelo seed na primeira subida. Senha igual para todas as contas: **`123456`**.
+
+| E-mail | Perfil | Escopo de acesso |
+|---|---|---|
+| `admin@1000valle.com` | ADMIN | Tudo no sistema |
+| `gerente.geral@1000valle.com` | GERENTE_GERAL | Todas as lojas e equipes |
+| `maria@1000valle.com` | GERENTE | Toda a Loja Central |
+| `joao@1000valle.com` | ATENDENTE | Apenas os próprios leads (Equipe Norte) |
+| `carlos@1000valle.com` | ATENDENTE | Apenas os próprios leads (Equipe Sul) |
 
 ---
 
 ## Arquitetura
 
-O backend segue **Clean Architecture** com separação em camadas:
+### Backend — Clean Architecture (quatro camadas)
 
 ```
-presentation/     → Controllers e Routes (entrada/saída HTTP)
-application/      → Services (regras de negócio)
-infrastructure/   → Repositories, Middlewares, Database
-domain/           → Entities e Interfaces
-shared/           → Types, Utils, Errors
+presentation/     ─→ HTTP: routes, controllers, middlewares de auth
+        │
+        ▼
+application/      ─→ Regras de negócio: services, casos de uso
+        │
+        ▼
+domain/           ─→ Entidades, value objects, validadores de transição
+        │
+        ▼
+infrastructure/   ─→ Detalhes: Prisma, repositories, conexão com Postgres
 ```
 
-O frontend segue organização por responsabilidade:
+Cada camada só conhece a de baixo. Controllers chamam services; services chamam repositories; repositories falam com o banco. Domain não importa nada de fora — só TypeScript puro.
+
+Pasta `shared/` agrupa código transversal: tipos (`AuthUser`, `Role`), erros (`AppError`), utils e validators.
+
+### Frontend — Organização por responsabilidade
 
 ```
-pages/      → Páginas da aplicação
-components/ → Componentes reutilizáveis
-services/   → Chamadas à API
-hooks/      → Lógica reutilizável
+pages/         ─→ Cada rota da aplicação (Dashboard, Leads, ModerarVitrine, ...)
+components/    ─→ Componentes reutilizáveis (OriginBadge, LeadHistoryTimeline, ...)
+services/      ─→ Cliente Axios + chamadas tipadas à API
+hooks/         ─→ Lógica reutilizável (useColumnLimit, useKanbanBoard)
+types/         ─→ Tipos compartilhados de domínio
+styles/        ─→ CSS de página
+routes/        ─→ Configuração do React Router
 ```
 
-Padrões de projeto utilizados: **Repository**, **Service Layer**, **Middleware Chain**, **GoF State** (validação de transições de lead). Ver [docs/padroes-de-projeto.md](docs/padroes-de-projeto.md).
+### Padrões de projeto aplicados
+
+| Padrão | Onde | Por quê |
+|---|---|---|
+| **Repository** | `backend/src/infrastructure/repositories/*` | Isola o ORM (Prisma) — services não conhecem SQL |
+| **Service Layer** | `backend/src/application/services/*` | Concentra regras de negócio fora de controllers |
+| **State (GoF)** | `domain/entities/LeadStage.ts` | Valida transições de estágio do lead (não pode pular etapas, fechar exige motivo) |
+| **Middleware Chain** | `infrastructure/middleware/authMiddleware.ts` | Auth + RBAC antes de cada handler |
+| **DTO público** | `presentation/controllers/PublicCatalogController.ts` | Vitrine pública não vaza colunas internas do banco |
+
+Diagrama completo: [`docs/diagramas/`](docs/diagramas/) · Discussão de padrões: [`docs/padroes-de-projeto.md`](docs/padroes-de-projeto.md)
 
 ---
 
-## Estrutura de Diretórios
+## Estrutura de pastas
 
 ```
 abp-3-valle-leads-system/
+├── .env.example                # Template de variáveis (copie para .env)
+├── docker-compose.yml          # Postgres + backend + frontend
+├── README.md
 ├── backend/
+│   ├── Dockerfile              # Build em dois estágios (builder + runtime)
 │   ├── prisma/
-│   │   ├── schema.prisma        # Definição do banco
-│   │   ├── migrations/          # Histórico de migrações
-│   │   └── seed.ts              # Dados iniciais
+│   │   ├── schema.prisma       # Modelo de dados
+│   │   ├── migrations/         # 9 migrations versionadas
+│   │   └── seed.ts             # Seed idempotente (skip se já houver dados)
 │   └── src/
-│       ├── application/services/  # Regras de negócio
-│       ├── domain/                # Entidades e interfaces
-│       ├── infrastructure/        # Repositories, middlewares
-│       ├── presentation/          # Controllers e routes
-│       └── shared/                # Types, utils, errors
+│       ├── domain/             # Entidades + regras invariantes
+│       ├── application/        # Services (LeadService, NegotiationService, ...)
+│       ├── infrastructure/     # Repositories Prisma, middlewares, conexão DB
+│       ├── presentation/       # Routes + Controllers Express
+│       ├── shared/             # Types, errors, validators, utils
+│       └── __tests__/          # Suite Jest (14 arquivos de teste)
 ├── frontend/
+│   ├── Dockerfile              # Vite dev server
 │   └── src/
-│       ├── components/   # Componentes reutilizáveis
-│       ├── hooks/        # Custom hooks
-│       ├── pages/        # Páginas (Dashboard, Leads, etc.)
-│       └── services/     # Serviços de API
-├── docs/
-│   ├── backlog/          # Product Backlog e Sprint Backlogs
-│   ├── diagramas/        # DER e diagramas UML
-│   ├── retrospectivas/   # Retrospectivas por sprint
-│   └── api.md            # Documentação dos endpoints
-├── docker-compose.yml
-└── README.md
+│       ├── pages/              # Rotas (Dashboard, Leads, ModerarVitrine, ...)
+│       ├── components/         # Reutilizáveis (Sidebar, OriginBadge, ...)
+│       ├── hooks/, services/, types/, styles/, routes/
+│       └── **/__tests__/       # Vitest (8 arquivos, 54 testes)
+└── docs/
+    ├── api.md                  # Documentação dos endpoints
+    ├── backlog/                # Product backlog e sprint backlogs
+    ├── diagramas/              # DER e diagramas UML
+    └── retrospectivas/         # Retros das sprints
 ```
 
 ---
 
-## Como Executar (Docker — recomendado)
+## Funcionalidades
 
-> Único requisito: **Docker Desktop** instalado e em execução.
+**Gestão de leads**
+- Cadastro manual + captação via formulário público (`/demonstrar-interesse`)
+- Kanban com 5 estágios e validação de transições (não pode pular etapas; fechar exige motivo)
+- Filtros por período, loja, equipe, atendente e temperatura
+- Edição de lead, histórico de alterações por lead, repescagem de leads frios
+- Badges visuais de origem (WhatsApp, Instagram, Facebook, etc) com cor da marca
 
-```bash
-# 1. Clonar o repositório
-git clone https://github.com/NexussDev/abp-3-valle-leads-system.git
-cd abp-3-valle-leads-system
+**Vitrine de veículos**
+- Atendente publica veículo (FIPE auto-preenche preço, Pexels sugere foto)
+- Gerente modera (aprovar / rejeitar com motivo / marcar como vendido)
+- Vitrine pública consome apenas listings aprovados
+- Estados: `PENDING → APPROVED → SOLD` ou `PENDING → REJECTED → PENDING` (edição reabilita)
 
-# 2. Subir todos os containers
-docker compose up --build
-```
+**Equipes & usuários**
+- Admin cria equipes, gerencia membros (modal completo com busca + add/remove)
+- RBAC em três níveis aplicado no service: ATENDENTE vê só os próprios, LIDER/GERENTE veem a equipe/loja, ADMIN/GERENTE_GERAL veem tudo
 
-O comando sobe automaticamente:
-- PostgreSQL (porta 5433)
-- Backend com migrations aplicadas (porta 3000)
-- Frontend (porta 5173)
+**Dashboards**
+- Métricas operacionais (total, fechados, conversão, tempo médio de atendimento)
+- Gráficos por origem, ranking de atendentes, motivos de fechamento
+- Visões distintas por perfil (Atendente / Líder / Gerente / Admin)
 
-> **Atenção:** o seed com dados iniciais **não é executado automaticamente** pelo Docker.
-> Para popular o banco, execute manualmente após subir os containers:
-> ```bash
-> docker compose exec backend npx prisma db seed
-> ```
-
-**Acessar:**
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
-
-> Não é necessário instalar Node.js, configurar banco ou rodar migrations manualmente.
-
----
-
-## Contas de Teste
-
-| E-mail | Senha | Perfil | Acesso |
-|--------|-------|--------|--------|
-| admin@1000valle.com | 123456 | Admin | Tudo |
-| pedro@1000valle.com | 123456 | Líder de Equipe | Equipe Norte |
-| maria@1000valle.com | 123456 | Gerente | Toda a loja |
-| joao@1000valle.com | 123456 | Atendente | Seus leads |
-| carlos@1000valle.com | 123456 | Atendente | Seus leads |
+**Auditoria**
+- `SystemLog` registra CREATE/UPDATE/APPROVE/REJECT/SOLD/LOGIN
+- `NegotiationHistory` registra transições de estágio
+- Página `/logs` com filtros e paginação
 
 ---
 
-## Variáveis de Ambiente
+## Stack
 
-As variáveis já estão configuradas no `docker-compose.yml` para execução local. Para execução manual (sem Docker):
+| Camada | Tecnologia | Versão |
+|---|---|---|
+| Frontend | React + TypeScript + Vite | React 19, Vite 5 |
+| Roteamento | React Router | 7 |
+| Gráficos | Recharts | 3 |
+| HTTP client | Axios | 1 |
+| Backend | Node + Express + TypeScript | Node 20, Express 5 |
+| ORM | Prisma | 5 |
+| Banco | PostgreSQL | 15 |
+| Auth | JWT (`jsonwebtoken`) + bcrypt | — |
+| Containerização | Docker + Docker Compose | — |
+| Testes | Vitest (front) · Jest (back) | — |
 
-**Backend** — criar `backend/.env`:
+---
+
+## Variáveis de ambiente
+
+Todas as variáveis ficam em **um único `.env` na raiz** (consumido pelo `docker-compose.yml` para os três serviços). O arquivo `.env.example` é o template oficial.
+
 ```env
-DATABASE_URL=postgresql://postgres:1234@localhost:5433/valle_leads
-JWT_SECRET=segredo_super_forte
+# PostgreSQL
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=troque-esta-senha
+POSTGRES_DB=valle_leads
+POSTGRES_PORT=5433
+
+# Backend
+DATABASE_URL=postgresql://postgres:troque-esta-senha@postgres:5432/valle_leads
+JWT_SECRET=troque-este-segredo-por-um-valor-aleatorio-longo
+BACKEND_PORT=3000
+NODE_ENV=development
+
+# Frontend
+FRONTEND_PORT=5173
 ```
 
-**Frontend** — criar `frontend/.env`:
-```env
-VITE_API_URL=http://localhost:3000/api
-```
-
----
-
-## Execução Manual (sem Docker)
-
-```bash
-# Terminal 1 — Banco de dados
-docker compose up postgres
-
-# Terminal 2 — Backend
-cd backend
-npm install
-npx prisma migrate deploy
-npx prisma db seed
-npm run dev
-
-# Terminal 3 — Frontend
-cd frontend
-npm install
-npm run dev
-```
+> ⚠️ **Importante**
+> - `DATABASE_URL` aponta para o host `postgres` (nome do serviço no compose), não para `localhost`.
+> - Em produção, gere um `JWT_SECRET` forte: `openssl rand -hex 64`
+> - O `.env` está no `.gitignore` — **nunca commit**.
 
 ---
 
 ## API REST
 
-Documentação completa dos endpoints em [docs/api.md](docs/api.md).
+Base URL: `http://localhost:3000`
 
-**Base URL:** `http://localhost:3000`
+Rotas autenticadas exigem o header `Authorization: Bearer <token>`. Token é obtido em `POST /auth/login`.
 
-| Prefixo | Descrição |
-|---------|-----------|
-| `POST /auth/login` | Autenticação |
-| `GET/POST/PUT/DELETE /api/users` | Gestão de usuários |
-| `GET/POST/PUT/DELETE /api/leads` | Gestão de leads |
-| `GET/POST/PUT/DELETE /api/leads/:id/negotiation` | Negociações |
-| `GET /api/dashboard`             | Dashboard operacional |
-| `GET /api/dashboard/analytics`   | Dashboard analítico   |
-| `GET /api/logs` | Logs do sistema |
-| `GET /api/lead-sources` | Origens de leads |
+### Autenticação (público)
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/auth/login` | Retorna `{ user, token }` |
 
-Rotas protegidas exigem header: `Authorization: Bearer <token>`
+### Captação pública (sem auth)
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/public/leads` | Formulário "Quero ser atendido" — cria lead, cliente e negociação |
+| `GET`  | `/public/catalog` | Lista veículos publicados (status `APPROVED`) |
+| `GET`  | `/public/catalog/:id` | Detalhe público de um veículo |
+
+### Leads (auth + RBAC)
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/leads` | Lista leads no escopo do usuário |
+| `GET` | `/api/leads/:id` | Detalhe de um lead |
+| `GET` | `/api/leads/:id/history` | Timeline unificada (SystemLog + NegotiationHistory) |
+| `POST` | `/api/leads` | Cria lead |
+| `PUT` / `PATCH` | `/api/leads/:id` | Atualiza (transição de estágio validada) |
+| `PATCH` | `/api/leads/:id/contact` | Registra contato |
+| `DELETE` | `/api/leads/:id` | Exclui lead |
+| `GET` | `/api/leads/recapture?days=30` | Leads para repescagem |
+
+### Negociações
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET/POST/PUT` | `/api/leads/:leadId/negotiation` | CRUD da negociação ativa |
+| `GET` | `/api/negotiations` | Lista geral |
+
+### Vitrine de veículos (auth)
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/vehicle-listings` | Lista (com filtro `?status=PENDING|APPROVED|REJECTED|SOLD` e `?mine=true`) |
+| `POST` | `/api/vehicle-listings` | Cria publicação (`PENDING`) |
+| `PATCH` | `/api/vehicle-listings/:id` | Edita |
+| `PATCH` | `/api/vehicle-listings/:id/approve` | Aprovar (gerentes/admin) |
+| `PATCH` | `/api/vehicle-listings/:id/reject` | Rejeitar com motivo |
+| `PATCH` | `/api/vehicle-listings/:id/sold` | Marcar como vendido |
+| `DELETE` | `/api/vehicle-listings/:id` | Excluir (apenas pending/rejected) |
+
+### Usuários, equipes, dashboard, logs
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET/POST/PUT/DELETE` | `/api/users` | Gestão de usuários (admin) |
+| `GET/POST/PUT/DELETE` | `/api/teams` | Gestão de equipes (admin) |
+| `GET` | `/api/dashboard/operacional` | Métricas operacionais |
+| `GET` | `/api/dashboard/analitico` | Métricas analíticas |
+| `GET` | `/api/logs` | Auditoria do sistema |
+| `GET` | `/api/lead-sources` | Origens cadastradas |
+
+Documentação detalhada: [`docs/api.md`](docs/api.md).
 
 ---
 
-## Definition of Done (DoD)
+## Testes
 
-Uma tarefa é considerada concluída quando:
+### Backend (Jest)
 
-- [ ] Funcionalidade implementada e testável
-- [ ] Regras de negócio aplicadas no backend (não só no frontend)
-- [ ] Dados persistidos corretamente no banco
-- [ ] RBAC aplicado — usuário acessa apenas o que tem permissão
-- [ ] Sem erros de console no frontend
-- [ ] Build Docker funcional (`docker compose up --build` sem erros)
-- [ ] Código commitado na branch correspondente com mensagem descritiva
-- [ ] Sem credenciais sensíveis expostas no código
+```bash
+docker compose exec backend npm test
+```
+
+14 arquivos de teste cobrindo: autenticação, validador de transição de estágio, RBAC do `LeadService`, recapture, escopo, dashboard TMA, logs CRUD, captação pública, ACL de rotas.
+
+### Frontend (Vitest)
+
+```bash
+docker compose exec frontend npm test
+```
+
+8 arquivos · 54 testes cobrindo: filtros, adapter de leads, hook de kanban board, hook `useColumnLimit`, `OriginBadge`, `matchesTemperature`, serviços de API.
+
+### Rodando localmente (sem Docker)
+
+```bash
+cd backend && npm install && npm test
+cd ../frontend && npm install && npm test
+```
 
 ---
 
-## Planejamento de Sprints
+## Comandos úteis
+
+```bash
+# Logs em tempo real
+docker compose logs -f backend
+docker compose logs -f frontend
+
+# Subir só um serviço (após mudanças)
+docker compose up --build -d backend
+
+# Acessar shell do backend
+docker compose exec backend sh
+
+# Rodar Prisma manualmente
+docker compose exec backend npx prisma migrate status
+docker compose exec backend npx prisma studio       # abre em :5555
+
+# Resetar o banco (apaga tudo, refaz migrations + seed)
+docker compose down -v
+docker compose up --build -d
+
+# Conectar no Postgres pelo psql
+docker compose exec postgres psql -U postgres -d valle_leads
+```
+
+---
+
+## Troubleshooting
+
+**`Port is already allocated` no startup**
+Outro processo está usando 5173, 3000 ou 5433. Pare-o ou edite as portas no `.env` (`FRONTEND_PORT`, `BACKEND_PORT`, `POSTGRES_PORT`).
+
+**`npm ci` falha no build do backend com "package-lock out of sync"**
+Alguém adicionou dependência sem atualizar o lock. Conserto:
+```bash
+cd backend && npm install --package-lock-only
+docker compose up --build -d
+```
+
+**Backend reinicia em loop com erro de migration**
+Provavelmente o banco está num estado divergente. Reset:
+```bash
+docker compose down -v && docker compose up --build -d
+```
+
+**Frontend mostra "Network Error" em todas as chamadas**
+O backend não subiu. `docker compose logs backend` e procure o erro real. Causa comum: `JWT_SECRET` ausente ou `DATABASE_URL` apontando para `localhost` (deve ser `postgres`).
+
+**Login retorna 401 com credenciais corretas**
+O seed não rodou. Verifique:
+```bash
+docker compose exec postgres psql -U postgres -d valle_leads -c "SELECT COUNT(*) FROM \"user\";"
+```
+Se for 0, rode manualmente: `docker compose exec backend npx prisma db seed`.
+
+**Erro 503 ao enviar formulário público de interesse**
+Significa que não há atendente (`role=ATENDENTE`) cadastrado com `teamId` e `storeId`. O seed cria esse atendente, então rode o seed.
+
+---
+
+## Padrões adotados
+
+**Boas práticas mantidas no código**
+- Separação rígida de camadas (clean architecture) — sem `import` de baixo pra cima
+- Repository pattern isolando Prisma do resto da aplicação
+- Validação na camada de domínio (`validateStageTransition`), não em controllers
+- Logs de auditoria centralizados em `LogService`
+- Migrations versionadas (9 atualmente) e seed idempotente
+- Erros tipados (`AppError`) tratados por middleware único
+- Senhas hashadas com bcrypt (cost 10)
+- JWT com `expiresIn` configurável
+- RBAC aplicado no service (não no controller) — defesa em profundidade
+- `.env.example` versionado; `.env` real fora do git
+
+**Definition of Done** — uma feature só é aceita quando:
+- [x] Regra de negócio implementada no backend (não só no frontend)
+- [x] Dados persistidos corretamente
+- [x] RBAC validado por perfil
+- [x] Sem erros de console
+- [x] `docker compose up --build` passa sem intervenção manual
+- [x] Sem credenciais sensíveis no código
+
+---
+
+## Sprints
 
 | Sprint | Período | Status |
-|--------|---------|--------|
-| Sprint 1 | 24/03 → 14/04 | Concluída ✓ |
-| Sprint 2 | 15/04 → 21/05 | Concluída ✓ |
-| Sprint 3 | 22/05 → 11/06 | Em andamento |
-| Entrega Final | Julho 2026 | — |
+|---|---|---|
+| Sprint 1 | 24/03 → 14/04 | ✓ Concluída |
+| Sprint 2 | 15/04 → 21/05 | ✓ Concluída |
+| Sprint 3 | 22/05 → 11/06 | ✓ Concluída |
+| Entrega final | Julho 2026 | — |
 
-[▶️ Vídeo Sprint 1](https://youtu.be/JZl4LicdbPs?si=BHBxFvGHBrTLPN_v)
-
-Backlog completo: [docs/backlog/](docs/backlog/)  
-Retrospectivas: [docs/retrospectivas/](docs/retrospectivas/)
+[▶️ Vídeo Sprint 1](https://youtu.be/JZl4LicdbPs?si=BHBxFvGHBrTLPN_v) · Backlog: [`docs/backlog/`](docs/backlog/) · Retros: [`docs/retrospectivas/`](docs/retrospectivas/)
 
 ---
 
-## Time de Desenvolvimento
+## Time
 
 | Função | Nome | Links |
-|--------|------|-------|
-| Product Owner | Pedro Claudino | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/PeClaudino2006) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://br.linkedin.com/in/pedro-claudino-0566472b9) |
-| Scrum Master | Manuela Castro | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/manuelalemes) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/manuela-lemes-castro) |
-| Backend & Database | Gabrielly Neu | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/gabriellyneu) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabrielly-neu-753906239) |
-| Backend Developer | Gabriel Teodoro | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/teodoroooo) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/gabrielteodoroo) |
-| Frontend Developer | Alicia Dias | [![GitHub](https://img.shields.io/badge/GitHub-000000?style=flat&logo=github&logoColor=white)](https://github.com/TIALICIA) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/alicia-silva-dias-656b2817a/) |
-
----
-
-![Status](https://img.shields.io/badge/status-Sprint%202%20concluída-green)
-[![React](https://img.shields.io/badge/React-19.2.4-61DAFB?logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql)](https://www.postgresql.org)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com)
+|---|---|---|
+| Product Owner | Pedro Claudino | [GitHub](https://github.com/PeClaudino2006) · [LinkedIn](https://br.linkedin.com/in/pedro-claudino-0566472b9) |
+| Scrum Master | Manuela Castro | [GitHub](https://github.com/manuelalemes) · [LinkedIn](https://www.linkedin.com/in/manuela-lemes-castro) |
+| Backend & Database | Gabrielly Neu | [GitHub](https://github.com/gabriellyneu) · [LinkedIn](https://www.linkedin.com/in/gabrielly-neu-753906239) |
+| Backend Developer | Gabriel Teodoro | [GitHub](https://github.com/teodoroooo) · [LinkedIn](https://www.linkedin.com/in/gabrielteodoroo) |
+| Frontend Developer | Alicia Dias | [GitHub](https://github.com/TIALICIA) · [LinkedIn](https://www.linkedin.com/in/alicia-silva-dias-656b2817a/) |

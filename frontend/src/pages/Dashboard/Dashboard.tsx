@@ -130,18 +130,19 @@ function ChartCard({ title, subtitle, height = 230, children }: {
   );
 }
 
-function PieSection({ title, subtitle, data }: {
+function PieSection({ title, subtitle, data, valueLabel = 'Leads' }: {
   title: string; subtitle: string;
   data: { name: string; value: number; color: string }[];
+  valueLabel?: string;
 }) {
   return (
     <ChartCard title={title} subtitle={subtitle}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={data} innerRadius={50} outerRadius={76} paddingAngle={4} dataKey="value">
+          <Pie data={data} innerRadius={50} outerRadius={76} paddingAngle={4} dataKey="value" name={valueLabel}>
             {data.map((e, i) => <Cell key={i} fill={e.color} />)}
           </Pie>
-          <Tooltip />
+          <Tooltip formatter={(v: number) => [v, valueLabel]} />
           <Legend formatter={(v) => <span style={{ color: '#111827', fontWeight: 400 }}>{cap(String(v))}</span>} />
         </PieChart>
       </ResponsiveContainer>
@@ -149,10 +150,11 @@ function PieSection({ title, subtitle, data }: {
   );
 }
 
-function BarSection({ title, subtitle, data, dataKey = 'value' }: {
+function BarSection({ title, subtitle, data, dataKey = 'value', valueLabel = 'Leads' }: {
   title: string; subtitle: string; height?: number;
   data: { name: string; value: number; fill?: string }[];
   dataKey?: string;
+  valueLabel?: string;
 }) {
   return (
     <ChartCard title={title} subtitle={subtitle} height={260}>
@@ -161,8 +163,8 @@ function BarSection({ title, subtitle, data, dataKey = 'value' }: {
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-12} textAnchor="end" height={60} />
           <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-          <Tooltip />
-          <Bar dataKey={dataKey} radius={[8, 8, 0, 0]}>
+          <Tooltip formatter={(v: number) => [v, valueLabel]} />
+          <Bar dataKey={dataKey} name={valueLabel} radius={[8, 8, 0, 0]}>
             {data.map((e, i) => <Cell key={i} fill={e.fill ?? BAR_PALETTE[i % BAR_PALETTE.length]} />)}
           </Bar>
         </BarChart>
@@ -456,17 +458,12 @@ function AdminDashboard({ userName }: { userName: string }) {
     <>
       <Hero badge="Dashboard Admin" name={userName} subtitle="Visão completa do sistema — todas as lojas e equipes." />
 
-      {/* Métricas operacionais vindas da API */}
+      {/* Métricas operacionais vindas da API.
+          Tempo de atendimento vive no PerformancePanel abaixo — não duplicar aqui. */}
       <div style={cardsGridStyle}>
-        <StatCard label="Total Sistema"   value={operacional.total}   color="#c0392b" />
+        <StatCard label="Total Sistema"   value={operacional.total}    color="#c0392b" />
         <StatCard label="Fechados"        value={operacional.fechados} color="#10b981" />
         <StatCard label="Taxa Conversão"  value={operacional.conversao} color="#8b5cf6" />
-        <StatCard
-          label="Tempo Médio Atend."
-          value={analitico.tempoMedioAtendimentoHoras ? `${analitico.tempoMedioAtendimentoHoras}h` : '—'}
-          color="#f97316"
-          hint="Da criação até a primeira atualização"
-        />
       </div>
       <PerformancePanel
         extra={{

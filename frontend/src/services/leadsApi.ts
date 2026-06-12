@@ -108,3 +108,17 @@ export async function createLeadApi(payload: {
   const { data } = await client.post<ApiLead>('/leads', payload);
   return data;
 }
+
+export interface LeadHistoryEntry {
+  id: string;
+  field: 'create' | 'stage' | 'status' | 'update';
+  oldValue?: string;
+  newValue: string;
+  updatedAt: string;
+  responsibleName: string;
+}
+
+export async function fetchLeadHistory(id: string): Promise<LeadHistoryEntry[]> {
+  const { data } = await client.get<LeadHistoryEntry[]>(`/leads/${id}/history`);
+  return data;
+}

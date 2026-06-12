@@ -74,6 +74,15 @@ class LeadController {
     }
   }
 
+  async history(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const entries = await leadService.findHistory(req.params['id'] as string, req.user!);
+      res.status(200).json(entries);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       console.log('Body recebido:', JSON.stringify(req.body));

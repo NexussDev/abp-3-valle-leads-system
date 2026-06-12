@@ -3,7 +3,7 @@ import { Lead } from '../../pages/Leads/types';
 
 export interface HistoryLog { // Garanta que tem a palavra 'export'
   id: string;
-  field: 'stage' | 'status' | 'create';
+  field: 'stage' | 'status' | 'create' | 'update';
   oldValue?: string;
   newValue: string;
   updatedAt: string;
@@ -17,11 +17,7 @@ interface Props {
 const formatLogMessage = (log: HistoryLog) => {
   switch (log.field) {
     case 'create':
-      return (
-        <span>
-          Negociação criada para o veículo <strong>{log.newValue}</strong>
-        </span>
-      );
+      return <span><strong>{log.newValue}</strong></span>;
     case 'stage':
       return (
         <span>
@@ -34,8 +30,10 @@ const formatLogMessage = (log: HistoryLog) => {
           Alterou o status da negociação para <strong>{log.newValue.toUpperCase()}</strong>
         </span>
       );
+    case 'update':
+      return <span><strong>{log.newValue}</strong></span>;
     default:
-      return <span>Alteração realizada</span>;
+      return <span>{log.newValue || 'Alteração realizada'}</span>;
   }
 };
 
@@ -43,6 +41,7 @@ const formatLogMessage = (log: HistoryLog) => {
 const getLogIcon = (field: string) => {
   if (field === 'create') return '🚀';
   if (field === 'stage') return '📍';
+  if (field === 'update') return '✏️';
   return '🔄';
 };
 

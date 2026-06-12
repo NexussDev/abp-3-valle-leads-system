@@ -25,24 +25,29 @@ class PublicLeadService {
 
     const origin = normalizeOrigin(data.origem);
 
-    // Equipe e loja padrão (primeira disponível).
-    // TODO(distribuição): substituir por estratégia round-robin quando
-    // o cadastro público crescer — por ora basta um atendente vivo.
-    const [team, store] = await Promise.all([
-      prisma.team.findFirst(),
-      prisma.store.findFirst(),
-    ]);
-
-    if (!team || !store) {
-      throw new AppError('Sistema não configurado. Contate o administrador.', 503);
-    }
-
+    // Distribuição: pegamos um atendente que já tenha equipe E loja vinculadas
+    // e usamos os IDs dele. Buscar team e store separadamente era frágil —
+    // o findFirst da team retornava qualquer equipe (mesmo as sem atendente),
+    // resultando em 503 mesmo com atendentes disponíveis em outros times.
+    // TODO(distribuição): substituir por round-robin quando o cadastro crescer.
     const atendente = await prisma.user.findFirst({
-      where: { role: 'ATENDENTE', teamId: team.id },
+      where: {
+        role: 'ATENDENTE',
+        teamId: { not: null },
+        storeId: { not: null },
+      },
+      orderBy: { id: 'asc' },
     });
+
     if (!atendente) {
-      throw new AppError('Nenhum atendente disponível no momento.', 503);
+      throw new AppError(
+        'Nenhum atendente disponível no momento. Contate o administrador.',
+        503,
+      );
     }
+
+    const teamId = atendente.teamId!;
+    const storeId = atendente.storeId!;
 
     // Cria cliente + lead + negociação inicial dentro de uma transação,
     // garantindo que o estado fique consistente mesmo se algo falhar.
@@ -65,8 +70,8 @@ class PublicLeadService {
           status: 'novo_lead',
           origin,
           userId: atendente.id,
-          teamId: team.id,
-          storeId: store.id,
+          teamId,
+          storeId,
           clientId: client.id,
         },
         include: {

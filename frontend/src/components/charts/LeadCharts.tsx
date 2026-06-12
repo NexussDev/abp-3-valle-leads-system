@@ -24,12 +24,12 @@ export default function LeadCharts() {
         <h4 style={titleStyle}>Origem dos Leads</h4>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
-            <Pie data={DATA_ORIGEM} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+            <Pie data={DATA_ORIGEM} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" name="Leads">
               {DATA_ORIGEM.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip formatter={(v: number) => [v, 'Leads']} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
@@ -43,8 +43,8 @@ export default function LeadCharts() {
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="name" axisLine={false} tickLine={false} />
             <YAxis axisLine={false} tickLine={false} />
-            <Tooltip cursor={{fill: '#f1f5f9'}} />
-            <Bar dataKey="conversao" fill="#38a169" radius={[4, 4, 0, 0]} />
+            <Tooltip cursor={{fill: '#f1f5f9'}} formatter={(v: number) => [`${v}%`, 'Conversão']} />
+            <Bar dataKey="conversao" name="Conversão" fill="#38a169" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
